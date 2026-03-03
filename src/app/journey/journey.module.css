@@ -1,0 +1,612 @@
+.container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    color: var(--text-main);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.panelHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.miniBtn {
+    background: var(--bg-app);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.miniBtn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.miniDelete {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    margin-left: auto;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+}
+
+.miniDelete:hover {
+    opacity: 1;
+    color: var(--secondary);
+}
+
+.headerTitle h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.headerTitle p {
+    color: var(--text-muted);
+}
+
+.viewSwitcher {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--bg-card);
+    padding: 0.4rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+}
+
+.viewBtn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.activeView {
+    background: var(--primary);
+    color: white;
+}
+
+/* Layout Columns */
+.layout {
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    gap: 2rem;
+}
+
+/* Notes Grid */
+.notesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.noteCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+}
+
+.noteCard:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.noteCard h3 {
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.noteContent {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    flex: 1;
+}
+
+.noteFooter {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.categoryTag {
+    background: var(--bg-app);
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+}
+
+.categoryList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.categoryList li {
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+}
+
+.categoryList li:hover {
+    background: var(--bg-app);
+    color: var(--text-main);
+}
+
+.activeCategory {
+    background: rgba(99, 102, 241, 0.1) !important;
+    color: var(--primary) !important;
+    font-weight: 600;
+}
+
+.searchBar {
+    margin-bottom: 2rem;
+}
+
+.searchBar input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    color: var(--text-main);
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.searchBar input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.noteHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.pinBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.2rem;
+    border-radius: 0.4rem;
+    transition: background 0.2s;
+}
+
+.pinBtn:hover {
+    background: var(--bg-app);
+}
+
+/* Task Side Column */
+.sideColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sideCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+}
+
+.sideCard h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.taskList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.taskItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-app);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+}
+
+.taskCheckbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.taskDone .taskCheckbox {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.taskDone .taskText {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+/* Sticky notes */
+.stickyPanel {
+    position: relative;
+}
+
+.sticky {
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.25rem;
+    position: relative;
+    line-height: 1.4;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.stickyDelete {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+}
+
+.sticky:hover .stickyDelete {
+    opacity: 1;
+}
+
+.addStickyBtn {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--bg-app);
+    border: 1px dashed var(--border);
+    border-radius: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.addStickyBtn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.reminderList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.reminderItem {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-app);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+}
+
+.reminderTime {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.4rem;
+    height: fit-content;
+}
+
+.reminderInfo strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+
+.reminderInfo p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.emptyText {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 1rem 0;
+}
+
+.yellow {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.green {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.pink {
+    background-color: #fce7f3;
+    color: #9d174d;
+}
+
+.blue {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+/* Editor Modal */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+/* Daily Log Panel */
+.dailyLogPanel {
+    background: var(--bg-card);
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    border: 1px solid var(--border);
+}
+
+.logHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.logForm {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.moodSelector {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.moodSelector input[type="range"] {
+    width: 100%;
+    accent-color: var(--primary);
+}
+
+.logSection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.logSection label {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.logSection textarea {
+    width: 100%;
+    min-height: 100px;
+    background: var(--bg-app);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    color: var(--text-main);
+    resize: vertical;
+}
+
+.logGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.logHistory {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.logHistory h3 {
+    margin-bottom: 1.5rem;
+}
+
+.logHistoryItem {
+    padding: 1.5rem;
+    background: var(--bg-app);
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+}
+
+.logHistoryItem strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--primary);
+}
+
+.modal {
+    background: var(--bg-card);
+    width: 90%;
+    max-width: 800px;
+    height: 80vh;
+    border-radius: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.modalHeader {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalHeader input {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    width: 80%;
+}
+
+.modalHeader input:focus {
+    outline: none;
+}
+
+.editorScroll {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.editorContent {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    resize: none;
+}
+
+.editorContent:focus {
+    outline: none;
+}
+
+.modalFooter {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalActions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btnDanger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btnDanger:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.btnPrimary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btnSecondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+@media (max-width: 1200px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+}

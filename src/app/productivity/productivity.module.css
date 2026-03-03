@@ -1,0 +1,264 @@
+.container {
+    padding: 3rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: 3.5rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    border-radius: 2rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+}
+
+.header h1 {
+    margin-bottom: 0.5rem;
+}
+
+.header p {
+    color: var(--text-muted);
+    max-width: 600px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 3rem;
+}
+
+.sectionTitle {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+}
+
+.fieldFull {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.label {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.largeInput {
+    padding: 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background: var(--bg-app);
+    color: var(--text-main);
+    width: 100%;
+}
+
+.largeInput:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--bg-card);
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stepper {
+    display: flex;
+    align-items: center;
+    background: var(--bg-app);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.stepper button {
+    padding: 0.875rem 1.5rem;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.stepper button:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.stepper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    text-align: center;
+    font-weight: 800;
+    color: var(--text-main);
+    -moz-appearance: textfield;
+}
+
+.stepper input::-webkit-outer-spin-button,
+.stepper input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.range {
+    width: 100%;
+    accent-color: var(--primary);
+    margin-top: 0.5rem;
+}
+
+.rangeLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.rangeVal {
+    color: var(--primary);
+    font-size: 0.875rem;
+}
+
+.historyList {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+}
+
+.historyCard {
+    padding: 1.5rem !important;
+}
+
+.historyHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.historyDate {
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.historyPriority {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--primary);
+}
+
+.historyStats {
+    display: flex;
+    gap: 2.5rem;
+}
+
+.miniStat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.miniStat label {
+    font-size: 0.625rem;
+    font-weight: 800;
+    color: var(--text-muted);
+}
+
+.miniStat span {
+    font-size: 1.125rem;
+    font-weight: 800;
+}
+
+/* Side Col */
+.sideTitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.statBox {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.statLabel {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.statValue {
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+.unit {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+.tipText {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    text-align: center;
+    font-style: italic;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+}
+
+@media (max-width: 1024px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,409 @@
+.container {
+    padding: 3rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: 3.5rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    border-radius: 2rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+}
+
+.header h1 {
+    margin-bottom: 0.5rem;
+}
+
+.header p {
+    color: var(--text-muted);
+    max-width: 600px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 3rem;
+}
+
+.sectionTitle {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+}
+
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.row {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.row .field {
+    flex: 1;
+}
+
+.label {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.input,
+.select,
+.textarea {
+    padding: 0.875rem 1.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+    background: var(--bg-app);
+    color: var(--text-main);
+    font-family: inherit;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--bg-card);
+}
+
+.sideTitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.skillList {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.skillItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.skillHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.skillName {
+    font-weight: 800;
+    font-size: 0.9375rem;
+}
+
+.skillLevel {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.masteryBar {
+    height: 6px;
+    background: var(--bg-app);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.masteryBar div {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+.skillMeta {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.recentWin {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.winDot {
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.winText {
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.winDate {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: center;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+}
+
+@media (max-width: 1024px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* New Skills Dashboard Styles */
+.viewSwitcher {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.viewSwitcher button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.viewSwitcher button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+}
+
+.viewSwitcher .activeView {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.viewSwitcher .activeView:hover {
+    background: var(--primary);
+    opacity: 0.9;
+}
+
+.dateTimeRow {
+    display: flex;
+    gap: 1rem;
+}
+
+.historyTrackingContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+.dashboardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.statCard {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.statValue {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+}
+
+.statLabel {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.trackingList {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 2rem;
+}
+
+.clearAllBtn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.clearAllBtn:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.expandedHistoryItem {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.expandedHistoryItem:hover {
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
+}
+
+.expandedHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.expandedHistoryDate h3 {
+    font-size: 1.125rem;
+    margin: 0 0 0.25rem 0;
+}
+
+.expandedHistoryDate p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 600;
+}
+
+.expandedScores {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.scoreBadge {
+    padding: 0.35rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.deleteActionArea {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.discardBtn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.discardBtn:hover {
+    opacity: 1;
+}
+
+.deleteBtn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.5;
+}
+
+.deleteBtn:hover {
+    opacity: 1;
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.2);
+}

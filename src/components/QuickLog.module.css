@@ -1,0 +1,184 @@
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--primary);
+    color: white;
+    padding: 1rem 1.75rem;
+    border-radius: 3rem;
+    font-weight: 700;
+    box-shadow: 0 10px 25px -5px var(--primary-glow);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.fab:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 35px -5px var(--primary-glow);
+}
+
+.fabIcon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 1rem;
+}
+
+.modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 450px;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.content {
+    padding: 2rem;
+}
+
+.formSection {
+    margin-bottom: 1.5rem;
+}
+
+.formSection label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.rangeInput {
+    width: 100%;
+    accent-color: var(--primary);
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+}
+
+.formRow {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.formField {
+    flex: 1;
+}
+
+.formField label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.formField input,
+.expenseRow input,
+.expenseRow select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--bg-app);
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+.expenseRow {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.expenseRow input {
+    flex: 2;
+}
+
+.expenseRow select {
+    flex: 1;
+}
+
+.message {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.success {
+    background: rgba(125, 216, 125, 0.1);
+    color: #2e7d32;
+    border: 1px solid rgba(125, 216, 125, 0.2);
+}
+
+.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #c62828;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.save {
+    background: var(--primary);
+    color: white;
+    padding: 0.875rem 2.5rem;
+    border-radius: 1rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.save:hover {
+    filter: brightness(1.1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
