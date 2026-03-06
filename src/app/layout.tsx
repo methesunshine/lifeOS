@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Sidebar from '@/components/Sidebar'
+import ActiveReminderAlert from '@/components/ActiveReminderAlert'
 import { createClient } from '@/lib/supabase-server'
 
 export const metadata: Metadata = {
@@ -27,6 +28,9 @@ export default async function RootLayout({
         }}>
           {children}
         </div>
+
+        {/* Global Reminder Alerts */}
+        {user && <ActiveReminderAlert />}
       </body>
     </html>
   )

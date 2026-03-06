@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { mood, sleep_hours, water_intake_ml, expense_amount, expense_category } = body;
+        const { mood, sleep_hours, water_intake_ml, expense_amount, expense_category, note } = body;
         const results = [];
 
         // 1. Log Mood (Mental Health)
@@ -46,6 +46,17 @@ export async function POST(request: Request) {
                 transaction_type: 'expense'
             }).select();
             results.push({ type: 'finance', success: !!fin });
+        }
+
+        // 4. Log Quick Note (Journey)
+        if (note) {
+            const { data: noteRes } = await supabase.from('notes').insert({
+                user_id: user.id,
+                title: note.slice(0, 50) + (note.length > 50 ? '...' : ''),
+                content: note,
+                category: 'General'
+            }).select();
+            results.push({ type: 'note', success: !!noteRes });
         }
 
         return NextResponse.json({ success: true, results });

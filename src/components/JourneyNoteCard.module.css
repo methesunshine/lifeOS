@@ -1,0 +1,76 @@
+.label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.titleInput {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--bg-app);
+    color: var(--text-main);
+    font-size: 0.875rem;
+}
+
+.contentInput {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--bg-app);
+    color: var(--text-main);
+    font-size: 0.875rem;
+    resize: none;
+    font-family: inherit;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.25rem;
+}
+
+.saveBtn {
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.saveBtn:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.saveBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.status {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.success {
+    color: #10b981;
+}
+
+.error {
+    color: #ef4444;
+}

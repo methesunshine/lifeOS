@@ -53,18 +53,16 @@ export async function POST(request: Request) {
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const body = await request.json()
-        const { title, description, due_date, priority, note_id } = body
+        const { title, due_date, priority } = body
 
         const { data, error } = await supabase
             .from('tasks')
             .insert([{
                 user_id: user.id,
                 title,
-                description,
                 due_date,
                 priority: priority || 'Medium',
-                status: 'Pending',
-                note_id: note_id || null
+                status: 'Pending'
             }])
             .select().single()
 
@@ -91,11 +89,6 @@ export async function PATCH(request: Request) {
         const updatePayload: any = { ...updates }
         if (status) {
             updatePayload.status = status
-            if (status === 'Completed') {
-                updatePayload.completed_at = new Date().toISOString()
-            } else {
-                updatePayload.completed_at = null
-            }
         }
 
         const { data, error } = await supabase
@@ -120,6 +113,18 @@ export async function DELETE(request: Request) {
 
         const { searchParams } = new URL(request.url)
         const id = searchParams.get('id')
+        const deleteAll = searchParams.get('all') === 'true'
+
+        if (deleteAll) {
+            const { error } = await supabase
+                .from('tasks')
+                .delete()
+                .eq('user_id', user.id)
+
+            if (error) throw error
+            return NextResponse.json({ success: true, message: 'All tasks deleted' })
+        }
+
         if (!id) return NextResponse.json({ error: 'Task ID required' }, { status: 400 })
 
         const { error } = await supabase

@@ -11,6 +11,7 @@ export default function QuickLog() {
     const [water, setWater] = useState('');
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('Essential');
+    const [note, setNote] = useState('');
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const handleSave = async () => {
@@ -25,7 +26,8 @@ export default function QuickLog() {
                     sleep_hours: sleep,
                     water_intake_ml: water,
                     expense_amount: amount,
-                    expense_category: category
+                    expense_category: category,
+                    note: note
                 })
             });
 
@@ -39,6 +41,7 @@ export default function QuickLog() {
                     setSleep('');
                     setWater('');
                     setAmount('');
+                    setNote('');
                 }, 1500);
             } else {
                 setMessage({ type: 'error', text: 'Failed to save log. Please try again.' });
@@ -118,6 +121,17 @@ export default function QuickLog() {
                                         <option>Work</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div className={styles.formSection}>
+                                <label>Quick Note (Journey)</label>
+                                <textarea
+                                    placeholder="Write a quick thought..."
+                                    value={note}
+                                    onChange={(e) => setNote(e.target.value)}
+                                    className={styles.noteInput}
+                                    rows={3}
+                                />
                             </div>
                         </div>
 

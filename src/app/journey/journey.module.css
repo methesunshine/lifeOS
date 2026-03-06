@@ -38,21 +38,48 @@
     color: var(--primary);
 }
 
+.taskContent {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.5rem;
+}
+
+.taskHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.taskMetaArea {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 2.5rem;
+    /* Align under the text, past the checkbox */
+}
+
+.taskDate {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
 .miniDelete {
     background: transparent;
     border: none;
-    color: var(--text-muted);
-    font-size: 1.2rem;
+    color: var(--secondary);
+    font-size: 1.4rem;
     cursor: pointer;
     line-height: 1;
     margin-left: auto;
-    opacity: 0.3;
-    transition: opacity 0.2s;
+    opacity: 0.7;
+    transition: all 0.2s;
 }
 
 .miniDelete:hover {
     opacity: 1;
-    color: var(--secondary);
+    transform: scale(1.2);
+    color: #ef4444;
 }
 
 .headerTitle h1 {
@@ -157,6 +184,31 @@
     padding: 0.2rem 0.6rem;
     border-radius: 1rem;
     border: 1px solid var(--border);
+    width: fit-content;
+}
+
+.noteMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.footerDeleteBtn {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    opacity: 0.8;
+}
+
+.footerDeleteBtn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    opacity: 1;
 }
 
 .categoryList {
@@ -212,6 +264,12 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+}
+
+.noteActions {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
 }
 
 .pinBtn {
@@ -303,18 +361,30 @@
     position: relative;
     line-height: 1.4;
     border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
 }
 
 .stickyDelete {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background: transparent;
-    border: none;
-    font-size: 1.2rem;
+    margin-top: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
     cursor: pointer;
-    opacity: 0.3;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
+    width: fit-content;
+    align-self: flex-end;
+    opacity: 0.8;
+}
+
+.stickyDelete:hover {
+    background: #ef4444;
+    color: white;
+    opacity: 1;
 }
 
 .sticky:hover .stickyDelete {
@@ -430,6 +500,35 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+}
+
+.headerActions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.logItemHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.logDeleteBtn {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+}
+
+.logDeleteBtn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
 }
 
 .logForm {
@@ -564,6 +663,12 @@
     align-items: center;
 }
 
+.saveStatus {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
 .modalActions {
     display: flex;
     gap: 1rem;
@@ -603,6 +708,12 @@
     border-radius: 0.5rem;
     font-weight: 600;
     cursor: pointer;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }
 
 @media (max-width: 1200px) {

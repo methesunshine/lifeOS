@@ -40,7 +40,7 @@ export async function GET() {
             // Goals
             supabase.from('goals').select('title, status, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
             // Notes
-            supabase.from('notes').select('title, category, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(5),
+            supabase.from('notes').select('note_id, title, category, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(5),
             // Tasks
             supabase.from('tasks').select('title, status, due_date, priority').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
             // Daily Logs
@@ -56,7 +56,7 @@ export async function GET() {
         finance.data?.forEach(d => combinedActivity.push({ area: 'Finance', action: d.transaction_type === 'expense' ? 'Debit' : 'Credit', detail: `${d.transaction_type === 'expense' ? '-' : '+'}₹${d.amount}`, time: d.transaction_date, icon: '💰' }));
         skills.data?.forEach((d: any) => combinedActivity.push({ area: 'Skills', action: 'Practice Done', detail: `${d.skills?.name || 'Skill'} • ${d.hours_invested}h`, time: d.created_at, icon: '📚' }));
         goals.data?.forEach(d => combinedActivity.push({ area: 'Goals', action: d.status === 'completed' ? 'Mission Success' : 'Objective Logged', detail: d.title, time: d.created_at, icon: '🎯' }));
-        notes.data?.forEach(d => combinedActivity.push({ area: 'Journey', action: 'Note Written', detail: d.title, time: d.updated_at, icon: '📓' }));
+        notes.data?.forEach(d => combinedActivity.push({ area: 'Journey', action: 'Note Written', detail: d.title, time: d.updated_at, icon: '📓', id: d.note_id }));
         tasks.data?.forEach(d => combinedActivity.push({ area: 'Journey', action: d.status === 'Completed' ? 'Task Done' : 'Task Added', detail: d.title, time: new Date().toISOString(), icon: '✅' }));
         productivity.data?.forEach(d => combinedActivity.push({ area: 'Productivity', action: 'System Active', detail: `${d.focus_hours}h focus • ${d.tasks_completed} tasks`, time: d.created_at, icon: '⚡' }));
 

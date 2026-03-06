@@ -161,6 +161,10 @@
     opacity: 0.5;
 }
 
+.draftRow {
+    margin-top: 1rem;
+}
+
 .areaGrid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -256,6 +260,24 @@
     font-size: 0.7rem;
     color: var(--text-muted);
     font-weight: 500;
+}
+
+.deleteBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    opacity: 0.3;
+    transition: all 0.2s;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.deleteBtn:hover {
+    opacity: 1;
+    color: var(--error);
+    background: rgba(239, 68, 68, 0.1);
 }
 
 .viewMore {

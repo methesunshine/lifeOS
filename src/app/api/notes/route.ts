@@ -110,6 +110,20 @@ export async function DELETE(request: Request) {
 
         const { searchParams } = new URL(request.url)
         const id = searchParams.get('id')
+        const deleteAll = searchParams.get('all') === 'true'
+        const category = searchParams.get('category')
+
+        if (deleteAll) {
+            let query = supabase.from('notes').delete().eq('user_id', user.id)
+            if (category && category !== 'All') {
+                query = query.eq('category', category)
+            }
+            const { error } = await query
+
+            if (error) throw error
+            return NextResponse.json({ success: true, message: 'Notes deleted' })
+        }
+
         if (!id) return NextResponse.json({ error: 'Note ID required' }, { status: 400 })
 
         const { error } = await supabase
