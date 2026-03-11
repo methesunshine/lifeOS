@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { calculateProductivityScore } from '@/lib/scoreCalculator'
 
 export async function GET(request: Request) {
     try {
@@ -67,6 +68,8 @@ export async function POST(request: Request) {
             .select().single()
 
         if (error) throw error
+
+        await calculateProductivityScore(supabase, user.id)
         return NextResponse.json({ success: true, task: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
@@ -99,6 +102,8 @@ export async function PATCH(request: Request) {
             .select().single()
 
         if (error) throw error
+
+        await calculateProductivityScore(supabase, user.id)
         return NextResponse.json({ success: true, task: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
@@ -122,6 +127,8 @@ export async function DELETE(request: Request) {
                 .eq('user_id', user.id)
 
             if (error) throw error
+
+            await calculateProductivityScore(supabase, user.id)
             return NextResponse.json({ success: true, message: 'All tasks deleted' })
         }
 
@@ -134,6 +141,8 @@ export async function DELETE(request: Request) {
             .eq('user_id', user.id)
 
         if (error) throw error
+
+        await calculateProductivityScore(supabase, user.id)
         return NextResponse.json({ success: true })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })

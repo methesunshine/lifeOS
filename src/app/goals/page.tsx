@@ -14,10 +14,40 @@ export default function GoalsPage() {
     const [subtasks, setSubtasks] = useState<string[]>(['']);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [isTimeEdited, setIsTimeEdited] = useState(false);
+
+    // Inline Confirmation States
+    const [isDeletingGoalId, setIsDeletingGoalId] = useState<number | null>(null);
+    const [isClearingAll, setIsClearingAll] = useState(false);
+
+    // Note Updating State
+    const [savingNoteId, setSavingNoteId] = useState<number | null>(null);
+    const [editingNotes, setEditingNotes] = useState<{ [key: number]: string }>({});
+
+    // New Subtask Appending State
+    const [newSubtaskTitle, setNewSubtaskTitle] = useState<{ [key: number]: string }>({});
+    const [savingSubtaskId, setSavingSubtaskId] = useState<number | null>(null);
 
     useEffect(() => {
+        const updateTime = () => {
+            if (!isTimeEdited) {
+                const now = new Date();
+                const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                setCustomDate(localDate);
+                setCustomTime(now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }));
+            }
+        };
+
+        // Update time immediately on mount
+        updateTime();
+
+        // Keep updating time every second so it perfectly synchronizes minute rollovers
+        const intervalId = setInterval(updateTime, 1000);
+
         fetchGoals();
-    }, []);
+
+        return () => clearInterval(intervalId);
+    }, [isTimeEdited]);
 
     async function fetchGoals() {
         const res = await fetch('/api/goals');
@@ -45,7 +75,7 @@ export default function GoalsPage() {
 
         setLoading(true);
         const parseTime = (t: string) => {
-            const match = t.match(/(\d+):(\d+)\s*(AM|PM|am|pm)?/i);
+            const match = t.match(/(\d+)[:;.](\d+)\s*(AM|PM|am|pm)?/i);
             if (!match) return { h: 0, m: 0 };
             let [, h, m, ampm] = match;
             let hrs = parseInt(h);
@@ -86,7 +116,6 @@ export default function GoalsPage() {
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('Are you sure you want to delete this goal and all its steps?')) return;
         setMessage(null);
 
         const res = await fetch(`/api/goals?id=${id}`, {
@@ -95,11 +124,74 @@ export default function GoalsPage() {
 
         if (res.ok) {
             setMessage({ type: 'success', text: 'Objective discarded.' });
+            setIsDeletingGoalId(null);
             fetchGoals();
         } else {
             setMessage({ type: 'error', text: 'Failed to delete goal.' });
         }
         setTimeout(() => setMessage(null), 6000);
+    }
+
+    async function handleClearAll() {
+        setMessage(null);
+
+        const res = await fetch('/api/goals?deleteAll=true', {
+            method: 'DELETE',
+        });
+
+        if (res.ok) {
+            setMessage({ type: 'success', text: 'All missions cleared.' });
+            setIsClearingAll(false);
+            fetchGoals();
+        } else {
+            setMessage({ type: 'error', text: 'Failed to clear missions.' });
+        }
+        setTimeout(() => setMessage(null), 6000);
+    }
+
+    async function handleSaveNote(goalId: number, currentNotes: string, newNote: string) {
+        if (currentNotes === newNote) return; // No change
+        setSavingNoteId(goalId);
+
+        try {
+            await fetch('/api/goals', {
+                method: 'PATCH',
+                body: JSON.stringify({ goal_id: goalId, note: newNote }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            // Update local state without full refetch to prevent UI jumping
+            setGoals(prev => prev.map(g => g.id === goalId ? { ...g, note: newNote } : g));
+        } catch (error) {
+            console.error('Failed to save note', error);
+        } finally {
+            setSavingNoteId(null);
+        }
+    }
+
+    async function handleAddSubtask(goalId: number) {
+        const title = newSubtaskTitle[goalId]?.trim();
+        if (!title) return;
+
+        setSavingSubtaskId(goalId);
+        try {
+            const res = await fetch('/api/goals', {
+                method: 'POST',
+                body: JSON.stringify({
+                    goal_id: goalId,
+                    subtask_title: title
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (res.ok) {
+                setNewSubtaskTitle(prev => ({ ...prev, [goalId]: '' }));
+                fetchGoals(); // Refresh to get updated subtasks and new progress %
+            }
+        } catch (error) {
+            console.error('Failed to add subtask', error);
+        } finally {
+            setSavingSubtaskId(null);
+        }
     }
 
     async function toggleSubtask(goalId: number, subtaskId: number, currentStatus: boolean) {
@@ -191,7 +283,10 @@ export default function GoalsPage() {
                                                 type="text"
                                                 placeholder="e.g. 10:29 AM"
                                                 value={customTime}
-                                                onChange={(e) => setCustomTime(e.target.value)}
+                                                onChange={(e) => {
+                                                    setCustomTime(e.target.value);
+                                                    if (!isTimeEdited) setIsTimeEdited(true);
+                                                }}
                                                 className={styles.input}
                                             />
                                         </div>
@@ -248,7 +343,7 @@ export default function GoalsPage() {
                         <div className={styles.activeGoals}>
                             <h2 className={styles.sectionTitle} style={{ marginTop: '3rem' }}>Latest Missions</h2>
                             <div className={styles.goalsGrid}>
-                                {goals.filter(g => g.status === 'in-progress').slice(0, 3).map(goal => (
+                                {goals.slice(0, 3).map(goal => (
                                     <div key={goal.id} className={`${styles.goalCard} card`} style={{ padding: '1.5rem !important' }}>
                                         <div className={styles.goalHeader} style={{ marginBottom: '1rem' }}>
                                             <div className={styles.goalInfo}>
@@ -258,7 +353,14 @@ export default function GoalsPage() {
                                                     Logged {new Date(goal.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(goal.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
                                                 </div>
                                             </div>
-                                            <button onClick={() => handleDelete(goal.id)} className={styles.deleteBtn}>🗑️</button>
+                                            {isDeletingGoalId === goal.id ? (
+                                                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                    <button onClick={() => handleDelete(goal.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                    <button onClick={() => setIsDeletingGoalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
+                                                </div>
+                                            ) : (
+                                                <button onClick={() => setIsDeletingGoalId(goal.id)} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
+                                            )}
                                         </div>
                                         <div className={styles.progressSection} style={{ marginBottom: '1.5rem' }}>
                                             <div className={styles.progressLabel}>
@@ -291,6 +393,53 @@ export default function GoalsPage() {
                                                     <span className={goal.progress_percent === 100 ? styles.completed : ''} style={{ fontSize: '0.85rem' }}>Complete Mission</span>
                                                 </label>
                                             )}
+
+                                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                                <input
+                                                    type="text"
+                                                    className={styles.input}
+                                                    style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', flex: 1, marginBottom: 0 }}
+                                                    placeholder="Add a new step..."
+                                                    value={newSubtaskTitle[goal.id] || ''}
+                                                    onChange={(e) => setNewSubtaskTitle(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleAddSubtask(goal.id);
+                                                    }}
+                                                />
+                                                <button
+                                                    className="secondary-btn"
+                                                    style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', background: 'var(--bg)', border: '1px solid var(--border)' }}
+                                                    onClick={() => handleAddSubtask(goal.id)}
+                                                    disabled={savingSubtaskId === goal.id || !newSubtaskTitle[goal.id]?.trim()}
+                                                >
+                                                    {savingSubtaskId === goal.id ? '...' : '+ Add'}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ marginBottom: '1.5rem' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                                <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: 0 }}>Mission Notes / Takeaways</label>
+                                                {savingNoteId === goal.id && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Saving...</span>}
+                                            </div>
+                                            <textarea
+                                                className={styles.textarea}
+                                                placeholder="Add important learnings, insights, or thoughts about this mission..."
+                                                style={{ width: '100%', minHeight: '140px', background: 'var(--bg-lighter)', color: 'white', padding: '0.75rem', fontSize: '0.85rem' }}
+                                                value={editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || '')}
+                                                onChange={(e) => setEditingNotes(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                                                onBlur={(e) => handleSaveNote(goal.id, goal.note || '', e.target.value)}
+                                            />
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                                                <button
+                                                    className="secondary-btn"
+                                                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}
+                                                    onClick={() => handleSaveNote(goal.id, goal.note || '', editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || ''))}
+                                                    disabled={savingNoteId === goal.id || (editingNotes[goal.id] !== undefined && editingNotes[goal.id] === (goal.note || ''))}
+                                                >
+                                                    {savingNoteId === goal.id ? 'Saving...' : '💾 Save Note'}
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className={styles.goalFooter}>
@@ -298,11 +447,11 @@ export default function GoalsPage() {
                                         </div>
                                     </div>
                                 ))}
-                                {goals.filter(g => g.status === 'in-progress').length === 0 && (
+                                {goals.length === 0 && (
                                     <p className={styles.hint}>No active missions. Set a goal to begin.</p>
                                 )}
                             </div>
-                            {goals.filter(g => g.status === 'in-progress').length > 3 && (
+                            {goals.length > 3 && (
                                 <button className="secondary-btn" style={{ marginTop: '1.5rem', width: '100%', fontSize: '0.75rem' }} onClick={() => setViewMode('dashboard')}>
                                     View All Active Missions in Dashboard
                                 </button>
@@ -354,7 +503,20 @@ export default function GoalsPage() {
                     </div>
 
                     <div className={styles.trackingList}>
-                        <h2 className={styles.sectionTitle}>Active Missions Control</h2>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h2 className={styles.sectionTitle} style={{ marginBottom: 0 }}>Active Missions Control</h2>
+                            {isClearingAll ? (
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Are you sure?</span>
+                                    <button onClick={handleClearAll} className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', background: 'var(--red)', borderColor: 'var(--red)' }}>Yes, Delete All</button>
+                                    <button onClick={() => setIsClearingAll(false)} className="secondary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>Cancel</button>
+                                </div>
+                            ) : (
+                                <button onClick={() => setIsClearingAll(true)} className="secondary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', color: 'var(--red)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                                    🗑️ Clear All Missions
+                                </button>
+                            )}
+                        </div>
                         <div className={styles.goalsGrid}>
                             {goals.filter(g => g.status === 'in-progress').length > 0 ? (
                                 goals.filter(g => g.status === 'in-progress').map(goal => {
@@ -371,7 +533,14 @@ export default function GoalsPage() {
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                                     {isOverdue && <span className={styles.overdueBadge}>OVERDUE</span>}
-                                                    <button onClick={() => handleDelete(goal.id)} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
+                                                    {isDeletingGoalId === goal.id ? (
+                                                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                            <button onClick={() => handleDelete(goal.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                            <button onClick={() => setIsDeletingGoalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
+                                                        </div>
+                                                    ) : (
+                                                        <button onClick={() => setIsDeletingGoalId(goal.id)} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -406,6 +575,53 @@ export default function GoalsPage() {
                                                         <span>Mark Mission as Accomplished</span>
                                                     </label>
                                                 )}
+
+                                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                                    <input
+                                                        type="text"
+                                                        className={styles.input}
+                                                        style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', flex: 1, marginBottom: 0 }}
+                                                        placeholder="Add a new step..."
+                                                        value={newSubtaskTitle[goal.id] || ''}
+                                                        onChange={(e) => setNewSubtaskTitle(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') handleAddSubtask(goal.id);
+                                                        }}
+                                                    />
+                                                    <button
+                                                        className="secondary-btn"
+                                                        style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', background: 'var(--bg)', border: '1px solid var(--border)' }}
+                                                        onClick={() => handleAddSubtask(goal.id)}
+                                                        disabled={savingSubtaskId === goal.id || !newSubtaskTitle[goal.id]?.trim()}
+                                                    >
+                                                        {savingSubtaskId === goal.id ? '...' : '+ Add'}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ marginBottom: '1.5rem' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                                    <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: 0 }}>Mission Notes / Takeaways</label>
+                                                    {savingNoteId === goal.id && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Saving...</span>}
+                                                </div>
+                                                <textarea
+                                                    className={styles.textarea}
+                                                    placeholder="Add important learnings, insights, or thoughts about this mission..."
+                                                    style={{ width: '100%', minHeight: '140px', background: 'var(--bg-lighter)', color: 'white', padding: '0.75rem', fontSize: '0.85rem' }}
+                                                    value={editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || '')}
+                                                    onChange={(e) => setEditingNotes(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                                                    onBlur={(e) => handleSaveNote(goal.id, goal.note || '', e.target.value)}
+                                                />
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                                                    <button
+                                                        className="secondary-btn"
+                                                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}
+                                                        onClick={() => handleSaveNote(goal.id, goal.note || '', editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || ''))}
+                                                        disabled={savingNoteId === goal.id || (editingNotes[goal.id] !== undefined && editingNotes[goal.id] === (goal.note || ''))}
+                                                    >
+                                                        {savingNoteId === goal.id ? 'Saving...' : '💾 Save Note'}
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className={styles.goalFooter}>
@@ -433,7 +649,14 @@ export default function GoalsPage() {
                                                         Mission started {new Date(goal.created_at).toLocaleDateString()}
                                                     </div>
                                                 </div>
-                                                <button onClick={() => handleDelete(goal.id)} className={styles.deleteBtn}>🗑️</button>
+                                                {isDeletingGoalId === goal.id ? (
+                                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                        <button onClick={() => handleDelete(goal.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                        <button onClick={() => setIsDeletingGoalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
+                                                    </div>
+                                                ) : (
+                                                    <button onClick={() => setIsDeletingGoalId(goal.id)} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
+                                                )}
                                             </div>
                                             <div className={styles.progressSection}>
                                                 <div className={styles.progressLabel} style={{ color: 'var(--accent)' }}>
@@ -442,6 +665,32 @@ export default function GoalsPage() {
                                                 </div>
                                                 <div className={styles.progressBar}><div style={{ width: '100%', background: 'var(--accent)' }}></div></div>
                                             </div>
+
+                                            <div style={{ marginBottom: '1.5rem' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                                    <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: 0 }}>Mission Notes / Takeaways</label>
+                                                    {savingNoteId === goal.id && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Saving...</span>}
+                                                </div>
+                                                <textarea
+                                                    className={styles.textarea}
+                                                    placeholder="Add important learnings, insights, or thoughts about this mission..."
+                                                    style={{ width: '100%', minHeight: '140px', background: 'var(--bg-lighter)', color: 'white', padding: '0.75rem', fontSize: '0.85rem' }}
+                                                    value={editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || '')}
+                                                    onChange={(e) => setEditingNotes(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                                                    onBlur={(e) => handleSaveNote(goal.id, goal.note || '', e.target.value)}
+                                                />
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                                                    <button
+                                                        className="secondary-btn"
+                                                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}
+                                                        onClick={() => handleSaveNote(goal.id, goal.note || '', editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || ''))}
+                                                        disabled={savingNoteId === goal.id || (editingNotes[goal.id] !== undefined && editingNotes[goal.id] === (goal.note || ''))}
+                                                    >
+                                                        {savingNoteId === goal.id ? 'Saving...' : '💾 Save Note'}
+                                                    </button>
+                                                </div>
+                                            </div>
+
                                             <div className={styles.goalFooter}>
                                                 <span>Accomplished on {new Date(goal.updated_at || goal.created_at).toLocaleDateString()}</span>
                                             </div>

@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import styles from './mental.module.css';
 
 export default function MentalHealthPage() {
-    const [mood, setMood] = useState(5);
-    const [stress, setStress] = useState(5);
-    const [focus, setFocus] = useState(5);
+    const [mood, setMood] = useState(0);
+    const [stress, setStress] = useState(0);
+    const [focus, setFocus] = useState(0);
     const [gratitude, setGratitude] = useState('');
     const [reflection, setReflection] = useState('');
     const [loading, setLoading] = useState(false);
@@ -21,6 +21,10 @@ export default function MentalHealthPage() {
     }>({ moodTrend: '0.0', sleepFocusAlert: false });
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+    // Inline Confirmation States
+    const [isDeletingMentalId, setIsDeletingMentalId] = useState<string | null>(null);
+    const [isDeletingAllMentals, setIsDeletingAllMentals] = useState(false);
+
     useEffect(() => {
         fetchHistory();
         fetchInsights();
@@ -31,13 +35,6 @@ export default function MentalHealthPage() {
         if (res.ok) {
             const data = await res.json();
             setHistory(data);
-
-            // Initialize sliders with latest entry if not already touched
-            if (data.length > 0) {
-                setMood(data[0].mood);
-                setStress(data[0].stress_level);
-                setFocus(data[0].focus_level);
-            }
         }
     }
 
@@ -73,9 +70,17 @@ export default function MentalHealthPage() {
         setLoading(false);
     }
 
-    async function handleDelete(id: string) {
-        if (!confirm('Are you sure you want to delete this log?')) return;
+    function handleReset() {
+        setMood(0);
+        setStress(0);
+        setFocus(0);
+        setGratitude('');
+        setReflection('');
+        setMessage(null);
+    }
 
+    async function handleDelete(id: string) {
+        setLoading(true);
         const res = await fetch(`/api/mental?id=${id}`, {
             method: 'DELETE',
         });
@@ -83,14 +88,16 @@ export default function MentalHealthPage() {
         if (res.ok) {
             fetchHistory();
             fetchInsights();
+            setIsDeletingMentalId(null);
+            setMessage({ type: 'success', text: 'Daily reflection deleted.' });
         } else {
-            alert('Failed to delete log.');
+            setMessage({ type: 'error', text: 'Failed to delete log.' });
         }
+        setLoading(false);
     }
 
     async function handleClearAll() {
-        if (!confirm('Are you SURE you want to clear your entire history? This cannot be undone.')) return;
-
+        setLoading(true);
         const res = await fetch(`/api/mental?id=all`, {
             method: 'DELETE',
         });
@@ -98,9 +105,12 @@ export default function MentalHealthPage() {
         if (res.ok) {
             fetchHistory();
             fetchInsights();
+            setIsDeletingAllMentals(false);
+            setMessage({ type: 'success', text: 'All tracking history cleared.' });
         } else {
-            alert('Failed to clear history.');
+            setMessage({ type: 'error', text: 'Failed to clear history.' });
         }
+        setLoading(false);
     }
 
     const [showFullHistory, setShowFullHistory] = useState(false);
@@ -154,7 +164,7 @@ export default function MentalHealthPage() {
                                             <label>Mood State</label>
                                             <span className={styles.valueDisplay}>{mood}/10</span>
                                         </div>
-                                        <input type="range" min="1" max="10" value={mood} onChange={(e) => setMood(parseInt(e.target.value))} className={styles.range} />
+                                        <input type="range" min="0" max="10" value={mood} onChange={(e) => setMood(parseInt(e.target.value))} className={styles.range} />
                                         <div className={styles.rangeLabels}><span>Low</span><span>Optimal</span></div>
                                     </div>
 
@@ -163,7 +173,7 @@ export default function MentalHealthPage() {
                                             <label>Stress Level</label>
                                             <span className={styles.valueDisplay}>{stress}/10</span>
                                         </div>
-                                        <input type="range" min="1" max="10" value={stress} onChange={(e) => setStress(parseInt(e.target.value))} className={styles.range} />
+                                        <input type="range" min="0" max="10" value={stress} onChange={(e) => setStress(parseInt(e.target.value))} className={styles.range} />
                                         <div className={styles.rangeLabels}><span>Calm</span><span>High</span></div>
                                     </div>
 
@@ -172,7 +182,7 @@ export default function MentalHealthPage() {
                                             <label>Focus / Flow</label>
                                             <span className={styles.valueDisplay}>{focus}/10</span>
                                         </div>
-                                        <input type="range" min="1" max="10" value={focus} onChange={(e) => setFocus(parseInt(e.target.value))} className={styles.range} />
+                                        <input type="range" min="0" max="10" value={focus} onChange={(e) => setFocus(parseInt(e.target.value))} className={styles.range} />
                                         <div className={styles.rangeLabels}><span>Distracted</span><span>Deep Work</span></div>
                                     </div>
                                 </div>
@@ -200,9 +210,14 @@ export default function MentalHealthPage() {
                                 </div>
                             </div>
 
-                            <button type="submit" className="primary-btn" style={{ marginTop: '2.5rem', width: '100%' }} disabled={loading}>
-                                {loading ? 'Saving to Systems...' : 'Commit Daily Entry'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
+                                <button type="button" onClick={handleReset} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} disabled={loading} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.borderColor = 'var(--text-muted)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
+                                    Reset Form
+                                </button>
+                                <button type="submit" className="primary-btn" style={{ flex: 2 }} disabled={loading}>
+                                    {loading ? 'Saving to Systems...' : 'Commit Daily Entry'}
+                                </button>
+                            </div>
                         </form>
                     </section>
 
@@ -238,9 +253,16 @@ export default function MentalHealthPage() {
                                                         <div>{new Date(entry.created_at).toLocaleDateString()}</div>
                                                         <div style={{ opacity: 0.6 }}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
                                                     </div>
-                                                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                                        <span className={styles.historyMood}>🧠 {entry.mood}/10</span>
-                                                        <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn}>🗑️</button>
+                                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                        <span className={styles.historyMood}>🧠 Mood: {entry.mood}/10</span>
+                                                        {isDeletingMentalId === entry.id ? (
+                                                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                                <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                                <button onClick={() => setIsDeletingMentalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
+                                                            </div>
+                                                        ) : (
+                                                            <button onClick={() => setIsDeletingMentalId(entry.id)} className={styles.deleteBtn}>🗑️</button>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <p className={styles.historyNote}>{entry.gratitude_note?.substring(0, 60)}...</p>
@@ -282,9 +304,19 @@ export default function MentalHealthPage() {
                     </div>
 
                     <div className={styles.trackingList}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                             <h2 className={styles.sectionTitle} style={{ margin: 0 }}>Full Reflection Timeline</h2>
-                            <button onClick={handleClearAll} className={styles.clearAllBtn}>Clear Entire History 🗑️</button>
+                            {history.length > 0 && (
+                                isDeletingAllMentals ? (
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Are you sure?</span>
+                                        <button className={styles.clearAllBtn} style={{ background: 'var(--red)', color: 'white', borderColor: 'var(--red)' }} onClick={handleClearAll}>Yes, Clear All</button>
+                                        <button className={styles.clearAllBtn} onClick={() => setIsDeletingAllMentals(false)}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setIsDeletingAllMentals(true)} className={styles.clearAllBtn}>Clear Entire History 🗑️</button>
+                                )
+                            )}
                         </div>
                         {history.map((entry) => (
                             <div key={entry.id} className={styles.expandedHistoryItem}>
@@ -300,9 +332,9 @@ export default function MentalHealthPage() {
                                         <p>{new Date(entry.created_at).getFullYear()} • {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
                                     </div>
                                     <div className={styles.expandedScores}>
-                                        <span className={styles.scoreBadge}>🧠 {entry.mood}</span>
-                                        <span className={styles.scoreBadge}>⚡ {entry.stress_level}</span>
-                                        <span className={styles.scoreBadge}>🎯 {entry.focus_level}</span>
+                                        <span className={styles.scoreBadge}>🧠 Mood: {entry.mood}</span>
+                                        <span className={styles.scoreBadge}>⚡ Stress: {entry.stress_level}</span>
+                                        <span className={styles.scoreBadge}>🎯 Focus: {entry.focus_level}</span>
                                     </div>
                                 </div>
 
@@ -320,13 +352,31 @@ export default function MentalHealthPage() {
                                     </div>
                                 )}
 
-                                <div className={styles.deleteActionArea}>
-                                    <button
-                                        onClick={() => handleDelete(entry.id)}
-                                        className={styles.discardBtn}
-                                    >
-                                        Discard Entry 🗑️
-                                    </button>
+                                <div className={styles.deleteActionArea} style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                                    {isDeletingMentalId === entry.id ? (
+                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.9rem', color: 'var(--red)', fontWeight: 'bold' }}>Are you sure?</span>
+                                            <button
+                                                onClick={() => handleDelete(entry.id)}
+                                                className={styles.discardBtn} style={{ background: 'var(--red)', color: 'white', borderColor: 'var(--red)' }}
+                                            >
+                                                Yes, Discard
+                                            </button>
+                                            <button
+                                                onClick={() => setIsDeletingMentalId(null)}
+                                                className={styles.discardBtn}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsDeletingMentalId(entry.id)}
+                                            className={styles.discardBtn}
+                                        >
+                                            Discard Entry 🗑️
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}

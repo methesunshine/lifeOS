@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import styles from './journey.module.css';
 
-const CATEGORIES = ['General', 'Goals', 'Learning', 'Personal', 'Finance'];
+const CATEGORIES = ['General', 'Learning', 'Personal', 'Finance'];
 
 export default function JourneyPage() {
     const [viewMode, setViewMode] = useState<'notes' | 'daily' | 'tasks'>('notes');
@@ -11,7 +11,6 @@ export default function JourneyPage() {
     const [tasks, setTasks] = useState<any[]>([]);
     const [dailyLogs, setDailyLogs] = useState<any[]>([]);
     const [stickies, setStickies] = useState<any[]>([]);
-    const [reminders, setReminders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -24,19 +23,6 @@ export default function JourneyPage() {
     const [noteCategory, setNoteCategory] = useState('General');
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
-
-    // Reminder Modal state
-    const [isReminderOpen, setIsReminderOpen] = useState(false);
-    const [remTitle, setRemTitle] = useState('');
-    const [remDesc, setRemDesc] = useState('');
-    const [remDate, setRemDate] = useState('');
-    const [remHour, setRemHour] = useState('12');
-    const [remMinute, setRemMinute] = useState('00');
-    const [remAmPm, setRemAmPm] = useState('PM');
-    const [remCategory, setRemCategory] = useState('personal');
-    const [remPriority, setRemPriority] = useState('medium');
-    const [remRecurrence, setRemRecurrence] = useState('none');
-    const [activeReminderId, setActiveReminderId] = useState<string | null>(null);
 
     // Toast State
     const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -57,11 +43,10 @@ export default function JourneyPage() {
         setLogToast(msg);
         setTimeout(() => setLogToast(null), 3000);
     };
-    const [reminderFilter, setReminderFilter] = useState('pending');
 
     // Daily Log state
     const [todayLog, setTodayLog] = useState<any>(null);
-    const [logMood, setLogMood] = useState(5);
+    const [logMood, setLogMood] = useState(0);
     const [logSummary, setLogSummary] = useState('');
     const [logWins, setLogWins] = useState('');
     const [logLessons, setLogLessons] = useState('');
@@ -123,10 +108,8 @@ export default function JourneyPage() {
             const found = data.find((l: any) => l.date === todayStr);
             if (found) {
                 setTodayLog(found);
-                setLogMood(found.mood);
-                setLogSummary(found.summary);
-                setLogWins(found.wins);
-                setLogLessons(found.lessons);
+                // Do NOT auto-fill the form — user must always start fresh
+                // Fields only fill when explicitly clicking Edit on a past entry
             }
         }
     }, []);
@@ -139,19 +122,12 @@ export default function JourneyPage() {
         }
     }, []);
 
-    const fetchReminders = useCallback(async () => {
-        let url = `/api/reminders?filter=${reminderFilter}`;
-        const res = await fetch(url);
-        if (res.ok) setReminders(await res.json());
-    }, [reminderFilter]);
-
     useEffect(() => {
         fetchNotes();
         fetchTasks();
         fetchDailyLogs();
         fetchStickies();
-        fetchReminders();
-    }, [fetchNotes, fetchTasks, fetchDailyLogs, fetchStickies, fetchReminders]);
+    }, [fetchNotes, fetchTasks, fetchDailyLogs, fetchStickies]);
 
     const handleSaveSticky = async (content: string, color: string = 'yellow') => {
         await fetch('/api/sticky-notes', {
@@ -186,7 +162,7 @@ export default function JourneyPage() {
 
     const handleNewReflection = () => {
         setActiveLogId(null);
-        setLogMood(5);
+        setLogMood(0);
         setLogSummary('');
         setLogWins('');
         setLogLessons('');
@@ -388,91 +364,6 @@ export default function JourneyPage() {
             body: JSON.stringify({ task_id: task.task_id, status: newStatus })
         });
         fetchTasks();
-    };
-
-    const toggleReminderStatus = async (reminder: any) => {
-        const newStatus = reminder.status === 'completed' ? 'pending' : 'completed';
-        const res = await fetch('/api/reminders', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reminder_id: reminder.reminder_id, status: newStatus })
-        });
-        if (res.ok) {
-            fetchReminders();
-            if (newStatus === 'completed') showToast(`"${reminder.title}" marked as complete!`);
-        }
-    };
-
-    const handleEditReminder = (reminder: any) => {
-        setActiveReminderId(reminder.reminder_id);
-        setRemTitle(reminder.title);
-        setRemDesc(reminder.description || '');
-        setRemCategory(reminder.category || 'personal');
-        setRemPriority(reminder.priority || 'medium');
-        setRemRecurrence(reminder.recurrence || 'none');
-
-        const rDate = new Date(reminder.remind_at);
-        const offset = rDate.getTimezoneOffset() * 60000;
-        const localISOTime = (new Date(rDate.getTime() - offset)).toISOString().slice(0, 16);
-        const [datePart, timePart] = localISOTime.split('T');
-
-        let h = parseInt(timePart.split(':')[0]);
-        const m = timePart.split(':')[1];
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12 || 12;
-
-        setRemDate(datePart);
-        setRemHour(h.toString());
-        setRemMinute(m);
-        setRemAmPm(ampm);
-
-        setIsReminderOpen(true);
-    };
-
-    const handleAddReminder = async () => {
-        if (!remTitle || !remDate) {
-            alert('Title and Date are required.');
-            return;
-        }
-        setIsSaving(true);
-
-        let hours = parseInt(remHour, 10);
-        if (remAmPm === 'PM' && hours !== 12) hours += 12;
-        if (remAmPm === 'AM' && hours === 12) hours = 0;
-        const dateTimeStr = `${remDate}T${hours.toString().padStart(2, '0')}:${remMinute}:00`;
-
-        const bodyPayload: any = {
-            title: remTitle,
-            description: remDesc,
-            remind_at: new Date(dateTimeStr).toISOString(),
-            category: remCategory,
-            priority: remPriority,
-            recurrence: remRecurrence
-        };
-
-        if (activeReminderId) bodyPayload.reminder_id = activeReminderId;
-
-        const res = await fetch('/api/reminders', {
-            method: activeReminderId ? 'PATCH' : 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bodyPayload)
-        });
-
-        setIsSaving(false);
-        if (res.ok) {
-            setIsReminderOpen(false);
-            setRemTitle(''); setRemDesc(''); setRemDate(''); setActiveReminderId(null);
-            fetchReminders();
-            showToast(activeReminderId ? 'Reminder updated!' : 'Reminder created!');
-        } else {
-            console.error('Failed to save reminder');
-            alert('Failed to save reminder.');
-        }
-    };
-
-    const deleteReminder = async (id: string) => {
-        await fetch(`/api/reminders?id=${id}`, { method: 'DELETE' });
-        fetchReminders();
     };
 
     const openEditor = (note: any = null) => {
@@ -890,14 +781,48 @@ export default function JourneyPage() {
 
                 <aside className={styles.sideColumn}>
                     <div className={styles.sideCard}>
-                        <h2>⚡ Quick Tasks</h2>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h2 style={{ margin: 0 }}>⚡ Quick Tasks</h2>
+                            {tasks.length > 0 && (
+                                isDeletingAllTasks ? (
+                                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sure?</span>
+                                        <button onClick={handleDeleteAllTasks} className={styles.logDeleteBtn} style={{ color: 'var(--red)', fontWeight: 'bold' }}>Yes</button>
+                                        <button onClick={() => setIsDeletingAllTasks(false)} className={styles.logDeleteBtn}>No</button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setIsDeletingAllTasks(true)} className={styles.logDeleteBtn} style={{ fontSize: '0.7rem' }}>Clear All 🗑️</button>
+                                )
+                            )}
+                        </div>
                         <div className={styles.taskList}>
-                            {tasks.filter(t => t.status === 'Pending').slice(0, 5).map(task => (
+                            {tasks.slice(0, 5).map(task => (
                                 <div key={task.task_id} className={styles.taskItem}>
                                     <div className={styles.taskContent}>
                                         <div className={styles.taskHeader}>
-                                            <div className={styles.taskCheckbox} onClick={() => toggleTask(task)}></div>
-                                            <span className={styles.taskText}>{task.title}</span>
+                                            <div
+                                                className={styles.taskCheckbox}
+                                                onClick={() => toggleTask(task)}
+                                                style={task.status === 'Completed' ? {
+                                                    background: 'var(--accent)',
+                                                    border: '2px solid var(--accent)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'white',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 'bold',
+                                                    flexShrink: 0
+                                                } : { flexShrink: 0 }}
+                                            >
+                                                {task.status === 'Completed' ? '✓' : ''}
+                                            </div>
+                                            <span className={styles.taskText} style={task.status === 'Completed' ? {
+                                                textDecoration: 'line-through',
+                                                opacity: 0.5
+                                            } : {}}>
+                                                {task.title}
+                                            </span>
                                         </div>
                                         <div className={styles.taskMetaArea}>
                                             <span className={styles.taskDate}>
@@ -914,79 +839,7 @@ export default function JourneyPage() {
                                     </div>
                                 </div>
                             ))}
-                            {tasks.filter(t => t.status === 'Pending').length === 0 && <p className={styles.emptyText}>No pending tasks.</p>}
-                        </div>
-                    </div>
-
-                    <div className={styles.sideCard}>
-                        <div className={styles.panelHeader}>
-                            <h2>📅 Reminders</h2>
-                            <button className={styles.miniBtn} onClick={() => {
-                                const now = new Date();
-                                const offset = now.getTimezoneOffset() * 60000;
-                                const localISOTime = (new Date(now.getTime() - offset)).toISOString().slice(0, 16);
-                                const [datePart, timePart] = localISOTime.split('T');
-
-                                let h = parseInt(timePart.split(':')[0]);
-                                const m = timePart.split(':')[1];
-                                const ampm = h >= 12 ? 'PM' : 'AM';
-                                h = h % 12 || 12;
-
-                                setRemDate(datePart);
-                                setRemHour(h.toString());
-                                setRemMinute(m);
-                                setRemAmPm(ampm);
-                                setRemTitle(''); setRemDesc(''); setRemCategory('personal'); setRemPriority('medium'); setRemRecurrence('none'); setActiveReminderId(null);
-                                setIsReminderOpen(true);
-                            }}>+</button>
-                        </div>
-
-                        {toastMessage && (
-                            <div style={{ padding: '0.5rem', marginBottom: '0.5rem', marginTop: '0.5rem', background: 'var(--primary)', color: 'white', borderRadius: '6px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 'bold', animation: 'fadeIn 0.2s ease-out' }}>
-                                {toastMessage}
-                            </div>
-                        )}
-
-                        <div className={styles.filterTabs} style={{ marginBottom: '1rem', marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
-                            {['pending', 'completed', 'all'].map(f => (
-                                <button
-                                    key={f}
-                                    onClick={() => setReminderFilter(f)}
-                                    className={`${styles.filterTab} ${reminderFilter === f ? styles.activeTab : ''}`}
-                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border)', background: reminderFilter === f ? 'var(--primary)' : 'transparent', color: reminderFilter === f ? '#fff' : 'var(--text-muted)', cursor: 'pointer' }}
-                                >
-                                    {f.charAt(0).toUpperCase() + f.slice(1)}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className={styles.reminderList}>
-                            {reminders.map(r => {
-                                const isOverdue = new Date(r.remind_at) < new Date() && r.status === 'pending';
-                                return (
-                                    <div key={r.reminder_id} className={`${styles.reminderItem} ${r.status === 'completed' ? styles.taskDone : ''}`} style={{ borderLeft: `3px solid ${r.priority === 'high' ? 'var(--red)' : r.priority === 'low' ? 'var(--blue)' : 'var(--yellow)'}`, flexDirection: 'column', gap: '0.5rem', width: '100%', overflow: 'hidden' }}>
-                                        <div className={styles.reminderHeaderRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', gap: '0.5rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-                                                <input type="checkbox" checked={r.status === 'completed'} onChange={() => toggleReminderStatus(r)} style={{ cursor: 'pointer', marginTop: '0.2rem', flexShrink: 0 }} />
-                                                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, width: '100%' }}>
-                                                    <strong style={{ textDecoration: r.status === 'completed' ? 'line-through' : 'none', wordBreak: 'break-word', whiteSpace: 'pre-wrap', lineHeight: '1.2' }}>{r.title}</strong>
-                                                    {r.description && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{r.description}</p>}
-                                                </div>
-                                            </div>
-                                            <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
-                                                <button className={styles.logDeleteBtn} style={{ fontSize: '0.7rem', padding: '0.1rem 0.3rem', color: 'var(--text-muted)' }} onClick={() => handleEditReminder(r)}>Edit</button>
-                                                <button className={styles.logDeleteBtn} style={{ fontSize: '0.7rem', padding: '0.1rem 0.3rem' }} onClick={() => deleteReminder(r.reminder_id)}>Delete</button>
-                                            </div>
-                                        </div>
-                                        <div className={styles.reminderTime} style={{ marginLeft: '1.5rem', marginTop: '0', fontSize: '0.75rem', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                            <span>{new Date(r.remind_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</span>
-                                            {isOverdue && <span style={{ color: 'var(--red)', fontWeight: 'bold', fontSize: '0.65rem', padding: '0.1rem 0.3rem', background: 'rgba(255,0,0,0.1)', borderRadius: '4px' }}>OVERDUE</span>}
-                                            <span style={{ color: 'var(--text-muted)' }}>• {r.category}</span>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                            {reminders.length === 0 && <p className={styles.emptyText}>No reminders for this filter.</p>}
+                            {tasks.length === 0 && <p className={styles.emptyText}>No pending tasks.</p>}
                         </div>
                     </div>
                 </aside>
@@ -1042,108 +895,6 @@ export default function JourneyPage() {
                                     </button>
                                 </div>
                             </div>
-                        </footer>
-                    </div>
-                </div>
-            )}
-
-            {/* Reminder Creation Modal */}
-            {isReminderOpen && (
-                <div className={styles.modalOverlay} onClick={() => setIsReminderOpen(false)}>
-                    <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-                        <header className={styles.modalHeader}>
-                            <h2 style={{ fontSize: '1.2rem' }}>{activeReminderId ? 'Edit Reminder' : 'New Reminder'}</h2>
-                            <button className={styles.modalClose} onClick={() => setIsReminderOpen(false)}>×</button>
-                        </header>
-                        <div className={styles.modalBody} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                            <div>
-                                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Reminder Title *</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Doctor's Appointment"
-                                    value={remTitle}
-                                    onChange={(e) => setRemTitle(e.target.value)}
-                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)' }}
-                                    autoFocus
-                                />
-                            </div>
-
-                            <div>
-                                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Description (Optional)</label>
-                                <textarea
-                                    placeholder="Add notes..."
-                                    value={remDesc}
-                                    onChange={(e) => setRemDesc(e.target.value)}
-                                    rows={3}
-                                    className={styles.logTextarea}
-                                    style={{ width: '100%', resize: 'vertical' }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Date & Time</label>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <input
-                                            type="date"
-                                            value={remDate}
-                                            onChange={(e) => setRemDate(e.target.value)}
-                                            style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)' }}
-                                        />
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                            <select value={remHour} onChange={(e) => setRemHour(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', cursor: 'pointer' }}>
-                                                {[...Array(12)].map((_, i) => <option key={i + 1} value={(i + 1).toString()}>{(i + 1).toString()}</option>)}
-                                            </select>
-                                            <span style={{ fontWeight: 'bold' }}>:</span>
-                                            <select value={remMinute} onChange={(e) => setRemMinute(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', cursor: 'pointer' }}>
-                                                {[...Array(60)].map((_, i) => {
-                                                    const min = i.toString().padStart(2, '0');
-                                                    return <option key={min} value={min}>{min}</option>;
-                                                })}
-                                            </select>
-                                            <select value={remAmPm} onChange={(e) => setRemAmPm(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', cursor: 'pointer' }}>
-                                                <option value="AM">AM</option>
-                                                <option value="PM">PM</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Category</label>
-                                    <select value={remCategory} onChange={(e) => setRemCategory(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)' }}>
-                                        <option value="personal">Personal</option>
-                                        <option value="task">Task</option>
-                                        <option value="health">Health</option>
-                                        <option value="finance">Finance</option>
-                                        <option value="custom">Custom</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Priority</label>
-                                    <select value={remPriority} onChange={(e) => setRemPriority(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)' }}>
-                                        <option value="low">Low</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Recurrence</label>
-                                    <select value={remRecurrence} onChange={(e) => setRemRecurrence(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)' }}>
-                                        <option value="none">One-time</option>
-                                        <option value="daily">Daily</option>
-                                        <option value="weekly">Weekly</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <footer className={styles.modalFooter} style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-                            <button className={styles.btnPrimary} onClick={handleAddReminder} disabled={isSaving || !remTitle || !remDate} style={{ opacity: (!remTitle || !remDate) ? 0.5 : 1 }}>
-                                {isSaving ? 'Saving...' : (activeReminderId ? 'Save Changes' : 'Set Reminder')}
-                            </button>
                         </footer>
                     </div>
                 </div>

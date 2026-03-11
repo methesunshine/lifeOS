@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { calculateProductivityScore } from '@/lib/scoreCalculator'
 
 export async function GET() {
     try {
@@ -52,6 +53,8 @@ export async function POST(request: Request) {
             .single()
 
         if (error) throw error
+
+        await calculateProductivityScore(supabase, user.id);
 
         return NextResponse.json({ success: true, entry: data })
     } catch (error: any) {

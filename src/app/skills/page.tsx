@@ -12,14 +12,37 @@ export default function SkillsPage() {
     const [level, setLevel] = useState(1);
     const [projects, setProjects] = useState('');
     const [note, setNote] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }));
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    const [isTimeEdited, setIsTimeEdited] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+    // Inline Confirmation States
+    const [isDeletingSkillLogId, setIsDeletingSkillLogId] = useState<string | null>(null);
+    const [isDeletingSkillId, setIsDeletingSkillId] = useState<string | null>(null);
+    const [isClearingAllSkills, setIsClearingAllSkills] = useState(false);
+
     useEffect(() => {
+        const updateTime = () => {
+            if (!isTimeEdited) {
+                const now = new Date();
+                const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                setDate(localDate);
+                setTime(now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }));
+            }
+        };
+
+        // Update time immediately on mount
+        updateTime();
+
+        // Keep updating time every second so it perfectly synchronizes minute rollovers
+        const intervalId = setInterval(updateTime, 1000);
+
         fetchSkills();
-    }, []);
+
+        return () => clearInterval(intervalId);
+    }, [isTimeEdited]);
 
     const formatDateTime = (dateStr: string) => {
         const d = new Date(dateStr);
@@ -49,7 +72,7 @@ export default function SkillsPage() {
         setLoading(true);
 
         const parseTime = (t: string) => {
-            const match = t.match(/(\d+):(\d+)\s*(AM|PM|am|pm)?/i);
+            const match = t.match(/(\d+)[:;.](\d+)\s*(AM|PM|am|pm)?/i);
             if (!match) return { h: 0, m: 0 };
             let [, h, m, ampm] = match;
             let hrs = parseInt(h);
@@ -98,41 +121,47 @@ export default function SkillsPage() {
     }
 
     async function handleDeleteLog(logId: string) {
-        if (!confirm('Discard this practice session?')) return;
+        setLoading(true);
         setMessage(null);
         const res = await fetch(`/api/skills?log_id=${logId}`, { method: 'DELETE' });
         if (res.ok) {
             await fetchSkills();
+            setIsDeletingSkillLogId(null);
             setMessage({ type: 'success', text: 'Entry discarded.' });
         } else {
             setMessage({ type: 'error', text: 'Failed to delete log.' });
         }
+        setLoading(false);
         setTimeout(() => setMessage(null), 3000);
     }
 
     async function handleDeleteSkill(skillId: string) {
-        if (!confirm('Are you sure? This will delete the skill and ALL associated practice history.')) return;
+        setLoading(true);
         setMessage(null);
         const res = await fetch(`/api/skills?skill_id=${skillId}`, { method: 'DELETE' });
         if (res.ok) {
             await fetchSkills();
+            setIsDeletingSkillId(null);
             setMessage({ type: 'success', text: 'Skill and history removed.' });
         } else {
             setMessage({ type: 'error', text: 'Failed to delete skill.' });
         }
+        setLoading(false);
         setTimeout(() => setMessage(null), 3000);
     }
 
     async function handleClearAll() {
-        if (!confirm('⚠️ DANGER: This will wipe your ENTIRE skill history. Proceed?')) return;
+        setLoading(true);
         setMessage(null);
         const res = await fetch('/api/skills?id=all', { method: 'DELETE' });
         if (res.ok) {
             await fetchSkills();
+            setIsClearingAllSkills(false);
             setMessage({ type: 'success', text: 'Mastery history wiped clean.' });
         } else {
             setMessage({ type: 'error', text: 'Failed to clear history.' });
         }
+        setLoading(false);
         setTimeout(() => setMessage(null), 3000);
     }
 
@@ -235,7 +264,10 @@ export default function SkillsPage() {
                                             <input
                                                 type="text"
                                                 value={time}
-                                                onChange={(e) => setTime(e.target.value)}
+                                                onChange={(e) => {
+                                                    setTime(e.target.value);
+                                                    setIsTimeEdited(true);
+                                                }}
                                                 className={styles.input}
                                                 style={{ flex: 1 }}
                                                 placeholder="e.g. 5:14 PM"
@@ -283,9 +315,19 @@ export default function SkillsPage() {
                             </div>
 
                             <div className={styles.trackingList}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                                     <h2 className={styles.sectionTitle} style={{ margin: 0 }}>Practice History Timeline</h2>
-                                    <button onClick={handleClearAll} className={styles.clearAllBtn}>Clear Entire History 🗑️</button>
+                                    {skills.flatMap(s => s.skill_logs || []).length > 0 && (
+                                        isClearingAllSkills ? (
+                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Are you sure?</span>
+                                                <button className={styles.clearAllBtn} style={{ background: 'var(--red)', color: 'white', borderColor: 'var(--red)' }} onClick={handleClearAll}>Yes, Clear All</button>
+                                                <button className={styles.clearAllBtn} onClick={() => setIsClearingAllSkills(false)}>Cancel</button>
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => setIsClearingAllSkills(true)} className={styles.clearAllBtn}>Clear Entire History 🗑️</button>
+                                        )
+                                    )}
                                 </div>
                                 {skills.flatMap(s => (s.skill_logs || []).map((l: any) => ({ ...l, skillName: s.name }))).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((log) => (
                                     <div key={log.id} className={styles.expandedHistoryItem}>
@@ -309,10 +351,28 @@ export default function SkillsPage() {
                                             </div>
                                         </div>
                                         {log.note && <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>{log.note}</p>}
-                                        <div className={styles.deleteActionArea}>
-                                            <button onClick={() => handleDeleteLog(log.id)} className={styles.discardBtn}>
-                                                Discard Entry 🗑️
-                                            </button>
+                                        <div className={styles.deleteActionArea} style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                                            {isDeletingSkillLogId === log.id ? (
+                                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                    <span style={{ fontSize: '0.9rem', color: 'var(--red)', fontWeight: 'bold' }}>Are you sure?</span>
+                                                    <button
+                                                        onClick={() => handleDeleteLog(log.id)}
+                                                        className={styles.discardBtn} style={{ background: 'var(--red)', color: 'white', borderColor: 'var(--red)' }}
+                                                    >
+                                                        Yes, Discard
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setIsDeletingSkillLogId(null)}
+                                                        className={styles.discardBtn}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button onClick={() => setIsDeletingSkillLogId(log.id)} className={styles.discardBtn}>
+                                                    Discard Entry 🗑️
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -339,7 +399,14 @@ export default function SkillsPage() {
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                                     <span className={styles.skillLevel}>Lvl {currentLevel}</span>
-                                                    <button onClick={() => handleDeleteSkill(skill.id)} className={styles.deleteBtn} title="Delete Skill">🗑️</button>
+                                                    {isDeletingSkillId === skill.id ? (
+                                                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                            <button onClick={() => handleDeleteSkill(skill.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                            <button onClick={() => setIsDeletingSkillId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
+                                                        </div>
+                                                    ) : (
+                                                        <button onClick={() => setIsDeletingSkillId(skill.id)} className={styles.deleteBtn} title="Delete Skill">🗑️</button>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className={styles.masteryBar}>

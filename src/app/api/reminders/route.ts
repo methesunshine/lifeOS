@@ -118,6 +118,18 @@ export async function DELETE(request: Request) {
 
         const { searchParams } = new URL(request.url)
         const id = searchParams.get('id')
+        const deleteAll = searchParams.get('all') === 'true'
+
+        if (deleteAll) {
+            const { error } = await supabase
+                .from('reminders')
+                .delete()
+                .eq('user_id', user.id)
+
+            if (error) throw error
+            return NextResponse.json({ success: true, message: 'All reminders deleted' })
+        }
+
         if (!id) return NextResponse.json({ error: 'Reminder ID required' }, { status: 400 })
 
         const { error } = await supabase

@@ -14,8 +14,8 @@ interface ActivityItem {
 
 export default function RecentActivity({ initialLogs }: { initialLogs: ActivityItem[] }) {
     const [logs, setLogs] = useState(initialLogs);
+    const [showConfirmAll, setShowConfirmAll] = useState(false);
 
-    // Refresh logs when triggered by other components
     const refreshLogs = async () => {
         try {
             const res = await fetch('/api/dashboard');
@@ -28,7 +28,10 @@ export default function RecentActivity({ initialLogs }: { initialLogs: ActivityI
         }
     };
 
+    const [mounted, setMounted] = useState(false);
+
     useEffect(() => {
+        setMounted(true);
         if (typeof window !== 'undefined') {
             window.addEventListener('activity-update', refreshLogs);
             return () => window.removeEventListener('activity-update', refreshLogs);
@@ -37,50 +40,86 @@ export default function RecentActivity({ initialLogs }: { initialLogs: ActivityI
 
     const handleDelete = async (id: string, area: string) => {
         if (area !== 'Journey') return;
-        if (!confirm('Are you sure you want to delete this note?')) return;
-
         try {
             const res = await fetch(`/api/notes?id=${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setLogs(logs.filter(log => log.id !== id));
-            } else {
-                const err = await res.json();
-                alert(`Failed to delete note: ${err.error || 'Unknown error'}`);
             }
         } catch (error) {
-            alert('An error occurred during deletion.');
+            console.error('Failed to delete note:', error);
         }
     };
 
+    const handleDeleteAll = () => {
+        setLogs([]);
+        setShowConfirmAll(false);
+    };
+
     return (
-        <div className={styles.logList}>
-            {logs.map((log, i) => (
-                <div key={i} className={styles.logItem}>
-                    <div className={styles.logIcon}>{log.icon}</div>
-                    <div className={styles.logInfo}>
-                        <p className={styles.logAction}>{log.action}</p>
-                        <p className={styles.logDetail}>{log.detail}</p>
-                    </div>
-                    <div className={styles.logTime}>
-                        {new Date(log.time).toLocaleString([], {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true
-                        })}
-                    </div>
-                    {log.area === 'Journey' && log.id && (
+        <>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ margin: 0 }}>System Activity</h2>
+                {logs.length > 0 && (
+                    showConfirmAll ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Delete all?</span>
+                            <button
+                                onClick={handleDeleteAll}
+                                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                            >Yes</button>
+                            <button
+                                onClick={() => setShowConfirmAll(false)}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                            >No</button>
+                        </div>
+                    ) : (
                         <button
+                            onClick={() => setShowConfirmAll(true)}
                             className={styles.deleteBtn}
-                            onClick={() => handleDelete(log.id!, log.area)}
-                            title="Delete this note"
+                            style={{ opacity: 1 }}
                         >
-                            Delete
+                            Delete All 🗑️
                         </button>
-                    )}
-                </div>
-            ))}
-        </div>
+                    )
+                )}
+            </div>
+
+            {/* Activity list */}
+            <div className={styles.logList}>
+                {logs.length === 0 && (
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem 0' }}>
+                        No recent activity yet.
+                    </p>
+                )}
+                {logs.map((log, i) => (
+                    <div key={i} className={styles.logItem}>
+                        <div className={styles.logIcon}>{log.icon}</div>
+                        <div className={styles.logInfo}>
+                            <p className={styles.logAction}>{log.action}</p>
+                            <p className={styles.logDetail}>{log.detail}</p>
+                        </div>
+                        <div className={styles.logTime}>
+                            {mounted && new Date(log.time).toLocaleString([], {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                            })}
+                        </div>
+                        {log.area === 'Journey' && log.id && (
+                            <button
+                                className={styles.deleteBtn}
+                                onClick={() => handleDelete(log.id!, log.area)}
+                                style={{ opacity: 1 }}
+                            >
+                                Delete
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </>
     );
 }

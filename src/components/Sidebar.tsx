@@ -11,9 +11,10 @@ const menuItems = [
     { name: 'Finance', icon: '💰', path: '/finance' },
     { name: 'Skills', icon: '📚', path: '/skills' },
     { name: 'Goals', icon: '🎯', path: '/goals' },
+    { name: 'Reminders', icon: '📅', path: '/reminders' },
     { name: 'Journey', icon: '📓', path: '/journey' },
-    { name: 'Productivity', icon: '⚡', path: '/productivity' },
-    { name: 'Reflection', icon: '🪞', path: '/reflection' },
+    // { name: 'Productivity', icon: '⚡', path: '/productivity' },
+    // { name: 'Reflection', icon: '🪞', path: '/reflection' },
 ];
 
 export default function Sidebar({ userEmail }: { userEmail?: string }) {

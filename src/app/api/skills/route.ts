@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { calculateSkillsScore } from '@/lib/scoreCalculator'
 
 export async function GET() {
     try {
@@ -16,9 +17,11 @@ export async function GET() {
             .select(`
                 *,
                 skill_logs (
+                    id,
                     hours_invested,
                     skill_level,
                     projects_completed,
+                    note,
                     created_at
                 )
             `)
@@ -81,6 +84,8 @@ export async function POST(request: Request) {
 
         if (logError) throw logError
 
+        await calculateSkillsScore(supabase, user.id);
+
         return NextResponse.json({ success: true })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
@@ -114,6 +119,8 @@ export async function DELETE(request: Request) {
                 .eq('user_id', user.id)
             if (skillError) throw skillError
 
+            await calculateSkillsScore(supabase, user.id);
+
             return NextResponse.json({ success: true })
         }
 
@@ -124,6 +131,8 @@ export async function DELETE(request: Request) {
                 .eq('id', skillId)
                 .eq('user_id', user.id)
             if (error) throw error
+
+            await calculateSkillsScore(supabase, user.id);
             return NextResponse.json({ success: true })
         }
 
@@ -134,6 +143,8 @@ export async function DELETE(request: Request) {
                 .eq('id', logId)
                 .eq('user_id', user.id)
             if (error) throw error
+
+            await calculateSkillsScore(supabase, user.id);
             return NextResponse.json({ success: true })
         }
 

@@ -11,15 +11,39 @@ export default function FinancePage() {
     const [category, setCategory] = useState('Food');
     const [type, setType] = useState<'expense' | 'income' | 'savings'>('expense');
     const [description, setDescription] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }));
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    const [isTimeEdited, setIsTimeEdited] = useState(false);
+
+
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState<any[]>([]);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+    // Inline Confirmation States
+    const [isDeletingFinanceId, setIsDeletingFinanceId] = useState<string | null>(null);
+    const [isDeletingAllFinance, setIsDeletingAllFinance] = useState(false);
+
     useEffect(() => {
+        const updateTime = () => {
+            if (!isTimeEdited) {
+                const now = new Date();
+                const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                setDate(localDate);
+                setTime(now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }));
+            }
+        };
+
+        // Update time immediately on mount
+        updateTime();
+
+        // Keep updating time every second so it perfectly synchronizes minute rollovers
+        const intervalId = setInterval(updateTime, 1000);
+
         fetchHistory();
-    }, []);
+
+        return () => clearInterval(intervalId);
+    }, [isTimeEdited]);
 
     const formatDateTime = (dateStr: string) => {
         const d = new Date(dateStr);
@@ -49,7 +73,7 @@ export default function FinancePage() {
         setLoading(true);
 
         const parseTime = (t: string) => {
-            const match = t.match(/(\d+):(\d+)\s*(AM|PM|am|pm)?/i);
+            const match = t.match(/(\d+)[:;.](\d+)\s*(AM|PM|am|pm)?/i);
             if (!match) return { h: 0, m: 0 };
             let [, h, m, ampm] = match;
             let hrs = parseInt(h);
@@ -94,7 +118,7 @@ export default function FinancePage() {
     }
 
     async function handleDelete(id: string) {
-        if (!confirm('Are you sure you want to delete this transaction?')) return;
+        setLoading(true);
         setMessage(null);
 
         const res = await fetch(`/api/finance?id=${id}`, {
@@ -103,15 +127,17 @@ export default function FinancePage() {
 
         if (res.ok) {
             fetchHistory();
+            setIsDeletingFinanceId(null);
             setMessage({ type: 'success', text: 'Entry discarded.' });
         } else {
             setMessage({ type: 'error', text: 'Failed to delete transaction.' });
         }
+        setLoading(false);
         setTimeout(() => setMessage(null), 3000);
     }
 
     async function handleClearAll() {
-        if (!confirm('Are you SURE you want to clear your entire financial history? This cannot be undone.')) return;
+        setLoading(true);
         setMessage(null);
 
         const res = await fetch(`/api/finance?id=all`, {
@@ -120,10 +146,12 @@ export default function FinancePage() {
 
         if (res.ok) {
             fetchHistory();
+            setIsDeletingAllFinance(false);
             setMessage({ type: 'success', text: 'Financial history wiped clean.' });
         } else {
             setMessage({ type: 'error', text: 'Failed to clear history.' });
         }
+        setLoading(false);
         setTimeout(() => setMessage(null), 3000);
     }
 
@@ -236,7 +264,10 @@ export default function FinancePage() {
                                             <input
                                                 type="text"
                                                 value={time}
-                                                onChange={(e) => setTime(e.target.value)}
+                                                onChange={(e) => {
+                                                    setTime(e.target.value);
+                                                    setIsTimeEdited(true);
+                                                }}
                                                 className={styles.input}
                                                 style={{ flex: 1 }}
                                                 placeholder="e.g. 5:14 PM"
@@ -294,12 +325,19 @@ export default function FinancePage() {
                                                     <span className={styles.historyAmount} style={{ color: entry.transaction_type === 'income' ? 'var(--accent)' : 'inherit' }}>
                                                         {entry.transaction_type === 'income' ? '+' : '-'}₹{parseFloat(entry.amount).toLocaleString()}
                                                     </span>
-                                                    <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn}>🗑️</button>
+                                                    {isDeletingFinanceId === entry.id ? (
+                                                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                            <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                            <button onClick={() => setIsDeletingFinanceId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
+                                                        </div>
+                                                    ) : (
+                                                        <button onClick={() => setIsDeletingFinanceId(entry.id)} className={styles.deleteBtn}>🗑️</button>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <div className={styles.historyMeta}>
+                                            <div className={styles.historyMeta} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
                                                 <span className={styles.categoryBadge}>{entry.category}</span>
-                                                <span className={styles.historyDesc}>{entry.description}</span>
+                                                {entry.description && <span className={styles.historyDesc} style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{entry.description}</span>}
                                             </div>
                                         </div>
                                     ))
@@ -345,11 +383,19 @@ export default function FinancePage() {
                     </div>
 
                     <div className={styles.trackingList}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                             <h2 className={styles.sectionTitle} style={{ margin: 0 }}>Financial Performance Timeline</h2>
-                            <button onClick={handleClearAll} className={styles.clearAllBtn}>
-                                Clear Entire History 🗑️
-                            </button>
+                            {history.length > 0 && (
+                                isDeletingAllFinance ? (
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Are you sure?</span>
+                                        <button className={styles.clearAllBtn} style={{ background: 'var(--red)', color: 'white', borderColor: 'var(--red)' }} onClick={handleClearAll}>Yes, Clear All</button>
+                                        <button className={styles.clearAllBtn} onClick={() => setIsDeletingAllFinance(false)}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setIsDeletingAllFinance(true)} className={styles.clearAllBtn}>Clear Entire History 🗑️</button>
+                                )
+                            )}
                         </div>
                         {history.map((entry) => (
                             <div key={entry.id} className={styles.expandedHistoryItem}>
@@ -373,10 +419,31 @@ export default function FinancePage() {
                                     </div>
                                 </div>
                                 {entry.description && <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>{entry.description}</p>}
-                                <div className={styles.deleteActionArea}>
-                                    <button onClick={() => handleDelete(entry.id)} className={styles.discardBtn}>
-                                        Discard Entry 🗑️
-                                    </button>
+                                <div className={styles.deleteActionArea} style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                                    {isDeletingFinanceId === entry.id ? (
+                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.9rem', color: 'var(--red)', fontWeight: 'bold' }}>Are you sure?</span>
+                                            <button
+                                                onClick={() => handleDelete(entry.id)}
+                                                className={styles.discardBtn} style={{ background: 'var(--red)', color: 'white', borderColor: 'var(--red)' }}
+                                            >
+                                                Yes, Discard
+                                            </button>
+                                            <button
+                                                onClick={() => setIsDeletingFinanceId(null)}
+                                                className={styles.discardBtn}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsDeletingFinanceId(entry.id)}
+                                            className={styles.discardBtn}
+                                        >
+                                            Discard Entry 🗑️
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { calculatePhysicalScore } from '@/lib/scoreCalculator'
 
 export async function POST(request: Request) {
     try {
@@ -28,6 +29,8 @@ export async function POST(request: Request) {
             ])
 
         if (error) throw error
+
+        await calculatePhysicalScore(supabase, user.id);
 
         return NextResponse.json({ success: true })
     } catch (error: any) {
@@ -82,6 +85,8 @@ export async function DELETE(request: Request) {
         const { error } = await query
 
         if (error) throw error
+
+        await calculatePhysicalScore(supabase, user.id);
 
         return NextResponse.json({ success: true })
     } catch (error: any) {

@@ -67,10 +67,53 @@ export async function GET() {
             ? Math.round(Object.values(recentScores).reduce((a, b) => a + b, 0) / Object.values(recentScores).length)
             : 0;
 
+        // Fetch past scores from 7 days ago to compute the trend
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: pastScoresData } = await supabase
+            .from('life_scores')
+            .select('area, score')
+            .eq('user_id', user.id)
+            .lte('calculated_at', sevenDaysAgo)
+            .order('calculated_at', { ascending: false });
+
+        const pastScores: Record<string, number> = {};
+        pastScoresData?.forEach(s => {
+            if (!(s.area in pastScores)) pastScores[s.area] = s.score;
+        });
+
+        const pastLifeScore = Object.values(pastScores).length > 0
+            ? Math.round(Object.values(pastScores).reduce((a, b) => a + b, 0) / Object.values(pastScores).length)
+            : 0;
+
+        let trendValue = overallLifeScore - pastLifeScore;
+        let lifeScoreTrend = trendValue > 0 ? 'positive' : trendValue < 0 ? 'negative' : 'neutral';
+
+        // If there is literally no past history, don't show an artificial giant spike, just say neutral
+        if (Object.values(pastScores).length === 0) {
+            trendValue = 0;
+            lifeScoreTrend = 'neutral';
+        }
+
         const totalFocusHours = productivity.data?.reduce((acc, curr) => acc + Number(curr.focus_hours), 0) || 0;
 
         // 4. Life Journey Metrics
-        const { count: pendingTasks } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'Pending');
+        const { count: totalTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
+        const { count: completedTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'Completed');
+        const { count: totalNotes } = await supabase.from('notes').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
+        const { count: totalStickies } = await supabase.from('sticky_notes').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
+        const { data: todayLog } = await supabase.from('daily_logs').select('log_id').eq('user_id', user.id).eq('date', today).single();
+
+        const pendingTasks = (totalTasksCount || 0) - (completedTasksCount || 0);
+        const hasLogToday = !!todayLog;
+
+        // Calculate a consolidated Journey Progress (0-100)
+        // Logic: 50% task completion, 25% daily log presence, 25% having at least 1 note/sticky
+        const taskProgress = totalTasksCount && totalTasksCount > 0 ? (completedTasksCount || 0) / totalTasksCount : (totalTasksCount === 0 ? 1 : 0);
+        const logFactor = hasLogToday ? 1 : 0;
+        const creationFactor = (totalNotes || 0) > 0 || (totalStickies || 0) > 0 ? 1 : 0;
+
+        const journeyProgress = Math.round((taskProgress * 0.5 + logFactor * 0.25 + creationFactor * 0.25) * 100);
+
         const tasksToday = tasks.data?.filter(t => t.due_date === today).length || 0;
         const latestMood = dailyLogs.data?.[0]?.mood || '-';
         const latestNote = notes.data?.[0]?.title || 'No recent notes';
@@ -80,9 +123,17 @@ export async function GET() {
             recentLogs: combinedActivity.slice(0, 8),
             vitals: {
                 overallLifeScore,
+                lifeScoreTrend,
+                trendValue,
                 totalFocusHours,
                 tasksToday,
-                pendingTasks: pendingTasks || 0,
+                pendingTasks,
+                completedTasksCount: completedTasksCount || 0,
+                totalTasksCount: totalTasksCount || 0,
+                journeyProgress,
+                totalNotes: totalNotes || 0,
+                totalStickies: totalStickies || 0,
+                hasLogToday,
                 latestMood,
                 latestNote
             }

@@ -12,9 +12,13 @@ export default function PhysicalHealthPage() {
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState<any[]>([]);
     const [viewMode, setViewMode] = useState<'entry' | 'history'>('entry');
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [message, setMessage] = useState<{ type: 'success' | 'error' | 'motivator', text: string } | null>(null);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }));
+
+    // Inline Confirmation States
+    const [isDeletingPhysicalId, setIsDeletingPhysicalId] = useState<string | null>(null);
+    const [isDeletingAllPhysical, setIsDeletingAllPhysical] = useState(false);
 
     useEffect(() => {
         fetchHistory();
@@ -105,7 +109,7 @@ export default function PhysicalHealthPage() {
     }
 
     async function handleDelete(id: string) {
-        if (!confirm('Are you sure you want to delete this log?')) return;
+        setLoading(true);
         setMessage(null);
 
         const res = await fetch(`/api/physical?id=${id}`, {
@@ -114,15 +118,17 @@ export default function PhysicalHealthPage() {
 
         if (res.ok) {
             fetchHistory();
+            setIsDeletingPhysicalId(null);
             setMessage({ type: 'success', text: 'Entry discarded.' });
         } else {
             setMessage({ type: 'error', text: 'Failed to delete log.' });
         }
+        setLoading(false);
         setTimeout(() => setMessage(null), 3000);
     }
 
     async function handleClearAll() {
-        if (!confirm('Are you SURE you want to clear your entire history? This cannot be undone.')) return;
+        setLoading(true);
         setMessage(null);
 
         const res = await fetch(`/api/physical?id=all`, {
@@ -131,10 +137,12 @@ export default function PhysicalHealthPage() {
 
         if (res.ok) {
             fetchHistory();
+            setIsDeletingAllPhysical(false);
             setMessage({ type: 'success', text: 'Health history wiped clean.' });
         } else {
             setMessage({ type: 'error', text: 'Failed to clear history.' });
         }
+        setLoading(false);
         setTimeout(() => setMessage(null), 3000);
     }
 
@@ -345,10 +353,10 @@ export default function PhysicalHealthPage() {
                                 <button type="submit" className="primary-btn" style={{ flex: 2 }} disabled={loading}>
                                     {loading ? 'Syncing...' : 'Commit Health Entry'}
                                 </button>
-                                <button 
-                                    type="button" 
-                                    onClick={handleReset} 
-                                    className={styles.historyViewBtn} 
+                                <button
+                                    type="button"
+                                    onClick={handleReset}
+                                    className={styles.historyViewBtn}
                                     style={{ flex: 1, margin: 0, padding: '0 1rem', fontSize: '0.75rem' }}
                                 >
                                     Reset Form
@@ -373,10 +381,10 @@ export default function PhysicalHealthPage() {
                                 <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
                                     <p className={styles.statLabel}>Today's Record</p>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.50rem', marginTop: '0.5rem' }}>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>💤 {lastEntry.sleep_hours}h</div>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>💧 {lastEntry.water_intake_ml}ml</div>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>👣 {lastEntry.steps} steps</div>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>⚖️ {lastEntry.weight_kg || lastEntry.weight}kg</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>💤 Sleep: {lastEntry.sleep_hours}h</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>💧 Water: {lastEntry.water_intake_ml}ml</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>👣 Steps: {lastEntry.steps}</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>⚖️ Weight: {lastEntry.weight_kg || lastEntry.weight}kg</div>
                                         <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8, gridColumn: 'span 2', marginTop: '0.5rem', padding: '0.5rem', borderRadius: '4px', background: lastEntry.workout_completed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 159, 67, 0.1)', color: lastEntry.workout_completed ? '#10b981' : '#ff9f43', textAlign: 'center' }}>
                                             {lastEntry.workout_completed ? '🏋️ WORKOUT COMPLETED' : '🕒 WORKOUT PENDING'}
                                         </div>
@@ -398,14 +406,21 @@ export default function PhysicalHealthPage() {
                                                         <div>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                                                         <div style={{ opacity: 0.6, fontSize: '0.8rem' }}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
                                                     </div>
-                                                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                                         <span className={styles.historyMood}>
-                                                            {entry.workout_completed ? '🏃' : '🧘'} {entry.steps}
+                                                            {entry.workout_completed ? '🏃 Workout' : '🧘 Rest'} | 👣 {entry.steps}
                                                         </span>
-                                                        <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn}>🗑️</button>
+                                                        {isDeletingPhysicalId === entry.id ? (
+                                                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                                <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                                <button onClick={() => setIsDeletingPhysicalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
+                                                            </div>
+                                                        ) : (
+                                                            <button onClick={() => setIsDeletingPhysicalId(entry.id)} className={styles.deleteBtn}>🗑️</button>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <p className={styles.historyNote}>{entry.sleep_hours}h sleep • {entry.water_intake_ml}ml water</p>
+                                                <p className={styles.historyNote}>💤 Sleep: {entry.sleep_hours}h • 💧 Water: {entry.water_intake_ml}ml</p>
                                             </div>
                                         ))}
                                         <button
@@ -444,9 +459,19 @@ export default function PhysicalHealthPage() {
                     </div>
 
                     <div className={styles.trackingList}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                             <h2 className={styles.sectionTitle} style={{ margin: 0 }}>Physical Performance Timeline</h2>
-                            <button onClick={handleClearAll} className={styles.clearAllBtn}>Clear Entire History 🗑️</button>
+                            {history.length > 0 && (
+                                isDeletingAllPhysical ? (
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Are you sure?</span>
+                                        <button className={styles.clearAllBtn} style={{ background: 'var(--red)', color: 'white', borderColor: 'var(--red)' }} onClick={handleClearAll}>Yes, Clear All</button>
+                                        <button className={styles.clearAllBtn} onClick={() => setIsDeletingAllPhysical(false)}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setIsDeletingAllPhysical(true)} className={styles.clearAllBtn}>Clear Entire History 🗑️</button>
+                                )
+                            )}
                         </div>
                         {history.map((entry) => (
                             <div key={entry.id} className={styles.expandedHistoryItem}>
@@ -462,20 +487,39 @@ export default function PhysicalHealthPage() {
                                         <p>{new Date(entry.created_at).getFullYear()} • {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
                                     </div>
                                     <div className={styles.expandedScores}>
-                                        <span className={styles.scoreBadge}>{entry.workout_completed ? '🏃' : '🧘'} {entry.steps} steps</span>
-                                        <span className={styles.scoreBadge}>💤 {entry.sleep_hours}h</span>
-                                        <span className={styles.scoreBadge}>💧 {entry.water_intake_ml}ml</span>
-                                        <span className={styles.scoreBadge}>⚖️ {entry.weight}kg</span>
+                                        <span className={styles.scoreBadge}>{entry.workout_completed ? '🏃 Workout' : '🧘 Rest'}</span>
+                                        <span className={styles.scoreBadge}>👣 Steps: {entry.steps}</span>
+                                        <span className={styles.scoreBadge}>💤 Sleep: {entry.sleep_hours}h</span>
+                                        <span className={styles.scoreBadge}>💧 Water: {entry.water_intake_ml}ml</span>
+                                        <span className={styles.scoreBadge}>⚖️ Weight: {entry.weight}kg</span>
                                     </div>
                                 </div>
 
-                                <div className={styles.deleteActionArea}>
-                                    <button
-                                        onClick={() => handleDelete(entry.id)}
-                                        className={styles.discardBtn}
-                                    >
-                                        Discard Entry 🗑️
-                                    </button>
+                                <div className={styles.deleteActionArea} style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                                    {isDeletingPhysicalId === entry.id ? (
+                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.9rem', color: 'var(--red)', fontWeight: 'bold' }}>Are you sure?</span>
+                                            <button
+                                                onClick={() => handleDelete(entry.id)}
+                                                className={styles.discardBtn} style={{ background: 'var(--red)', color: 'white', borderColor: 'var(--red)' }}
+                                            >
+                                                Yes, Discard
+                                            </button>
+                                            <button
+                                                onClick={() => setIsDeletingPhysicalId(null)}
+                                                className={styles.discardBtn}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsDeletingPhysicalId(entry.id)}
+                                            className={styles.discardBtn}
+                                        >
+                                            Discard Entry 🗑️
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
