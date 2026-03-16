@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { sendPushNotification } from '@/lib/pushbullet'
 
 export async function GET(request: Request) {
     try {
@@ -68,6 +69,14 @@ export async function POST(request: Request) {
             .select().single()
 
         if (error) throw error
+
+        // Pushbullet Integration
+        await sendPushNotification(
+            user.id,
+            `📅 New Reminder: ${title}`,
+            `Set for ${new Date(remind_at).toLocaleString()}`
+        );
+
         return NextResponse.json({ success: true, reminder: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })

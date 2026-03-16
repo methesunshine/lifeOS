@@ -70,17 +70,33 @@ export default function DashboardAlerts({ userId, areaScores = [] }: { userId?: 
 
     const target = getWeakestLink();
 
-    if (alerts.length === 0) return (
+    return (
         <section className={`${styles.alertCard} card glass`} style={{ borderLeft: '4px solid #10b981' }}>
             <div className={styles.heartbeat}>
                 <div className={styles.pulse}></div>
                 System Heartbeat: Live
             </div>
+            
             <div className={styles.alertHeader} style={{ color: '#10b981' }}>
-                <span>🛡️</span>
+                <span>{alerts.length > 0 ? '⚠️' : '🛡️'}</span>
                 <h3 style={{ color: 'var(--text-main)' }}>System Status</h3>
             </div>
-            <p style={{ fontSize: '0.8rem', opacity: 0.9 }}>All systems nominal. No anomalies detected within the 24h window.</p>
+
+            {alerts.length > 0 ? (
+                <div className={styles.activeAlertsSection}>
+                    <div style={{ marginBottom: '0.75rem', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.75rem', color: '#10b981', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                            {alerts[0].title}
+                        </div>
+                        <p style={{ fontSize: '0.8rem', margin: 0 }}>{alerts[0].message}</p>
+                    </div>
+                    {alerts.length > 1 && (
+                        <p className={styles.moreAlerts} style={{ marginBottom: '0.75rem' }}>+{alerts.length - 1} more system anomalies detected</p>
+                    )}
+                </div>
+            ) : (
+                <p style={{ fontSize: '0.8rem', opacity: 0.9 }}>All systems nominal. No anomalies detected within the 24h window.</p>
+            )}
 
             <div className={styles.monitorStats}>
                 <div className={styles.statItem}>
@@ -98,28 +114,18 @@ export default function DashboardAlerts({ userId, areaScores = [] }: { userId?: 
             </div>
 
             <Link href={target.path}>
-                <button className={styles.actionBtn} style={{ marginTop: '1.25rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                <button 
+                    className={styles.actionBtn} 
+                    style={{ 
+                        marginTop: '1.25rem', 
+                        background: 'rgba(16, 185, 129, 0.1)', 
+                        color: '#10b981', 
+                        border: '1px solid rgba(16, 185, 129, 0.2)' 
+                    }}
+                >
                     View {target.name} Trends
                 </button>
             </Link>
-        </section>
-    );
-
-    const mainAlert = alerts[0];
-
-    return (
-        <section className={`${styles.alertCard} card glass`} style={{ borderLeft: '4px solid #f59e0b' }}>
-            <div className={styles.alertHeader}>
-                <span>⚠️</span>
-                <h3>{mainAlert.title}</h3>
-            </div>
-            <p>{mainAlert.message}</p>
-            <Link href="/physical">
-                <button className={styles.actionBtn}>{mainAlert.actionLabel}</button>
-            </Link>
-            {alerts.length > 1 && (
-                <p className={styles.moreAlerts}>+{alerts.length - 1} more insights</p>
-            )}
         </section>
     );
 }

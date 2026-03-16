@@ -13,6 +13,7 @@ const menuItems = [
     { name: 'Goals', icon: '🎯', path: '/goals' },
     { name: 'Reminders', icon: '📅', path: '/reminders' },
     { name: 'Journey', icon: '📓', path: '/journey' },
+    { name: 'Settings', icon: '⚙️', path: '/settings' },
     // { name: 'Productivity', icon: '⚡', path: '/productivity' },
     // { name: 'Reflection', icon: '🪞', path: '/reflection' },
 ];
