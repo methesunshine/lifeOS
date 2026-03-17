@@ -170,21 +170,60 @@
     align-items: flex-start;
 }
 
-.insightFeed {
+.areaDeck {
+    width: 320px;
+    height: 400px;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 1rem;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
-.insightItem {
+.areaScroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.areaListItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+}
+
+.areaListItem:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(4px);
+    border-color: var(--primary);
+}
+
+.areaListItemHead {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.6rem 0.75rem;
-    border-radius: 0.75rem;
-    background: var(--bg-app);
-    font-size: 0.85rem;
+}
+
+.areaListItemIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.areaListItemInfo h3 {
+    font-size: 0.9rem;
+    margin: 0;
 }
 
 .insightItemIcon {
@@ -209,66 +248,7 @@
     flex-shrink: 0;
 }
 
-.areaGrid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-}
 
-.areaCard {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 320px;
-    height: 400px;
-    padding: 2rem;
-    box-sizing: border-box;
-}
-
-.areaHeader {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1.5rem;
-}
-
-.areaIcon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-}
-
-.statusBadge {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
-
-.areaStats {
-    text-align: center;
-    border-top: 1px solid var(--border);
-    padding-top: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.scoreLarge {
-    font-size: 3rem;
-    font-weight: 800;
-}
-
-.trendSmall {
-    font-size: 1rem;
-    font-weight: 700;
-}
 
 /* Side Column */
 .sideColumn {

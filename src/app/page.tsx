@@ -418,28 +418,32 @@ export default async function Home() {
               <SystemsPerformanceChart areaScores={dashboardData.areaScores} />
             </section>
 
-            <section className={styles.areaGrid}>
-              {areas.map((area: any) => (
-                <Link href={`/${area.id}`} key={area.id} className={styles.areaLink}>
-                  <div className={`${styles.areaCard} card`}>
-                    <div className={styles.areaHeader}>
-                      <div className={styles.areaIcon} style={{ background: `${area.color}20`, color: area.color }}>
+            <section className={`${styles.areaDeck} card glass`}>
+              <div className={styles.cardHeader}>
+                <h2>Integrity Snapshot</h2>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>Area Optimization Metrics</p>
+              </div>
+              <div className={styles.areaScroll}>
+                {areas.map((area: any) => (
+                  <Link href={`/${area.id}`} key={area.id} className={styles.areaListItem}>
+                    <div className={styles.areaListItemHead}>
+                      <div className={styles.areaListItemIcon} style={{ background: `${area.color}20`, color: area.color }}>
                         {area.icon}
                       </div>
-                      <div>
+                      <div className={styles.areaListItemInfo}>
                         <h3>{area.name}</h3>
                         <span className={styles.statusBadge}>{area.status}</span>
                       </div>
                     </div>
                     <div className={styles.areaStats}>
-                      <div className={styles.scoreLarge}>{area.score}</div>
-                      <div className={styles.trendSmall} style={{ color: 'var(--accent)' }}>
+                      <div className={styles.scoreLarge} style={{ fontSize: '1.25rem' }}>{area.score}</div>
+                      <div className={styles.trendSmall} style={{ color: 'var(--accent)', fontSize: '0.7rem' }}>
                         {area.trend}
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
             </section>
           </div>
 
