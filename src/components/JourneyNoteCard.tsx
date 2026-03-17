@@ -79,7 +79,7 @@ export default function JourneyNoteCard() {
     };
 
     return (
-        <div className="card glass">
+        <div className={`card glass ${styles.container}`}>
             <div className={styles.cardHeader}>
                 <p className={styles.label}>⚡ Quick Journey Note</p>
             </div>
