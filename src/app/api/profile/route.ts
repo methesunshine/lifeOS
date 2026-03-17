@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
+import { sendPushNotification } from '@/lib/pushbullet';
 
 export async function GET() {
     try {
@@ -52,8 +53,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
+        // Pushbullet Notification
+        await sendPushNotification(user.id, '⚙️ Profile Updated', 'Your notification and profile settings have been updated.');
+
         return NextResponse.json({ profile });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+

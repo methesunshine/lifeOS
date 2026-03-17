@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculatePhysicalScore } from '@/lib/scoreCalculator'
+import { sendPushNotification } from '@/lib/pushbullet'
 
 export async function POST(request: Request) {
     try {
@@ -29,6 +30,13 @@ export async function POST(request: Request) {
             ])
 
         if (error) throw error
+
+        // Pushbullet Notification
+        await sendPushNotification(
+            user.id, 
+            '💪 Physical Health Logged', 
+            `${steps} steps, ${sleep_hours}h sleep, Workout: ${workout_completed ? 'Yes' : 'No'}`
+        );
 
         await calculatePhysicalScore(supabase, user.id);
 

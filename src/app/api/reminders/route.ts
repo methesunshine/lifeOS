@@ -113,6 +113,16 @@ export async function PATCH(request: Request) {
             .select().single()
 
         if (error) throw error
+
+        // Pushbullet Integration for completed reminders
+        if (updates.status === 'completed' && data) {
+            await sendPushNotification(
+                user.id,
+                `✅ Reminder Completed: ${data.title}`,
+                `Finished at ${new Date().toLocaleString()}`
+            );
+        }
+
         return NextResponse.json({ success: true, reminder: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculateSkillsScore } from '@/lib/scoreCalculator'
+import { sendPushNotification } from '@/lib/pushbullet'
 
 export async function GET() {
     try {
@@ -84,6 +85,13 @@ export async function POST(request: Request) {
 
         if (logError) throw logError
 
+        // Pushbullet Notification
+        await sendPushNotification(
+            user.id, 
+            '🚀 Skill Progress', 
+            `${name}: ${hours_invested}h invested (Level ${skill_level})`
+        );
+
         await calculateSkillsScore(supabase, user.id);
 
         return NextResponse.json({ success: true })
@@ -91,6 +99,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
+
 
 export async function DELETE(request: Request) {
     try {

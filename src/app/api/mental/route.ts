@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculateMentalScore } from '@/lib/scoreCalculator'
+import { sendPushNotification } from '@/lib/pushbullet'
 
 export async function POST(request: Request) {
     try {
@@ -28,6 +29,9 @@ export async function POST(request: Request) {
             ])
 
         if (error) throw error
+
+        // Pushbullet Notification
+        await sendPushNotification(user.id, '🧠 Mental Health Logged', `Mood: ${mood}, Stress: ${stress}, Focus: ${focus}`);
 
         await calculateMentalScore(supabase, user.id);
 
@@ -123,6 +127,9 @@ export async function PATCH(request: Request) {
 
         if (error) throw error
 
+        // Pushbullet Notification
+        await sendPushNotification(user.id, '🧠 Mental Health Updated', `Your mental health log has been successfully updated.`);
+
         await calculateMentalScore(supabase, user.id);
 
         return NextResponse.json({ success: true })
@@ -130,3 +137,4 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
+

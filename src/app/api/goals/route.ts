@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculateGoalsScore } from '@/lib/scoreCalculator'
+import { sendPushNotification } from '@/lib/pushbullet'
 
 export async function GET() {
     try {
@@ -72,6 +73,9 @@ export async function POST(request: Request) {
                     .update({ progress_percent: newProgress, status: newStatus })
                     .eq('id', goal_id)
                     .eq('user_id', user.id)
+                
+                // Pushbullet Notification for subtask
+                await sendPushNotification(user.id, '📝 Subtask Added', `Goal: ${goal_id}\nSubtask: ${subtask_title}`);
             }
 
             await calculateGoalsScore(supabase, user.id);
@@ -113,6 +117,9 @@ export async function POST(request: Request) {
 
             if (subtasksError) throw subtasksError
         }
+
+        // Pushbullet Notification for new goal
+        await sendPushNotification(user.id, '🎯 New Goal Set', `${title}\nPriority: ${priority}`);
 
         await calculateGoalsScore(supabase, user.id);
         return NextResponse.json({ success: true, goal })
@@ -159,6 +166,11 @@ export async function PATCH(request: Request) {
                     .update({ progress_percent: newProgress, status: newStatus })
                     .eq('id', goal_id)
                     .eq('user_id', user.id)
+                
+                // Pushbullet Notification for progress
+                if (is_completed) {
+                    await sendPushNotification(user.id, '✅ Subtask Completed', `Goal progress: ${newProgress}%`);
+                }
             }
         } else if (goal_id) {
             // Update goal directly
@@ -174,6 +186,9 @@ export async function PATCH(request: Request) {
                 .eq('user_id', user.id)
 
             if (error) throw error
+
+            // Pushbullet Notification for goal update
+            await sendPushNotification(user.id, '🎯 Goal Updated', `Status: ${status || 'Updated'}\nProgress: ${progress_percent || 'N/A'}%`);
         }
 
         await calculateGoalsScore(supabase, user.id);
@@ -182,6 +197,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
+
 
 export async function DELETE(request: Request) {
     try {

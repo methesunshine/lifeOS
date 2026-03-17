@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculateFinanceScore } from '@/lib/scoreCalculator'
+import { sendPushNotification } from '@/lib/pushbullet'
 
 export async function POST(request: Request) {
     try {
@@ -29,6 +30,13 @@ export async function POST(request: Request) {
             ])
 
         if (error) throw error
+
+        // Pushbullet Notification
+        await sendPushNotification(
+            user.id, 
+            '💰 Finance Logged', 
+            `${transaction_type === 'income' ? 'Received' : 'Spent'} $${amount} on ${category}`
+        );
 
         await calculateFinanceScore(supabase, user.id);
 
