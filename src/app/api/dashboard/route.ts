@@ -118,9 +118,22 @@ export async function GET() {
         const latestMood = dailyLogs.data?.[0]?.mood || '-';
         const latestNote = notes.data?.[0]?.title || 'No recent notes';
 
+        // ── Persistent Activity Filtering ──
+        const { cookies } = await import('next/headers');
+        const cookieJar = await cookies();
+        const clearPoint = cookieJar.get('activity_cleared_at')?.value;
+        const hiddenItems = cookieJar.get('hidden_activities')?.value?.split(',') || [];
+
+        const filteredLogs = combinedActivity.filter(log => {
+            const logTime = new Date(log.time).getTime();
+            const clearTime = clearPoint ? new Date(clearPoint).getTime() : 0;
+            const logId = log.id || `${log.area}-${log.action}-${log.time}`;
+            return logTime > clearTime && !hiddenItems.includes(logId);
+        });
+
         return NextResponse.json({
             scores: recentScores,
-            recentLogs: combinedActivity.slice(0, 8),
+            recentLogs: filteredLogs.slice(0, 10),
             vitals: {
                 overallLifeScore,
                 lifeScoreTrend,

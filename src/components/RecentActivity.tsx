@@ -38,19 +38,27 @@ export default function RecentActivity({ initialLogs }: { initialLogs: ActivityI
         }
     }, []);
 
-    const handleDelete = async (id: string, area: string) => {
-        if (area !== 'Journey') return;
-        try {
-            const res = await fetch(`/api/notes?id=${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setLogs(logs.filter(log => log.id !== id));
-            }
-        } catch (error) {
-            console.error('Failed to delete note:', error);
-        }
+    const handleDelete = (id: string | undefined, area: string, action: string, time: string) => {
+        const logId = id || `${area}-${action}-${time}`;
+        
+        // Add to persistent hidden activities
+        const hiddenItems = document.cookie.split('; ').find(row => row.startsWith('hidden_activities='))?.split('=')[1] || '';
+        const updatedHidden = hiddenItems ? `${hiddenItems},${logId}` : logId;
+        
+        document.cookie = `hidden_activities=${updatedHidden}; path=/; max-age=31536000`; // 1 year
+        
+        // Immediate UI update
+        setLogs(logs.filter(log => {
+            const currentId = log.id || `${log.area}-${log.action}-${log.time}`;
+            return currentId !== logId;
+        }));
     };
 
     const handleDeleteAll = () => {
+        const now = new Date().toISOString();
+        document.cookie = `activity_cleared_at=${now}; path=/; max-age=31536000`; // 1 year
+        
+        // Clear UI
         setLogs([]);
         setShowConfirmAll(false);
     };
@@ -108,15 +116,13 @@ export default function RecentActivity({ initialLogs }: { initialLogs: ActivityI
                                 hour12: true
                             })}
                         </div>
-                        {log.area === 'Journey' && log.id && (
-                            <button
-                                className={styles.deleteBtn}
-                                onClick={() => handleDelete(log.id!, log.area)}
-                                style={{ opacity: 1 }}
-                            >
-                                Delete
-                            </button>
-                        )}
+                        <button
+                            className={styles.deleteBtn}
+                            onClick={() => handleDelete(log.id, log.area, log.action, log.time)}
+                            style={{ opacity: 1 }}
+                        >
+                            Delete
+                        </button>
                     </div>
                 ))}
             </div>

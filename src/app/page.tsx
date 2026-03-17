@@ -219,10 +219,27 @@ export default async function Home() {
       return `${diff > 0 ? '+' : ''}${diff}%`;
     };
 
+    // ── Persistent Activity Filtering ──
+    const cookieStore = await supabase.auth.getSession(); // Just to trigger a thought about cookies, but I'll use next/headers
+    const { cookies } = await import('next/headers');
+    const cookieJar = await cookies();
+    const clearPoint = cookieJar.get('activity_cleared_at')?.value;
+    const hiddenItems = cookieJar.get('hidden_activities')?.value?.split(',') || [];
+
+    const filteredLogs = combinedActivity.filter(log => {
+      const logTime = new Date(log.time).getTime();
+      const clearTime = clearPoint ? new Date(clearPoint).getTime() : 0;
+      
+      // Generate a unique ID for the log if it doesn't have one (e.g., for mood logs)
+      const logId = log.id || `${log.area}-${log.action}-${log.time}`;
+      
+      return logTime > clearTime && !hiddenItems.includes(logId);
+    });
+
     dashboardData = {
       scores: recentScores,
       areaScores,
-      recentLogs: combinedActivity.slice(0, 8),
+      recentLogs: filteredLogs.slice(0, 10),
       vitals: {
         overallLifeScore,
         lifeScoreTrend,
