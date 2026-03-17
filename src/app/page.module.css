@@ -97,12 +97,13 @@
 
 /* Content Layout */
 .contentLayout {
-    display: grid;
-    grid-template-columns: 1fr 320px;
+    display: flex;
+    flex-direction: column;
     gap: 2rem;
 }
 
 .mainColumn {
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -166,8 +167,8 @@
 .draftRow {
     margin-top: 1rem;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2rem;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.5rem;
     align-items: flex-start;
 }
 
@@ -252,8 +253,9 @@
 
 /* Side Column */
 .sideColumn {
-    display: flex;
-    flex-direction: column;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 2rem;
 }
 
@@ -271,6 +273,8 @@
     height: 400px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .logItem {

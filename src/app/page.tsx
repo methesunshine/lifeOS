@@ -404,6 +404,7 @@ export default async function Home() {
 
         <section className={styles.draftRow}>
           <JourneyNoteCard />
+          <DashboardReminders />
           <DashboardAlerts userId={user?.id} areaScores={dashboardData.areaScores} />
           <section className={`${styles.areaDeck} card glass`}>
             <div className={styles.cardHeader}>
@@ -450,7 +451,6 @@ export default async function Home() {
           </div>
 
           <aside className={styles.sideColumn}>
-            <DashboardReminders />
           </aside>
         </div>
       </div>
