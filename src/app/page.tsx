@@ -432,7 +432,9 @@ export default async function Home() {
               ))}
             </div>
           </section>
-          <DashboardReminders />
+          <section className={`${styles.logsCard} card glass`}>
+            <RecentActivity initialLogs={dashboardData.recentLogs} />
+          </section>
         </section>
 
         <div className={styles.contentLayout}>
@@ -448,9 +450,7 @@ export default async function Home() {
           </div>
 
           <aside className={styles.sideColumn}>
-            <section className={`${styles.logsCard} card`}>
-              <RecentActivity initialLogs={dashboardData.recentLogs} />
-            </section>
+            <DashboardReminders />
           </aside>
         </div>
       </div>
