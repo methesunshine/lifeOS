@@ -45,7 +45,7 @@ export default function DashboardReminders() {
 
     return (
         <section className={`${styles.alertCard} card glass`} style={{ marginTop: '1rem', padding: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>⏰ Action Required</h2>
+            <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', color: 'var(--green)' }}>⏰ Action Required</h2>
 
             {overdue.length > 0 && (
                 <div style={{ marginBottom: '1rem' }}>
@@ -83,7 +83,7 @@ export default function DashboardReminders() {
                 </div>
             )}
 
-            <Link href="/journey" style={{ display: 'block', marginTop: '1rem', textAlign: 'center' }}>
+            <Link href="/reminders" style={{ display: 'block', marginTop: '1rem', textAlign: 'center' }}>
                 <button className={styles.actionBtn} style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', width: '100%' }}>Manage Reminders →</button>
             </Link>
         </section>
