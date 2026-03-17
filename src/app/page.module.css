@@ -109,7 +109,9 @@
 }
 
 .statsCard {
-    min-height: 400px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
 }
 
 .cardHeader {
@@ -263,8 +265,17 @@
 .logList {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+    gap: 1.25rem;
+    margin-top: 1rem;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 0.5rem;
+}
+
+.logsCard {
+    height: 400px;
+    display: flex;
+    flex-direction: column;
 }
 
 .logItem {
