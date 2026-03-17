@@ -165,7 +165,8 @@
 
 .draftRow {
     margin-top: 1rem;
-    max-width: 380px;
+    width: 320px;
+    height: 400px;
 }
 
 .insightFeed {
