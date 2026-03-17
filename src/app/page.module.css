@@ -344,11 +344,17 @@
 .alertCard {
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
     border-color: rgba(239, 68, 68, 0.2);
+    width: 320px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .successCard {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    background: linear-gradient(135deg, rgba(82, 82, 91, 0.1) 0%, rgba(39, 39, 42, 0.05) 100%);
+    border: 1px solid var(--border);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     width: 320px;
     height: 400px;

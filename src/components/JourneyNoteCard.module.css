@@ -16,7 +16,8 @@
 }
 
 .container {
-    height: 100%;
+    width: 320px;
+    height: 400px;
     display: flex;
     flex-direction: column;
     overflow: hidden;

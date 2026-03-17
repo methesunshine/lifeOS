@@ -404,6 +404,7 @@ export default async function Home() {
 
         <section className={styles.draftRow}>
           <JourneyNoteCard />
+          <DashboardAlerts userId={user?.id} areaScores={dashboardData.areaScores} />
           <DashboardReminders />
         </section>
 
@@ -446,8 +447,6 @@ export default async function Home() {
             <section className={`${styles.logsCard} card`}>
               <RecentActivity initialLogs={dashboardData.recentLogs} />
             </section>
-
-            <DashboardAlerts userId={user?.id} areaScores={dashboardData.areaScores} />
           </aside>
         </div>
       </div>
