@@ -44,7 +44,12 @@ export default function DashboardReminders() {
     if (overdue.length === 0 && today.length === 0 && upcoming.length === 0) return null;
 
     return (
-        <section className={`${styles.alertCard} card glass`} style={{ marginTop: '1rem', padding: '1.5rem' }}>
+        <section className={`${styles.successCard} card glass`} style={{ marginTop: '1rem', padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
+            <div className={styles.heartbeat}>
+                <div className={styles.pulse}></div>
+                Action Heartbeat: Active
+            </div>
+            
             <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', color: 'var(--green)' }}>⏰ Action Required</h2>
 
             {overdue.length > 0 && (

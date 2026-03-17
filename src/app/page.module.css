@@ -332,6 +332,11 @@
     border-color: rgba(239, 68, 68, 0.2);
 }
 
+.successCard {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
 .alertHeader {
     display: flex;
     align-items: center;
