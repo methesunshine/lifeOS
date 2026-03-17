@@ -52,43 +52,45 @@ export default function DashboardReminders() {
             
             <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', color: 'var(--green)' }}>⏰ Action Required</h2>
 
-            {overdue.length > 0 && (
-                <div style={{ marginBottom: '1rem' }}>
-                    <h3 style={{ fontSize: '0.8rem', color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>LATE ({overdue.length})</h3>
-                    {overdue.map(r => (
-                        <div key={r.reminder_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,0,0,0.05)', padding: '0.5rem', borderRadius: '4px', marginBottom: '0.5rem', borderLeft: '3px solid var(--red)' }}>
-                            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{r.title}</span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Overdue</span>
-                        </div>
-                    ))}
-                </div>
-            )}
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.4rem', marginTop: '0.5rem' }}>
+                {overdue.length > 0 && (
+                    <div style={{ marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '0.8rem', color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>LATE ({overdue.length})</h3>
+                        {overdue.map(r => (
+                            <div key={r.reminder_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,0,0,0.05)', padding: '0.5rem', borderRadius: '4px', marginBottom: '0.5rem', borderLeft: '3px solid var(--red)' }}>
+                                <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{r.title}</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Overdue</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
-            {today.length > 0 && (
-                <div style={{ marginBottom: '1rem' }}>
-                    <h3 style={{ fontSize: '0.8rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>TODAY ({today.length})</h3>
-                    {today.map(r => (
-                        <div key={r.reminder_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-body)', padding: '0.5rem', borderRadius: '4px', marginBottom: '0.5rem', borderLeft: `3px solid ${r.priority === 'high' ? 'var(--red)' : 'var(--primary)'}` }}>
-                            <span style={{ fontSize: '0.9rem' }}>{r.title}</span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(r.remind_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
-                        </div>
-                    ))}
-                </div>
-            )}
+                {today.length > 0 && (
+                    <div style={{ marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '0.8rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>TODAY ({today.length})</h3>
+                        {today.map(r => (
+                            <div key={r.reminder_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-body)', padding: '0.5rem', borderRadius: '4px', marginBottom: '0.5rem', borderLeft: `3px solid ${r.priority === 'high' ? 'var(--red)' : 'var(--primary)'}` }}>
+                                <span style={{ fontSize: '0.9rem' }}>{r.title}</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(r.remind_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
-            {upcoming.length > 0 && (
-                <div>
-                    <h3 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>TOMORROW ({upcoming.length})</h3>
-                    {upcoming.map(r => (
-                        <div key={r.reminder_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '0.5rem', borderRadius: '4px', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{r.title}</span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(r.remind_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
-                        </div>
-                    ))}
-                </div>
-            )}
+                {upcoming.length > 0 && (
+                    <div>
+                        <h3 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>TOMORROW ({upcoming.length})</h3>
+                        {upcoming.map(r => (
+                            <div key={r.reminder_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '0.5rem', borderRadius: '4px', marginBottom: '0.5rem' }}>
+                                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{r.title}</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(r.remind_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
 
-            <Link href="/reminders" style={{ display: 'block', marginTop: '1rem', textAlign: 'center' }}>
+            <Link href="/reminders" style={{ display: 'block', marginTop: 'auto', textAlign: 'center', paddingTop: '1rem' }}>
                 <button className={styles.actionBtn} style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', width: '100%' }}>Manage Reminders →</button>
             </Link>
         </section>

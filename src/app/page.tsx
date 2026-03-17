@@ -404,6 +404,7 @@ export default async function Home() {
 
         <section className={styles.draftRow}>
           <JourneyNoteCard />
+          <DashboardReminders />
         </section>
 
         <div className={styles.contentLayout}>
@@ -447,7 +448,6 @@ export default async function Home() {
             </section>
 
             <DashboardAlerts userId={user?.id} areaScores={dashboardData.areaScores} />
-            <DashboardReminders />
           </aside>
         </div>
       </div>

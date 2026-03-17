@@ -165,11 +165,9 @@
 
 .draftRow {
     margin-top: 1rem;
-    width: 320px;
-    height: 400px;
-    overflow: hidden;
-    position: relative;
-    box-sizing: border-box;
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
 }
 
 .insightFeed {
@@ -349,8 +347,15 @@
 }
 
 .successCard {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
-    border-color: rgba(16, 185, 129, 0.2);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    width: 320px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .alertHeader {
