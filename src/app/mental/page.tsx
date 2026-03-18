@@ -240,43 +240,69 @@ export default function MentalHealthPage() {
                             </div>
                         </div>
 
-                        <div className="card" style={{ marginTop: '2rem' }}>
-                            <h3 className={styles.sideTitle}>History Overview</h3>
-                            <div className={styles.historyList}>
-                                {history.length > 0 ? (
-                                    <>
-                                        {history.slice(0, 5).map((entry) => (
-                                            <div key={entry.id} className={styles.historyItem}>
-                                                <div className={styles.historyHeader}>
-                                                    <div className={styles.historyDate}>
-                                                        <div>{new Date(entry.created_at).toLocaleDateString()}</div>
-                                                        <div style={{ opacity: 0.6 }}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
-                                                    </div>
-                                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                        <span className={styles.historyMood}>🧠 Mood: {entry.mood}/10</span>
-                                                        {isDeletingMentalId === entry.id ? (
-                                                            <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                                                <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
-                                                                <button onClick={() => setIsDeletingMentalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
-                                                            </div>
-                                                        ) : (
-                                                            <button onClick={() => setIsDeletingMentalId(entry.id)} className={styles.deleteBtn}>🗑️</button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <p className={styles.historyNote}>{entry.gratitude_note?.substring(0, 60)}...</p>
-                                            </div>
-                                        ))}
-                                        <button
-                                            className={styles.historyViewBtn}
-                                            onClick={() => setViewMode('history')}
+                        <div className={styles.historyCardStandard}>
+                            <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                    <h3 className={styles.sideTitle} style={{ margin: 0 }}>History Overview</h3>
+                                    {history.length > 0 && (
+                                        <button 
+                                            onClick={() => setIsDeletingAllMentals(true)} 
+                                            className={styles.deleteBtn}
+                                            style={{ fontSize: '0.75rem', opacity: 0.7 }}
+                                            title="Clear All History"
                                         >
-                                            Enter Full Tracking Dashboard
+                                            Clear All 🗑️
                                         </button>
-                                    </>
-                                ) : (
-                                    <p className={styles.hint}>No history yet. Start tracking today!</p>
+                                    )}
+                                </div>
+
+                                {isDeletingAllMentals && (
+                                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--red)', marginBottom: '0.5rem', fontWeight: 'bold' }}>Clear entire history?</p>
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <button onClick={handleClearAll} style={{ background: 'var(--red)', color: 'white', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', cursor: 'pointer' }}>Yes</button>
+                                            <button onClick={() => setIsDeletingAllMentals(false)} style={{ background: 'transparent', border: '1px solid var(--border)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', cursor: 'pointer' }}>No</button>
+                                        </div>
+                                    </div>
                                 )}
+
+                                <div className={styles.historyList}>
+                                    {history.length > 0 ? (
+                                        <>
+                                            {history.map((entry) => (
+                                                <div key={entry.id} className={styles.historyItem}>
+                                                    <div className={styles.historyHeader}>
+                                                        <div className={styles.historyDate}>
+                                                            <div>{new Date(entry.created_at).toLocaleDateString()}</div>
+                                                            <div style={{ opacity: 0.6 }}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                            <span className={styles.historyMood}>🧠 {entry.mood}/10</span>
+                                                            {isDeletingMentalId === entry.id ? (
+                                                                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                                    <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.7rem', fontWeight: 'bold' }}>Ok</button>
+                                                                    <button onClick={() => setIsDeletingMentalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.7rem' }}>X</button>
+                                                                </div>
+                                                            ) : (
+                                                                <button onClick={() => setIsDeletingMentalId(entry.id)} className={styles.deleteBtn} style={{ fontSize: '0.8rem' }}>🗑️</button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <p className={styles.historyNote}>{entry.gratitude_note?.substring(0, 60)}...</p>
+                                                </div>
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <p className={styles.hint}>No history yet. Start tracking today!</p>
+                                    )}
+                                </div>
+                                <button
+                                    className={styles.historyViewBtn}
+                                    onClick={() => setViewMode('history')}
+                                    style={{ marginTop: '1rem', padding: '0.75rem', fontSize: '0.8rem' }}
+                                >
+                                    Enter Full Tracking Dashboard
+                                </button>
                             </div>
                         </div>
                     </aside>
