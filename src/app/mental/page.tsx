@@ -188,25 +188,27 @@ export default function MentalHealthPage() {
                                 </div>
                             </div>
 
-                            <div className="card" style={{ marginTop: '2rem' }}>
+                            <div className={`card ${styles.gratitudeCardStandard}`} style={{ marginTop: '2rem' }}>
                                 <h2 className={styles.sectionTitle}>Gratitude & Reflection</h2>
-                                <div className={styles.field}>
-                                    <label className={styles.label}>One thing I am grateful for today:</label>
-                                    <textarea
-                                        value={gratitude}
-                                        onChange={(e) => setGratitude(e.target.value)}
-                                        placeholder="Today I am grateful for..."
-                                        className={styles.textarea}
-                                    />
-                                </div>
-                                <div className={styles.field} style={{ marginTop: '1.5rem' }}>
-                                    <label className={styles.label}>Detailed Daily Reflection:</label>
-                                    <textarea
-                                        value={reflection}
-                                        onChange={(e) => setReflection(e.target.value)}
-                                        placeholder="What happened today? How did I handle challenges?"
-                                        className={styles.textarea}
-                                    />
+                                <div className={styles.formContentScroll}>
+                                    <div className={styles.field}>
+                                        <label className={styles.label}>One thing I am grateful for today:</label>
+                                        <textarea
+                                            value={gratitude}
+                                            onChange={(e) => setGratitude(e.target.value)}
+                                            placeholder="Today I am grateful for..."
+                                            className={styles.textarea}
+                                        />
+                                    </div>
+                                    <div className={styles.field} style={{ marginTop: '1.5rem' }}>
+                                        <label className={styles.label}>Detailed Daily Reflection:</label>
+                                        <textarea
+                                            value={reflection}
+                                            onChange={(e) => setReflection(e.target.value)}
+                                            placeholder="What happened today? How did I handle challenges?"
+                                            className={styles.textarea}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

@@ -204,6 +204,20 @@
     margin-top: 2rem;
 }
 
+.gratitudeCardStandard {
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.formContentScroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
 .historyItem {
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border);
