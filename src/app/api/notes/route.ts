@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { sendPushNotification } from '@/lib/pushbullet'
 
 export async function GET(request: Request) {
     try {
@@ -66,6 +67,10 @@ export async function POST(request: Request) {
             .select().single()
 
         if (error) throw error
+
+        // Pushbullet Notification
+        await sendPushNotification(user.id, '📓 Note Created', `Title: ${title}\nCategory: ${category || 'General'}`);
+
         return NextResponse.json({ success: true, note: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
@@ -96,6 +101,10 @@ export async function PATCH(request: Request) {
             .select().single()
 
         if (error) throw error
+
+        // Pushbullet Notification
+        await sendPushNotification(user.id, '📓 Note Updated', `Title: ${data.title}`);
+
         return NextResponse.json({ success: true, note: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })

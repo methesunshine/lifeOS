@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculateProductivityScore } from '@/lib/scoreCalculator'
+import { sendPushNotification } from '@/lib/pushbullet'
 
 export async function GET(request: Request) {
     try {
@@ -70,6 +71,10 @@ export async function POST(request: Request) {
         if (error) throw error
 
         await calculateProductivityScore(supabase, user.id)
+
+        // Pushbullet Notification
+        await sendPushNotification(user.id, '✅ Task Added', `Title: ${title}\nPriority: ${priority || 'Medium'}`);
+
         return NextResponse.json({ success: true, task: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
@@ -104,6 +109,14 @@ export async function PATCH(request: Request) {
         if (error) throw error
 
         await calculateProductivityScore(supabase, user.id)
+
+        // Pushbullet Notification
+        if (status) {
+            await sendPushNotification(user.id, '✅ Task Updated', `Title: ${data.title}\nStatus: ${status}`);
+        } else {
+            await sendPushNotification(user.id, '✅ Task Updated', `Title: ${data.title}`);
+        }
+
         return NextResponse.json({ success: true, task: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
