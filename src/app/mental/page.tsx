@@ -11,21 +11,14 @@ export default function MentalHealthPage() {
     const [reflection, setReflection] = useState('');
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState<any[]>([]);
-    const [mentalClearPoint, setMentalClearPoint] = useState<string | null>(null); // State to store the clear point
 
     useEffect(() => {
         fetchHistory();
         fetchInsights();
-        const cp = document.cookie.split('; ').find(row => row.startsWith('mental_history_cleared_at='))?.split('=')[1];
-        if (cp) setMentalClearPoint(cp);
     }, []);
 
     // Filter history based on mentalClearPoint
-    const filteredHistory = history.filter(entry => {
-        const entryTime = new Date(entry.created_at).getTime();
-        const clearTime = mentalClearPoint ? new Date(mentalClearPoint).getTime() : 0;
-        return entryTime > clearTime;
-    });
+    const filteredHistory = history; // Reverting to full history, handled by deletion
 
     const [insights, setInsights] = useState<{
         moodTrend: string,
@@ -109,11 +102,20 @@ export default function MentalHealthPage() {
     }
 
     async function handleClearAll() {
-        const now = new Date().toISOString();
-        document.cookie = `mental_history_cleared_at=${now}; path=/; max-age=31536000`; // 1 year
-        setMentalClearPoint(now);
-        setIsDeletingAllMentals(false);
-        setMessage({ type: 'success', text: 'Tracking view cleared.' });
+        setLoading(true);
+        const res = await fetch(`/api/mental?id=all`, {
+            method: 'DELETE',
+        });
+
+        if (res.ok) {
+            fetchHistory();
+            fetchInsights();
+            setIsDeletingAllMentals(false);
+            setMessage({ type: 'success', text: 'All tracking history cleared.' });
+        } else {
+            setMessage({ type: 'error', text: 'Failed to clear history.' });
+        }
+        setLoading(false);
     }
 
     const [showFullHistory, setShowFullHistory] = useState(false);
