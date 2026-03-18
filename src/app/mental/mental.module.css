@@ -195,7 +195,7 @@
 
 .historyCardStandard {
     height: 400px;
-    width: 320px;
+    width: 300px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
