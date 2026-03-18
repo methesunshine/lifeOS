@@ -78,6 +78,24 @@
     gap: 2.5rem;
 }
 
+.compactSliderGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.matchInsightsHeight {
+    height: 280px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.matchInsightsHeight .historyList {
+    flex: 1;
+    overflow-y: auto;
+}
+
 .fieldHeader {
     display: flex;
     justify-content: space-between;

@@ -156,34 +156,31 @@ export default function MentalHealthPage() {
                 <div className={styles.grid}>
                     <section className={styles.mainCol}>
                         <form onSubmit={handleSubmit} className={styles.formCard}>
-                            <div className="card">
-                                <h2 className={styles.sectionTitle}>Daily Core Metrics</h2>
-                                <div className={styles.sliderGroup}>
+                            <div className={`card ${styles.matchInsightsHeight}`}>
+                                <h2 className={styles.sectionTitle} style={{ marginBottom: '1rem', fontSize: '1rem' }}>Daily Core Metrics</h2>
+                                <div className={styles.compactSliderGroup}>
                                     <div className={styles.field}>
-                                        <div className={styles.fieldHeader}>
-                                            <label>Mood State</label>
-                                            <span className={styles.valueDisplay}>{mood}/10</span>
+                                        <div className={styles.fieldHeader} style={{ marginBottom: '0.25rem' }}>
+                                            <label style={{ fontSize: '0.8rem' }}>Mood State</label>
+                                            <span className={styles.valueDisplay} style={{ padding: '0.1rem 0.4rem', fontSize: '0.75rem' }}>{mood}/10</span>
                                         </div>
-                                        <input type="range" min="0" max="10" value={mood} onChange={(e) => setMood(parseInt(e.target.value))} className={styles.range} />
-                                        <div className={styles.rangeLabels}><span>Low</span><span>Optimal</span></div>
+                                        <input type="range" min="0" max="10" value={mood} onChange={(e) => setMood(parseInt(e.target.value))} className={styles.range} style={{ height: '4px' }} />
                                     </div>
 
                                     <div className={styles.field}>
-                                        <div className={styles.fieldHeader}>
-                                            <label>Stress Level</label>
-                                            <span className={styles.valueDisplay}>{stress}/10</span>
+                                        <div className={styles.fieldHeader} style={{ marginBottom: '0.25rem' }}>
+                                            <label style={{ fontSize: '0.8rem' }}>Stress Level</label>
+                                            <span className={styles.valueDisplay} style={{ padding: '0.1rem 0.4rem', fontSize: '0.75rem' }}>{stress}/10</span>
                                         </div>
-                                        <input type="range" min="0" max="10" value={stress} onChange={(e) => setStress(parseInt(e.target.value))} className={styles.range} />
-                                        <div className={styles.rangeLabels}><span>Calm</span><span>High</span></div>
+                                        <input type="range" min="0" max="10" value={stress} onChange={(e) => setStress(parseInt(e.target.value))} className={styles.range} style={{ height: '4px' }} />
                                     </div>
 
                                     <div className={styles.field}>
-                                        <div className={styles.fieldHeader}>
-                                            <label>Focus / Flow</label>
-                                            <span className={styles.valueDisplay}>{focus}/10</span>
+                                        <div className={styles.fieldHeader} style={{ marginBottom: '0.25rem' }}>
+                                            <label style={{ fontSize: '0.8rem' }}>Focus / Flow</label>
+                                            <span className={styles.valueDisplay} style={{ padding: '0.1rem 0.4rem', fontSize: '0.75rem' }}>{focus}/10</span>
                                         </div>
-                                        <input type="range" min="0" max="10" value={focus} onChange={(e) => setFocus(parseInt(e.target.value))} className={styles.range} />
-                                        <div className={styles.rangeLabels}><span>Distracted</span><span>Deep Work</span></div>
+                                        <input type="range" min="0" max="10" value={focus} onChange={(e) => setFocus(parseInt(e.target.value))} className={styles.range} style={{ height: '4px' }} />
                                     </div>
                                 </div>
                             </div>
@@ -210,6 +207,8 @@ export default function MentalHealthPage() {
                                 </div>
                             </div>
 
+
+
                             <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
                                 <button type="button" onClick={handleReset} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} disabled={loading} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.borderColor = 'var(--text-muted)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
                                     Reset Form
@@ -222,7 +221,7 @@ export default function MentalHealthPage() {
                     </section>
 
                     <aside className={styles.sideCol}>
-                        <div className="card glass">
+                        <div className={`card glass ${styles.matchInsightsHeight}`}>
                             <h3 className={styles.sideTitle}>Recent Insights</h3>
                             <div className={styles.insightItem}>
                                 <span className={styles.dot} style={{
