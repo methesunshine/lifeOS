@@ -11,6 +11,22 @@ export default function MentalHealthPage() {
     const [reflection, setReflection] = useState('');
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState<any[]>([]);
+    const [mentalClearPoint, setMentalClearPoint] = useState<string | null>(null); // State to store the clear point
+
+    useEffect(() => {
+        fetchHistory();
+        fetchInsights();
+        const cp = document.cookie.split('; ').find(row => row.startsWith('mental_history_cleared_at='))?.split('=')[1];
+        if (cp) setMentalClearPoint(cp);
+    }, []);
+
+    // Filter history based on mentalClearPoint
+    const filteredHistory = history.filter(entry => {
+        const entryTime = new Date(entry.created_at).getTime();
+        const clearTime = mentalClearPoint ? new Date(mentalClearPoint).getTime() : 0;
+        return entryTime > clearTime;
+    });
+
     const [insights, setInsights] = useState<{
         moodTrend: string,
         sleepFocusAlert: boolean,
@@ -25,10 +41,6 @@ export default function MentalHealthPage() {
     const [isDeletingMentalId, setIsDeletingMentalId] = useState<string | null>(null);
     const [isDeletingAllMentals, setIsDeletingAllMentals] = useState(false);
 
-    useEffect(() => {
-        fetchHistory();
-        fetchInsights();
-    }, []);
 
     async function fetchHistory() {
         const res = await fetch('/api/mental');
@@ -97,20 +109,11 @@ export default function MentalHealthPage() {
     }
 
     async function handleClearAll() {
-        setLoading(true);
-        const res = await fetch(`/api/mental?id=all`, {
-            method: 'DELETE',
-        });
-
-        if (res.ok) {
-            fetchHistory();
-            fetchInsights();
-            setIsDeletingAllMentals(false);
-            setMessage({ type: 'success', text: 'All tracking history cleared.' });
-        } else {
-            setMessage({ type: 'error', text: 'Failed to clear history.' });
-        }
-        setLoading(false);
+        const now = new Date().toISOString();
+        document.cookie = `mental_history_cleared_at=${now}; path=/; max-age=31536000`; // 1 year
+        setMentalClearPoint(now);
+        setIsDeletingAllMentals(false);
+        setMessage({ type: 'success', text: 'Tracking view cleared.' });
     }
 
     const [showFullHistory, setShowFullHistory] = useState(false);
@@ -240,36 +243,40 @@ export default function MentalHealthPage() {
                             </div>
                         </div>
 
-                        <div className={styles.historyCardStandard}>
+                        <div className={styles.historyCardStandard} style={{ width: '100%' }}>
                             <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                     <h3 className={styles.sideTitle} style={{ margin: 0 }}>History Overview</h3>
-                                    {history.length > 0 && (
-                                        <button 
-                                            onClick={() => setIsDeletingAllMentals(true)} 
-                                            className={styles.deleteBtn}
-                                            style={{ fontSize: '0.75rem', opacity: 0.7 }}
-                                            title="Clear All History"
-                                        >
-                                            Clear All 🗑️
-                                        </button>
+                                    {filteredHistory.length > 0 && (
+                                        isDeletingAllMentals ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Clear all?</span>
+                                                <button 
+                                                    onClick={() => {
+                                                        const now = new Date().toISOString();
+                                                        document.cookie = `mental_history_cleared_at=${now}; path=/; max-age=31536000`;
+                                                        window.location.reload();
+                                                    }}
+                                                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                                                >Yes</button>
+                                                <button onClick={() => setIsDeletingAllMentals(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>No</button>
+                                            </div>
+                                        ) : (
+                                            <button 
+                                                onClick={() => setIsDeletingAllMentals(true)} 
+                                                className={styles.deleteBtn}
+                                                style={{ opacity: 1, fontSize: '0.85rem' }}
+                                            >
+                                                Delete All 🗑️
+                                            </button>
+                                        )
                                     )}
                                 </div>
 
-                                {isDeletingAllMentals && (
-                                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                                        <p style={{ fontSize: '0.75rem', color: 'var(--red)', marginBottom: '0.5rem', fontWeight: 'bold' }}>Clear entire history?</p>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button onClick={handleClearAll} style={{ background: 'var(--red)', color: 'white', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', cursor: 'pointer' }}>Yes</button>
-                                            <button onClick={() => setIsDeletingAllMentals(false)} style={{ background: 'transparent', border: '1px solid var(--border)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', cursor: 'pointer' }}>No</button>
-                                        </div>
-                                    </div>
-                                )}
-
                                 <div className={styles.historyList}>
-                                    {history.length > 0 ? (
+                                    {filteredHistory.length > 0 ? (
                                         <>
-                                            {history.map((entry) => (
+                                            {filteredHistory.map((entry) => (
                                                 <div key={entry.id} className={styles.historyItem}>
                                                     <div className={styles.historyHeader}>
                                                         <div className={styles.historyDate}>
