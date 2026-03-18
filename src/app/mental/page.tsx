@@ -188,39 +188,41 @@ export default function MentalHealthPage() {
                                 </div>
                             </div>
 
-                            <div className={`card ${styles.gratitudeCardStandard}`} style={{ marginTop: '2rem' }}>
-                                <h2 className={styles.sectionTitle}>Gratitude & Reflection</h2>
-                                <div className={styles.formContentScroll}>
-                                    <div className={styles.field}>
-                                        <label className={styles.label}>One thing I am grateful for today:</label>
-                                        <textarea
-                                            value={gratitude}
-                                            onChange={(e) => setGratitude(e.target.value)}
-                                            placeholder="Today I am grateful for..."
-                                            className={styles.textarea}
-                                        />
-                                    </div>
-                                    <div className={styles.field} style={{ marginTop: '1.5rem' }}>
-                                        <label className={styles.label}>Detailed Daily Reflection:</label>
-                                        <textarea
-                                            value={reflection}
-                                            onChange={(e) => setReflection(e.target.value)}
-                                            placeholder="What happened today? How did I handle challenges?"
-                                            className={styles.textarea}
-                                        />
+                            <div className={styles.gratitudeSectionWrapper}>
+                                <div className={`card ${styles.gratitudeCardFlex}`}>
+                                    <h2 className={styles.sectionTitle} style={{ fontSize: '1rem', marginBottom: '1rem' }}>Gratitude & Reflection</h2>
+                                    <div className={styles.formContentScroll}>
+                                        <div className={styles.field}>
+                                            <label className={styles.label} style={{ fontSize: '0.85rem' }}>One thing I am grateful for today:</label>
+                                            <textarea
+                                                value={gratitude}
+                                                onChange={(e) => setGratitude(e.target.value)}
+                                                placeholder="Today I am grateful for..."
+                                                className={styles.textarea}
+                                                style={{ minHeight: '80px', padding: '0.75rem' }}
+                                            />
+                                        </div>
+                                        <div className={styles.field} style={{ marginTop: '1.25rem' }}>
+                                            <label className={styles.label} style={{ fontSize: '0.85rem' }}>Detailed Daily Reflection:</label>
+                                            <textarea
+                                                value={reflection}
+                                                onChange={(e) => setReflection(e.target.value)}
+                                                placeholder="What happened today? How did I handle challenges?"
+                                                className={styles.textarea}
+                                                style={{ minHeight: '80px', padding: '0.75rem' }}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-
-
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
-                                <button type="button" onClick={handleReset} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} disabled={loading} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.borderColor = 'var(--text-muted)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
-                                    Reset Form
-                                </button>
-                                <button type="submit" className="primary-btn" style={{ flex: 2 }} disabled={loading}>
-                                    {loading ? 'Saving to Systems...' : 'Commit Daily Entry'}
-                                </button>
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <button type="button" onClick={handleReset} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }} disabled={loading} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.borderColor = 'var(--text-muted)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
+                                        Reset Form
+                                    </button>
+                                    <button type="submit" className="primary-btn" style={{ flex: 2, padding: '0.75rem', fontSize: '0.85rem' }} disabled={loading}>
+                                        {loading ? 'Saving...' : 'Commit Daily Entry'}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </section>
