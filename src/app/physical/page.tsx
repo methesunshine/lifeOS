@@ -398,7 +398,7 @@ export default function PhysicalHealthPage() {
                             )}
                         </div>
 
-                        <div className={styles.historyCardStandard}>
+                        <div className={styles.historyCardStandard} style={{ marginTop: '2.5rem' }}>
                             <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                     <h3 className={styles.sideTitle} style={{ margin: 0 }}>Recent Logs</h3>
