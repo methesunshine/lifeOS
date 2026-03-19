@@ -193,9 +193,9 @@ export default function FinancePage() {
                 <div className={styles.grid}>
                     <section className={styles.mainCol}>
                         <form onSubmit={handleSubmit} className={styles.formCard}>
-                            <div className="card glass">
+                            <div className="card glass" style={{ padding: '0.65rem' }}>
                                 <h2 className={styles.sectionTitle}>New Transaction</h2>
-                                <div className={styles.fieldGroup}>
+                                <div className={styles.fieldGroup} style={{ gap: '0.75rem' }}>
                                     <div className={styles.field}>
                                         <label className={styles.label}>Amount</label>
                                         <input
@@ -277,8 +277,8 @@ export default function FinancePage() {
                                 </div>
                             </div>
 
-                            <button type="submit" className="primary-btn" style={{ marginTop: '2.5rem', width: '100%' }} disabled={loading}>
-                                {loading ? 'Processing Flow...' : 'Record Transaction'}
+                            <button type="submit" className="primary-btn" style={{ marginTop: '1rem', width: '100%', padding: '0.65rem', fontSize: '0.8rem' }} disabled={loading}>
+                                {loading ? 'Processing...' : 'Record Transaction'}
                             </button>
                         </form>
                     </section>
@@ -310,44 +310,58 @@ export default function FinancePage() {
                             </div>
                         </div>
 
-                        <div className="card" style={{ marginTop: '2rem' }}>
-                            <h3 className={styles.sideTitle}>Recent Logs</h3>
-                            <div className={styles.historyList}>
-                                {history.length > 0 ? (
-                                    history.slice(0, 5).map((entry) => (
-                                        <div key={entry.id} className={styles.historyItem}>
-                                            <div className={styles.historyHeader}>
-                                                <div className={styles.historyDate}>
-                                                    <div>{formatDateTime(entry.created_at).date}</div>
-                                                    <div style={{ opacity: 0.6 }}>{formatDateTime(entry.created_at).time}</div>
+                        <div className={styles.historyCardStandard}>
+                            <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '0.65rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                    <h3 className={styles.sideTitle} style={{ margin: 0 }}>Recent Logs</h3>
+                                    {history.length > 0 && (
+                                        isDeletingAllFinance ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                <button onClick={handleClearAll} className={styles.deleteBtn} style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 'bold', padding: '0.2rem' }}>CONFIRM</button>
+                                                <button onClick={() => setIsDeletingAllFinance(false)} className={styles.deleteBtn} style={{ fontSize: '0.7rem', padding: '0.2rem' }}>NO</button>
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => setIsDeletingAllFinance(true)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', padding: '0.2rem' }} title="Clear All">🗑️ ALL</button>
+                                        )
+                                    )}
+                                </div>
+                                <div className={styles.historyList}>
+                                    {history.length > 0 ? (
+                                        history.map((entry) => (
+                                            <div key={entry.id} className={styles.historyItem}>
+                                                <div className={styles.historyHeader}>
+                                                    <div className={styles.historyDate}>
+                                                        <div>{formatDateTime(entry.transaction_date || entry.created_at).date}</div>
+                                                        <div style={{ opacity: 0.6 }}>{formatDateTime(entry.transaction_date || entry.created_at).time}</div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: entry.transaction_type === 'income' ? 'var(--accent)' : (entry.transaction_type === 'expense' ? '#ff4d4d' : '#ff9f43') }}>
+                                                            {entry.transaction_type === 'income' ? '+' : '-'}₹{parseFloat(entry.amount).toLocaleString()}
+                                                        </span>
+                                                        {isDeletingFinanceId === entry.id ? (
+                                                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                                <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn} style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 'bold' }}>✓</button>
+                                                                <button onClick={() => setIsDeletingFinanceId(null)} className={styles.deleteBtn} style={{ fontSize: '0.7rem' }}>✗</button>
+                                                            </div>
+                                                        ) : (
+                                                            <button onClick={() => setIsDeletingFinanceId(entry.id)} className={styles.deleteBtn} style={{ fontSize: '0.7rem' }}>🗑️</button>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                                    <span className={styles.historyAmount} style={{ color: entry.transaction_type === 'income' ? 'var(--accent)' : 'inherit' }}>
-                                                        {entry.transaction_type === 'income' ? '+' : '-'}₹{parseFloat(entry.amount).toLocaleString()}
-                                                    </span>
-                                                    {isDeletingFinanceId === entry.id ? (
-                                                        <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                                            <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
-                                                            <button onClick={() => setIsDeletingFinanceId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
-                                                        </div>
-                                                    ) : (
-                                                        <button onClick={() => setIsDeletingFinanceId(entry.id)} className={styles.deleteBtn}>🗑️</button>
-                                                    )}
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span>{entry.category}</span>
+                                                    {entry.description && <span style={{ fontStyle: 'italic' }}>{entry.description.slice(0, 15)}{entry.description.length > 15 ? '...' : ''}</span>}
                                                 </div>
                                             </div>
-                                            <div className={styles.historyMeta} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
-                                                <span className={styles.categoryBadge}>{entry.category}</span>
-                                                {entry.description && <span className={styles.historyDesc} style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{entry.description}</span>}
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className={styles.hint}>No transactions found.</p>
-                                )}
+                                        ))
+                                    ) : (
+                                        <p className={styles.hint}>No transactions found.</p>
+                                    )}
+                                </div>
+                                <button className="secondary-btn" style={{ width: '100%', marginTop: '0.75rem', fontSize: '0.7rem', padding: '0.4rem' }} onClick={() => setViewMode('history')}>
+                                    Enter Full Tracking Dashboard
+                                </button>
                             </div>
-                            <button className="secondary-btn" style={{ width: '100%', marginTop: '1.5rem', fontSize: '0.75rem' }} onClick={() => setViewMode('history')}>
-                                View Full Dashboard
-                            </button>
                         </div>
                     </aside>
                 </div>
