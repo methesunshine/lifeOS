@@ -442,18 +442,18 @@ export default function PhysicalHealthPage() {
                                                     <p className={styles.historyNote}>💤 Sleep: {entry.sleep_hours}h • 💧 Water: {entry.water_intake_ml}ml</p>
                                                 </div>
                                             ))}
-                                            <button
-                                                className={styles.historyViewBtn}
-                                                onClick={() => setViewMode('history')}
-                                                style={{ marginTop: '1rem', padding: '0.75rem', fontSize: '0.8rem' }}
-                                            >
-                                                Enter Full Tracking Dashboard
-                                            </button>
                                         </>
                                     ) : (
                                         <p className={styles.hint}>No logs recorded yet. Push your limits!</p>
                                     )}
                                 </div>
+                                <button
+                                    className={styles.historyViewBtn}
+                                    onClick={() => setViewMode('history')}
+                                    style={{ marginTop: '1rem', padding: '0.75rem', fontSize: '0.8rem' }}
+                                >
+                                    Enter Full Tracking Dashboard
+                                </button>
                             </div>
                         </div>
                     </aside>
