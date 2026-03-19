@@ -195,34 +195,34 @@ export default function MentalHealthPage() {
                                     <h2 className={styles.sectionTitle} style={{ fontSize: '0.85rem', marginBottom: '0.75rem' }}>Gratitude & Reflection</h2>
                                     <div className={styles.formContentScroll}>
                                         <div className={styles.field}>
-                                            <label className={styles.label} style={{ fontSize: '0.75rem' }}>One thing I am grateful for today:</label>
+                                            <label className={styles.label} style={{ fontSize: '0.7rem' }}>I am grateful for:</label>
                                             <textarea
                                                 value={gratitude}
                                                 onChange={(e) => setGratitude(e.target.value)}
                                                 placeholder="..."
                                                 className={styles.textarea}
-                                                style={{ minHeight: '40px', padding: '0.5rem', fontSize: '0.75rem' }}
+                                                style={{ minHeight: '30px', padding: '0.35rem', fontSize: '0.7rem' }}
                                             />
                                         </div>
-                                        <div className={styles.field} style={{ marginTop: '0.75rem' }}>
-                                            <label className={styles.label} style={{ fontSize: '0.75rem' }}>Detailed Daily Reflection:</label>
+                                        <div className={styles.field} style={{ marginTop: '0.4rem' }}>
+                                            <label className={styles.label} style={{ fontSize: '0.7rem' }}>Reflection:</label>
                                             <textarea
                                                 value={reflection}
                                                 onChange={(e) => setReflection(e.target.value)}
                                                 placeholder="..."
                                                 className={styles.textarea}
-                                                style={{ minHeight: '40px', padding: '0.5rem', fontSize: '0.75rem' }}
+                                                style={{ minHeight: '30px', padding: '0.35rem', fontSize: '0.7rem' }}
                                             />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <button type="button" onClick={handleReset} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }} disabled={loading} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.borderColor = 'var(--text-muted)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
-                                        Reset Form
+                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                                    <button type="button" onClick={handleReset} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.7rem' }} disabled={loading}>
+                                        Reset
                                     </button>
-                                    <button type="submit" className="primary-btn" style={{ flex: 2, padding: '0.75rem', fontSize: '0.85rem' }} disabled={loading}>
-                                        {loading ? 'Saving...' : 'Commit Daily Entry'}
+                                    <button type="submit" className="primary-btn" style={{ flex: 2, padding: '0.5rem', fontSize: '0.7rem', borderRadius: '0.5rem' }} disabled={loading}>
+                                        {loading ? 'Saving' : 'Commit Entry'}
                                     </button>
                                 </div>
                             </div>
@@ -232,20 +232,22 @@ export default function MentalHealthPage() {
                     <aside className={styles.sideCol}>
                         <div className={`card glass ${styles.matchInsightsHeight}`} style={{ padding: '0.65rem' }}>
                             <h3 className={styles.sideTitle} style={{ fontSize: '0.8rem', marginBottom: '0.75rem' }}>Recent Insights</h3>
-                            <div className={styles.insightItem}>
+                             <div className={styles.insightItem} style={{ marginBottom: '0.4rem' }}>
                                 <span className={styles.dot} style={{
+                                    marginTop: '4px',
                                     background: insights.moodStatus === 'optimal' ? 'var(--primary)' :
                                         insights.moodStatus === 'warning' ? '#ef4444' :
                                             insights.moodStatus === 'stable' ? 'var(--accent)' : 'var(--text-muted)'
                                 }}></span>
-                                <p>{insights.moodRecommendation || `Your mood is ${Number(insights.moodTrend) >= 0 ? 'up' : 'down'} ${Math.abs(Number(insights.moodTrend))}% compared to last week.`}</p>
+                                <p style={{ fontSize: '0.75rem', margin: 0 }}>{insights.moodRecommendation || `Mood ${Number(insights.moodTrend) >= 0 ? 'up' : 'down'} ${Math.abs(Number(insights.moodTrend))}%`}</p>
                             </div>
-                            <div className={styles.insightItem}>
+                            <div className={styles.insightItem} style={{ marginBottom: 0 }}>
                                 <span className={styles.dot} style={{
+                                    marginTop: '4px',
                                     background: insights.moodStatus === 'warning' || insights.sleepFocusAlert ? '#f59e0b' :
                                         insights.moodStatus === 'optimal' ? 'var(--primary)' : 'var(--accent)'
                                 }}></span>
-                                <p><strong>{insights.systemStatusLabel || 'System Stable'}:</strong> {insights.systemStatusMessage || 'No critical sleep-focus correlations detected.'}</p>
+                                <p style={{ fontSize: '0.75rem', margin: 0 }}>{insights.systemStatusMessage || 'System Stable'}</p>
                             </div>
                         </div>
 
