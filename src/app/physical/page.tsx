@@ -362,8 +362,8 @@ export default function PhysicalHealthPage() {
                     </section>
 
                     <aside className={styles.sideCol}>
-                        <div className="card glass">
-                            <h3 className={styles.sideTitle}>Vital Stats</h3>
+                        <div className="card" style={{ padding: '0.85rem' }}>
+                            <h3 className={styles.sideTitle} style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>Vital Stats</h3>
                             <div className={styles.statBox}>
                                 <p className={styles.statLabel}>Consistency</p>
                                 <p className={styles.statValue} style={{ color: 'var(--accent)' }}>{consistencyScore}%</p>
@@ -372,20 +372,28 @@ export default function PhysicalHealthPage() {
                                 <p className={styles.statLabel}>Workout Streak</p>
                                 <p className={styles.statValue} style={{ color: '#ff9f43' }}>{streakCount} Days</p>
                             </div>
-
                             {isLastEntryToday && (
-                                <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
-                                    <p className={styles.statLabel}>Today's Record</p>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.50rem', marginTop: '0.5rem' }}>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>💤 Sleep: {lastEntry.sleep_hours}h</div>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>💧 Water: {lastEntry.water_intake_ml}ml</div>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>👣 Steps: {lastEntry.steps}</div>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8 }}>⚖️ Weight: {lastEntry.weight_kg || lastEntry.weight}kg</div>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8, gridColumn: 'span 2', marginTop: '0.5rem', padding: '0.5rem', borderRadius: '4px', background: lastEntry.workout_completed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 159, 67, 0.1)', color: lastEntry.workout_completed ? '#10b981' : '#ff9f43', textAlign: 'center' }}>
-                                            {lastEntry.workout_completed ? '🏋️ WORKOUT COMPLETED' : '🕒 WORKOUT PENDING'}
+                                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
+                                    <p className={styles.statLabel} style={{ marginBottom: '0.4rem' }}>Today's Record</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem' }}>
+                                        <div style={{ fontSize: '0.7rem', fontWeight: 700, opacity: 0.8 }}>💤 {lastEntry.sleep_hours}h</div>
+                                        <div style={{ fontSize: '0.7rem', fontWeight: 700, opacity: 0.8 }}>💧 {lastEntry.water_intake_ml}ml</div>
+                                        <div style={{ fontSize: '0.7rem', fontWeight: 700, opacity: 0.8 }}>👣 {lastEntry.steps}</div>
+                                        <div style={{ fontSize: '0.7rem', fontWeight: 700, opacity: 0.8 }}>⚖️ {lastEntry.weight_kg || lastEntry.weight}kg</div>
+                                        <div style={{
+                                            fontSize: '0.65rem',
+                                            fontWeight: 800,
+                                            gridColumn: 'span 2',
+                                            marginTop: '0.4rem',
+                                            padding: '0.35rem',
+                                            borderRadius: '4px',
+                                            background: lastEntry.workout_completed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 159, 67, 0.1)',
+                                            color: lastEntry.workout_completed ? '#10b981' : '#ff9f43',
+                                            textAlign: 'center'
+                                        }}>
+                                            {lastEntry.workout_completed ? '🏋️ COMPLETED' : '🕒 PENDING'}
                                         </div>
                                     </div>
-                                    <p style={{ fontSize: '0.65rem', color: 'var(--accent)', marginTop: '0.75rem', fontWeight: 700 }}>✅ LOGGED FOR TODAY</p>
                                 </div>
                             )}
                         </div>

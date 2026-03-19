@@ -220,7 +220,10 @@
 }
 
 .statBox {
-    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.65rem;
 }
 
 .statBox:last-child {
@@ -228,17 +231,17 @@
 }
 
 .statLabel {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: 800;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
 }
 
 .statValue {
-    font-size: 1.25rem;
-    font-weight: 900;
+    font-size: 1rem;
+    font-weight: 800;
 }
 
 .historyList {
