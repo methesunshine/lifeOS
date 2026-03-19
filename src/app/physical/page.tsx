@@ -364,13 +364,15 @@ export default function PhysicalHealthPage() {
                     <aside className={styles.sideCol}>
                         <div className="card" style={{ padding: '0.65rem' }}>
                             <h3 className={styles.sideTitle} style={{ fontSize: '0.8rem', marginBottom: '0.75rem' }}>Vital Stats</h3>
-                            <div className={styles.statBox}>
-                                <p className={styles.statLabel}>Consistency</p>
-                                <p className={styles.statValue} style={{ color: 'var(--accent)' }}>{consistencyScore}%</p>
-                            </div>
-                            <div className={styles.statBox}>
-                                <p className={styles.statLabel}>Workout Streak</p>
-                                <p className={styles.statValue} style={{ color: '#ff9f43' }}>{streakCount} Days</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                <div className={styles.statBox} style={{ flexDirection: 'column', alignItems: 'flex-start', margin: 0 }}>
+                                    <p className={styles.statLabel}>Consistency</p>
+                                    <p className={styles.statValue} style={{ color: 'var(--accent)' }}>{consistencyScore}%</p>
+                                </div>
+                                <div className={styles.statBox} style={{ flexDirection: 'column', alignItems: 'flex-start', margin: 0 }}>
+                                    <p className={styles.statLabel}>Streak</p>
+                                    <p className={styles.statValue} style={{ color: '#ff9f43' }}>{streakCount} Days</p>
+                                </div>
                             </div>
                             {isLastEntryToday && (
                                 <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
