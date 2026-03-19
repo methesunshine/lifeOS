@@ -362,8 +362,8 @@ export default function PhysicalHealthPage() {
                     </section>
 
                     <aside className={styles.sideCol}>
-                        <div className="card" style={{ padding: '0.85rem' }}>
-                            <h3 className={styles.sideTitle} style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>Vital Stats</h3>
+                        <div className="card" style={{ padding: '0.65rem' }}>
+                            <h3 className={styles.sideTitle} style={{ fontSize: '0.8rem', marginBottom: '0.75rem' }}>Vital Stats</h3>
                             <div className={styles.statBox}>
                                 <p className={styles.statLabel}>Consistency</p>
                                 <p className={styles.statValue} style={{ color: 'var(--accent)' }}>{consistencyScore}%</p>
