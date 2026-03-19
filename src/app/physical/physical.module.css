@@ -111,16 +111,16 @@
 
 .metricInputContainer {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    flex-direction: row;
+    align-items: center;
     gap: 0.1rem;
     background: var(--bg-sidebar);
-    padding: 0.25rem 0.65rem;
-    border-radius: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.5rem;
     border: 1px solid var(--border);
     transition: all 0.2s ease;
     cursor: text;
-    min-width: 80px;
+    min-width: 60px;
 }
 
 .metricInputContainer:focus-within {
@@ -148,12 +148,7 @@
 }
 
 .rangeHint {
-    font-size: 0.6rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    opacity: 0.8;
+    display: none;
 }
 
 /* Chrome, Safari, Edge, Opera */
@@ -184,13 +179,7 @@
 }
 
 .rangeLabels {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 0.5rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
+    display: none;
 }
 
 .numberInput {

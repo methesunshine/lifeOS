@@ -230,8 +230,8 @@ export default function PhysicalHealthPage() {
                                 <h2 className={styles.sectionTitle} style={{ fontSize: '1rem', marginBottom: '1.25rem' }}>Daily Vital Metrics</h2>
                                 <div className={styles.compactMetricsGroup}>
                                     <div className={styles.field}>
-                                        <div className={styles.fieldHeader}>
-                                            <label style={{ fontSize: '0.85rem' }}>Sleep Duration</label>
+                                        <div className={styles.fieldHeader} style={{ marginBottom: '0.1rem' }}>
+                                            <label style={{ fontSize: '0.8rem', opacity: 0.9 }}>Sleep</label>
                                             <div className={styles.metricInputContainer}>
                                                 <div className={styles.metricInputGroup}>
                                                     <input
@@ -239,22 +239,21 @@ export default function PhysicalHealthPage() {
                                                         value={sleep}
                                                         onChange={(e) => setSleep(parseFloat(e.target.value) || 0)}
                                                         className={styles.metricInput}
+                                                        style={{ fontSize: '0.9rem', width: '2.5rem' }}
                                                         step="0.5"
                                                         min="0"
                                                         max="15"
                                                     />
-                                                    <span className={styles.unitLabel}>h</span>
+                                                    <span className={styles.unitLabel} style={{ fontSize: '0.65rem' }}>h</span>
                                                 </div>
-                                                <span className={styles.rangeHint} style={{ fontSize: '0.55rem' }}>Range: 0-15</span>
                                             </div>
                                         </div>
                                         <input type="range" min="0" max="15" step="0.5" value={sleep} onChange={(e) => setSleep(parseFloat(e.target.value))} className={styles.range} />
-                                        <div className={styles.rangeLabels} style={{ marginTop: '0.25rem' }}><span>Tired</span><span>Rested</span></div>
                                     </div>
 
                                     <div className={styles.field}>
-                                        <div className={styles.fieldHeader}>
-                                            <label style={{ fontSize: '0.85rem' }}>Water Intake</label>
+                                        <div className={styles.fieldHeader} style={{ marginBottom: '0.1rem' }}>
+                                            <label style={{ fontSize: '0.8rem', opacity: 0.9 }}>Water</label>
                                             <div className={styles.metricInputContainer}>
                                                 <div className={styles.metricInputGroup}>
                                                     <input
@@ -262,22 +261,21 @@ export default function PhysicalHealthPage() {
                                                         value={water}
                                                         onChange={(e) => setWater(parseInt(e.target.value) || 0)}
                                                         className={styles.metricInput}
+                                                        style={{ fontSize: '0.9rem', width: '3rem' }}
                                                         step="100"
                                                         min="0"
                                                         max="5000"
                                                     />
-                                                    <span className={styles.unitLabel}>ml</span>
+                                                    <span className={styles.unitLabel} style={{ fontSize: '0.65rem' }}>ml</span>
                                                 </div>
-                                                <span className={styles.rangeHint} style={{ fontSize: '0.55rem' }}>Range: 0-5000</span>
                                             </div>
                                         </div>
                                         <input type="range" min="0" max="5000" step="100" value={water} onChange={(e) => setWater(parseInt(e.target.value))} className={styles.range} />
-                                        <div className={styles.rangeLabels} style={{ marginTop: '0.25rem' }}><span>Low</span><span>Hydrated</span></div>
                                     </div>
 
                                     <div className={styles.field}>
-                                        <div className={styles.fieldHeader}>
-                                            <label style={{ fontSize: '0.85rem' }}>Step Count</label>
+                                        <div className={styles.fieldHeader} style={{ marginBottom: '0.1rem' }}>
+                                            <label style={{ fontSize: '0.8rem', opacity: 0.9 }}>Steps</label>
                                             <div className={styles.metricInputContainer}>
                                                 <div className={styles.metricInputGroup}>
                                                     <input
@@ -285,17 +283,16 @@ export default function PhysicalHealthPage() {
                                                         value={steps}
                                                         onChange={(e) => setSteps(parseInt(e.target.value) || 0)}
                                                         className={styles.metricInput}
+                                                        style={{ fontSize: '0.9rem', width: '3rem' }}
                                                         step="500"
                                                         min="0"
                                                         max="20000"
                                                     />
-                                                    <span className={styles.unitLabel}>steps</span>
+                                                    <span className={styles.unitLabel} style={{ fontSize: '0.65rem' }}>steps</span>
                                                 </div>
-                                                <span className={styles.rangeHint} style={{ fontSize: '0.55rem' }}>Range: 0-20k</span>
                                             </div>
                                         </div>
                                         <input type="range" min="0" max="20000" step="500" value={steps} onChange={(e) => setSteps(parseInt(e.target.value))} className={styles.range} />
-                                        <div className={styles.rangeLabels} style={{ marginTop: '0.25rem' }}><span>Sedentary</span><span>Active</span></div>
                                     </div>
 
                                     <div className={`${styles.field} ${styles.checkboxField}`} style={{ padding: '0.75rem', marginTop: '0.25rem' }}>
@@ -306,8 +303,8 @@ export default function PhysicalHealthPage() {
                                     </div>
 
                                     <div className={styles.field}>
-                                        <div className={styles.fieldHeader}>
-                                            <label style={{ fontSize: '0.85rem' }}>Weight Balance</label>
+                                        <div className={styles.fieldHeader} style={{ marginBottom: '0.1rem' }}>
+                                            <label style={{ fontSize: '0.8rem', opacity: 0.9 }}>Weight</label>
                                             <div className={styles.metricInputContainer}>
                                                 <div className={styles.metricInputGroup}>
                                                     <input
@@ -315,17 +312,16 @@ export default function PhysicalHealthPage() {
                                                         value={weight}
                                                         onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
                                                         className={styles.metricInput}
+                                                        style={{ fontSize: '0.9rem', width: '2.5rem' }}
                                                         step="0.1"
                                                         min="0"
                                                         max="150"
                                                     />
-                                                    <span className={styles.unitLabel}>kg</span>
+                                                    <span className={styles.unitLabel} style={{ fontSize: '0.65rem' }}>kg</span>
                                                 </div>
-                                                <span className={styles.rangeHint} style={{ fontSize: '0.55rem' }}>Range: 0-150</span>
                                             </div>
                                         </div>
                                         <input type="range" min="0" max="150" step="0.1" value={weight} onChange={(e) => setWeight(parseFloat(e.target.value))} className={styles.range} />
-                                        <div className={styles.rangeLabels} style={{ marginTop: '0.25rem' }}><span>Current</span><span>Target</span></div>
                                     </div>
 
                                     <div className={styles.field} style={{ marginTop: '1.5rem' }}>
