@@ -237,14 +237,19 @@
 }
 
 .statValue {
-    font-size: 2rem;
+    font-size: 1.25rem;
     font-weight: 900;
 }
 
 .historyList {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 0.75rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
 }
 
 .historyItem {
