@@ -223,7 +223,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.45rem;
+    margin-bottom: 0.35rem;
 }
 
 .statBox:last-child {
@@ -231,11 +231,7 @@
 }
 
 .statLabel {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     font-weight: 800;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -244,33 +240,33 @@
 }
 
 .statValue {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 800;
 }
 
 .historyCardStandard {
-    height: 300px;
+    height: 220px;
     width: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     box-sizing: border-box;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
 }
 
 .historyList {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 0.75rem;
     overflow-y: auto;
     flex: 1;
-    padding-right: 0.75rem;
+    padding-right: 0.5rem;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
 }
 
 .historyItem {
-    padding-bottom: 1rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border);
 }
 
@@ -285,13 +281,13 @@
 }
 
 .historyDate {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--text-muted);
 }
 
 .historyMood {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 700;
 }
 
@@ -311,7 +307,7 @@
 }
 
 .historyNote {
-    font-size: 0.875rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     font-style: italic;
 }
