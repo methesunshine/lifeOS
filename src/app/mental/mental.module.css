@@ -161,8 +161,8 @@
 }
 
 .sideTitle {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
 }
 
 .insightItem {
@@ -197,7 +197,7 @@
 }
 
 .historyCardStandard {
-    height: 400px;
+    height: 300px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -207,7 +207,7 @@
 }
 
 .gratitudeSectionWrapper {
-    height: 400px;
+    height: 300px;
     display: flex;
     flex-direction: column;
     margin-top: 2rem;

@@ -161,8 +161,8 @@ export default function MentalHealthPage() {
                 <div className={styles.grid}>
                     <section className={styles.mainCol}>
                         <form onSubmit={handleSubmit} className={styles.formCard}>
-                            <div className={`card ${styles.matchInsightsHeight}`}>
-                                <h2 className={styles.sectionTitle} style={{ marginBottom: '1rem', fontSize: '1rem' }}>Daily Core Metrics</h2>
+                            <div className={`card ${styles.matchInsightsHeight}`} style={{ padding: '0.65rem' }}>
+                                <h2 className={styles.sectionTitle} style={{ marginBottom: '0.75rem', fontSize: '0.85rem' }}>Daily Core Metrics</h2>
                                 <div className={styles.compactSliderGroup}>
                                     <div className={styles.field}>
                                         <div className={styles.fieldHeader} style={{ marginBottom: '0.25rem' }}>
@@ -191,27 +191,27 @@ export default function MentalHealthPage() {
                             </div>
 
                             <div className={styles.gratitudeSectionWrapper}>
-                                <div className={`card ${styles.gratitudeCardFlex}`}>
-                                    <h2 className={styles.sectionTitle} style={{ fontSize: '1rem', marginBottom: '1rem' }}>Gratitude & Reflection</h2>
+                                <div className={`card ${styles.gratitudeCardFlex}`} style={{ padding: '0.65rem' }}>
+                                    <h2 className={styles.sectionTitle} style={{ fontSize: '0.85rem', marginBottom: '0.75rem' }}>Gratitude & Reflection</h2>
                                     <div className={styles.formContentScroll}>
                                         <div className={styles.field}>
-                                            <label className={styles.label} style={{ fontSize: '0.85rem' }}>One thing I am grateful for today:</label>
+                                            <label className={styles.label} style={{ fontSize: '0.75rem' }}>One thing I am grateful for today:</label>
                                             <textarea
                                                 value={gratitude}
                                                 onChange={(e) => setGratitude(e.target.value)}
-                                                placeholder="Today I am grateful for..."
+                                                placeholder="..."
                                                 className={styles.textarea}
-                                                style={{ minHeight: '80px', padding: '0.75rem' }}
+                                                style={{ minHeight: '40px', padding: '0.5rem', fontSize: '0.75rem' }}
                                             />
                                         </div>
-                                        <div className={styles.field} style={{ marginTop: '1.25rem' }}>
-                                            <label className={styles.label} style={{ fontSize: '0.85rem' }}>Detailed Daily Reflection:</label>
+                                        <div className={styles.field} style={{ marginTop: '0.75rem' }}>
+                                            <label className={styles.label} style={{ fontSize: '0.75rem' }}>Detailed Daily Reflection:</label>
                                             <textarea
                                                 value={reflection}
                                                 onChange={(e) => setReflection(e.target.value)}
-                                                placeholder="What happened today? How did I handle challenges?"
+                                                placeholder="..."
                                                 className={styles.textarea}
-                                                style={{ minHeight: '80px', padding: '0.75rem' }}
+                                                style={{ minHeight: '40px', padding: '0.5rem', fontSize: '0.75rem' }}
                                             />
                                         </div>
                                     </div>
@@ -230,8 +230,8 @@ export default function MentalHealthPage() {
                     </section>
 
                     <aside className={styles.sideCol}>
-                        <div className={`card glass ${styles.matchInsightsHeight}`}>
-                            <h3 className={styles.sideTitle}>Recent Insights</h3>
+                        <div className={`card glass ${styles.matchInsightsHeight}`} style={{ padding: '0.65rem' }}>
+                            <h3 className={styles.sideTitle} style={{ fontSize: '0.8rem', marginBottom: '0.75rem' }}>Recent Insights</h3>
                             <div className={styles.insightItem}>
                                 <span className={styles.dot} style={{
                                     background: insights.moodStatus === 'optimal' ? 'var(--primary)' :
@@ -249,10 +249,10 @@ export default function MentalHealthPage() {
                             </div>
                         </div>
 
-                        <div className={styles.historyCardStandard} style={{ width: '100%' }}>
-                            <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <h3 className={styles.sideTitle} style={{ margin: 0 }}>History Overview</h3>
+                        <div className={styles.historyCardStandard} style={{ marginTop: '2rem' }}>
+                            <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '0.65rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                    <h3 className={styles.sideTitle} style={{ margin: 0, fontSize: '0.8rem' }}>History Overview</h3>
                                     {filteredHistory.length > 0 && (
                                         isDeletingAllMentals ? (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
