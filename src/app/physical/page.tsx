@@ -390,70 +390,45 @@ export default function PhysicalHealthPage() {
                             )}
                         </div>
 
-                        <div className={styles.historyCardStandard}>
-                            <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <h3 className={styles.sideTitle} style={{ margin: 0 }}>Recent Logs</h3>
-                                    {history.length > 0 && (
-                                        isDeletingAllPhysical ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Clear all?</span>
-                                                <button 
-                                                    onClick={handleClearAll}
-                                                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                                                >Yes</button>
-                                                <button onClick={() => setIsDeletingAllPhysical(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>No</button>
-                                            </div>
-                                        ) : (
-                                            <button 
-                                                onClick={() => setIsDeletingAllPhysical(true)} 
-                                                className={styles.deleteBtn}
-                                                style={{ opacity: 1, fontSize: '0.85rem' }}
-                                            >
-                                                Delete All 🗑️
-                                            </button>
-                                        )
-                                    )}
-                                </div>
-                                <div className={styles.historyList}>
-                                    {history.length > 0 ? (
-                                        <>
-                                            {history.map((entry) => (
-                                                <div key={entry.id} className={styles.historyItem}>
-                                                    <div className={styles.historyHeader}>
-                                                        <div className={styles.historyDate}>
-                                                            <div>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                                                            <div style={{ opacity: 0.6, fontSize: '0.8rem' }}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
-                                                        </div>
-                                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                            <span className={styles.historyMood}>
-                                                                {entry.workout_completed ? '🏃' : '🧘'} • {entry.steps}
-                                                            </span>
-                                                            {isDeletingPhysicalId === entry.id ? (
-                                                                <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                                                    <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
-                                                                    <button onClick={() => setIsDeletingPhysicalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>X</button>
-                                                                </div>
-                                                            ) : (
-                                                                <button onClick={() => setIsDeletingPhysicalId(entry.id)} className={styles.deleteBtn}>🗑️</button>
-                                                            )}
-                                                        </div>
+                        <div className="card" style={{ marginTop: '2rem' }}>
+                            <h3 className={styles.sideTitle}>Recent Logs</h3>
+                            <div className={styles.historyList}>
+                                {history.length > 0 ? (
+                                    <>
+                                        {history.slice(0, 5).map((entry) => (
+                                            <div key={entry.id} className={styles.historyItem}>
+                                                <div className={styles.historyHeader}>
+                                                    <div className={styles.historyDate}>
+                                                        <div>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                                                        <div style={{ opacity: 0.6, fontSize: '0.8rem' }}>{new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
                                                     </div>
-                                                    <p className={styles.historyNote}>💤 {entry.sleep_hours}h • 💧 {entry.water_intake_ml}ml</p>
+                                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                        <span className={styles.historyMood}>
+                                                            {entry.workout_completed ? '🏃 Workout' : '🧘 Rest'} | 👣 {entry.steps}
+                                                        </span>
+                                                        {isDeletingPhysicalId === entry.id ? (
+                                                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                                <button onClick={() => handleDelete(entry.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                                <button onClick={() => setIsDeletingPhysicalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
+                                                            </div>
+                                                        ) : (
+                                                            <button onClick={() => setIsDeletingPhysicalId(entry.id)} className={styles.deleteBtn}>🗑️</button>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            ))}
-                                            <button
-                                                className={styles.historyViewBtn}
-                                                onClick={() => setViewMode('history')}
-                                                style={{ marginTop: '1rem', padding: '0.75rem', fontSize: '0.8rem' }}
-                                            >
-                                                Enter Full Tracking Dashboard
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <p className={styles.hint}>No logs recorded yet. Push your limits!</p>
-                                    )}
-                                </div>
+                                                <p className={styles.historyNote}>💤 Sleep: {entry.sleep_hours}h • 💧 Water: {entry.water_intake_ml}ml</p>
+                                            </div>
+                                        ))}
+                                        <button
+                                            className={styles.historyViewBtn}
+                                            onClick={() => setViewMode('history')}
+                                        >
+                                            Enter Full Tracking Dashboard
+                                        </button>
+                                    </>
+                                ) : (
+                                    <p className={styles.hint}>No logs recorded yet. Push your limits!</p>
+                                )}
                             </div>
                         </div>
                     </aside>
