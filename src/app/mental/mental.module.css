@@ -191,7 +191,9 @@
     gap: 1.5rem;
     overflow-y: auto;
     flex: 1;
-    padding-right: 0.5rem;
+    padding-right: 0.75rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
 }
 
 .historyCardStandard {

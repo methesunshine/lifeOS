@@ -258,11 +258,7 @@ export default function MentalHealthPage() {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Clear all?</span>
                                                 <button 
-                                                    onClick={() => {
-                                                        const now = new Date().toISOString();
-                                                        document.cookie = `mental_history_cleared_at=${now}; path=/; max-age=31536000`;
-                                                        window.location.reload();
-                                                    }}
+                                                    onClick={handleClearAll}
                                                     style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
                                                 >Yes</button>
                                                 <button onClick={() => setIsDeletingAllMentals(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>No</button>
