@@ -3,12 +3,67 @@
 import { useState, useEffect, useCallback } from 'react';
 import styles from './reminders.module.css';
 
+const REMINDER_REFRESH_EVENT = 'reminderUpdated';
+
+function getReminderBadge(reminder: any) {
+    const isOverdue = new Date(reminder.remind_at) < new Date() && reminder.status === 'pending';
+
+    if (isOverdue) {
+        return { label: 'OVERDUE', background: 'var(--red)', color: 'white' };
+    }
+
+    if (reminder.status === 'snoozed' && new Date(reminder.remind_at) > new Date()) {
+        return { label: 'DELAY', background: 'var(--yellow)', color: 'black' };
+    }
+
+    if (reminder.status === 'completed') {
+        return { label: 'DONE', background: '#10b981', color: 'white' };
+    }
+
+    if (reminder.status === 'cancelled') {
+        return { label: 'CANCEL', background: '#ef4444', color: 'white' };
+    }
+
+    return null;
+}
+
+function SnoozeCountdown({ remindAt }: { remindAt: string }) {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        const calculate = () => {
+            const now = new Date();
+            const target = new Date(remindAt);
+            const diff = target.getTime() - now.getTime();
+
+            if (diff <= 0) {
+                setTimeLeft('00:00');
+                return;
+            }
+
+            const mins = Math.floor(diff / 60000);
+            const secs = Math.floor((diff % 60000) / 1000);
+            setTimeLeft(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+        };
+
+        calculate();
+        const interval = setInterval(calculate, 1000);
+        return () => clearInterval(interval);
+    }, [remindAt]);
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(245, 158, 11, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--yellow)', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' }}>SNOOZE TIMER</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--yellow)', fontWeight: 'bold', fontFamily: 'monospace' }}>{timeLeft}</span>
+        </div>
+    );
+}
+
 export default function RemindersPage() {
     const [reminders, setReminders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [reminderFilter, setReminderFilter] = useState('pending');
 
-    // Reminder Modal state
     const [isReminderOpen, setIsReminderOpen] = useState(false);
     const [remTitle, setRemTitle] = useState('');
     const [remDesc, setRemDesc] = useState('');
@@ -22,9 +77,8 @@ export default function RemindersPage() {
     const [activeReminderId, setActiveReminderId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Toast State
     const [reminderToast, setReminderToast] = useState<string | null>(null);
-    const [isDeletingAllReminders, setIsDeletingAllReminders] = useState(false);
+    const [deleteConfirmScope, setDeleteConfirmScope] = useState<'filtered' | 'everything' | null>(null);
 
     const showReminderToast = (msg: string) => {
         setReminderToast(msg);
@@ -33,9 +87,10 @@ export default function RemindersPage() {
 
     const fetchReminders = useCallback(async () => {
         setLoading(true);
-        let url = `/api/reminders?filter=${reminderFilter}`;
-        const res = await fetch(url);
-        if (res.ok) setReminders(await res.json());
+        const res = await fetch(`/api/reminders?filter=${reminderFilter}`);
+        if (res.ok) {
+            setReminders(await res.json());
+        }
         setLoading(false);
     }, [reminderFilter]);
 
@@ -43,16 +98,53 @@ export default function RemindersPage() {
         fetchReminders();
     }, [fetchReminders]);
 
+    useEffect(() => {
+        if (!loading && reminders.length > 0) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const highlightId = urlParams.get('id');
+            if (highlightId) {
+                setTimeout(() => {
+                    const element = document.getElementById(`reminder-${highlightId}`);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        element.style.transition = 'all 1s ease';
+                        element.style.boxShadow = '0 0 20px var(--primary)';
+                        element.style.borderColor = 'var(--primary)';
+                        element.style.transform = 'scale(1.02)';
+                        
+                        setTimeout(() => {
+                            element.style.boxShadow = '';
+                            element.style.transform = '';
+                        }, 3000);
+                    }
+                }, 500);
+            }
+        }
+    }, [loading, reminders]);
+
+    useEffect(() => {
+        const handleRefresh = () => fetchReminders();
+        window.addEventListener(REMINDER_REFRESH_EVENT, handleRefresh);
+        return () => window.removeEventListener(REMINDER_REFRESH_EVENT, handleRefresh);
+    }, [fetchReminders]);
+
+    useEffect(() => {
+        setDeleteConfirmScope(null);
+    }, [reminderFilter]);
+
     const toggleReminderStatus = async (reminder: any) => {
         const newStatus = reminder.status === 'completed' ? 'pending' : 'completed';
         const res = await fetch('/api/reminders', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reminder_id: reminder.reminder_id, status: newStatus })
+            body: JSON.stringify({ reminder_id: reminder.reminder_id, status: newStatus }),
         });
+
         if (res.ok) {
             fetchReminders();
-            if (newStatus === 'completed') showReminderToast(`"${reminder.title}" marked as complete!`);
+            if (newStatus === 'completed') {
+                showReminderToast(`"${reminder.title}" marked as complete!`);
+            }
         }
     };
 
@@ -64,21 +156,19 @@ export default function RemindersPage() {
         setRemPriority(reminder.priority || 'medium');
         setRemRecurrence(reminder.recurrence || 'none');
 
-        const rDate = new Date(reminder.remind_at);
-        const offset = rDate.getTimezoneOffset() * 60000;
-        const localISOTime = (new Date(rDate.getTime() - offset)).toISOString().slice(0, 16);
+        const reminderDate = new Date(reminder.remind_at);
+        const offset = reminderDate.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(reminderDate.getTime() - offset).toISOString().slice(0, 16);
         const [datePart, timePart] = localISOTime.split('T');
-
-        let h = parseInt(timePart.split(':')[0]);
-        const m = timePart.split(':')[1];
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12 || 12;
+        let hour = parseInt(timePart.split(':')[0], 10);
+        const minute = timePart.split(':')[1];
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
 
         setRemDate(datePart);
-        setRemHour(h.toString());
-        setRemMinute(m);
+        setRemHour(hour.toString());
+        setRemMinute(minute);
         setRemAmPm(ampm);
-
         setIsReminderOpen(true);
     };
 
@@ -87,38 +177,43 @@ export default function RemindersPage() {
             alert('Title and Date are required.');
             return;
         }
+
         setIsSaving(true);
 
         let hours = parseInt(remHour, 10);
         if (remAmPm === 'PM' && hours !== 12) hours += 12;
         if (remAmPm === 'AM' && hours === 12) hours = 0;
-        const dateTimeStr = `${remDate}T${hours.toString().padStart(2, '0')}:${remMinute}:00`;
 
+        const dateTimeStr = `${remDate}T${hours.toString().padStart(2, '0')}:${remMinute}:00`;
         const bodyPayload: any = {
             title: remTitle,
             description: remDesc,
             remind_at: new Date(dateTimeStr).toISOString(),
             category: remCategory,
             priority: remPriority,
-            recurrence: remRecurrence
+            recurrence: remRecurrence,
         };
 
-        if (activeReminderId) bodyPayload.reminder_id = activeReminderId;
+        if (activeReminderId) {
+            bodyPayload.reminder_id = activeReminderId;
+        }
 
         const res = await fetch('/api/reminders', {
             method: activeReminderId ? 'PATCH' : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bodyPayload)
+            body: JSON.stringify(bodyPayload),
         });
 
         setIsSaving(false);
         if (res.ok) {
             setIsReminderOpen(false);
-            setRemTitle(''); setRemDesc(''); setRemDate(''); setActiveReminderId(null);
+            setRemTitle('');
+            setRemDesc('');
+            setRemDate('');
+            setActiveReminderId(null);
             fetchReminders();
             showReminderToast(activeReminderId ? 'Reminder updated!' : 'Reminder created!');
         } else {
-            console.error('Failed to save reminder');
             alert('Failed to save reminder.');
         }
     };
@@ -131,18 +226,32 @@ export default function RemindersPage() {
         }
     };
 
-    const handleDeleteAllReminders = async () => {
+    const getFilterDeleteLabel = () => {
+        if (reminderFilter === 'pending') return 'Delete Pending';
+        if (reminderFilter === 'completed') return 'Delete Completed';
+        return 'Delete All';
+    };
+
+    const getFilterDeleteEmoji = () => {
+        if (reminderFilter === 'pending') return '🟡';
+        if (reminderFilter === 'completed') return '🟢';
+        return '🔵';
+    };
+
+    const handleDeleteReminders = async (scope: 'filtered' | 'everything') => {
         try {
-            const res = await fetch('/api/reminders?all=true', { method: 'DELETE' });
+            const filter = scope === 'everything' ? 'all' : reminderFilter;
+            const res = await fetch(`/api/reminders?all=true&filter=${filter}`, { method: 'DELETE' });
             if (res.ok) {
+                const data = await res.json();
                 fetchReminders();
-                setIsDeletingAllReminders(false);
-                showReminderToast('All reminders deleted.');
+                setDeleteConfirmScope(null);
+                showReminderToast(data.message || 'Reminders deleted.');
             } else {
                 const err = await res.json();
-                alert(`Failed to delete all reminders: ${err.error || 'Unknown error'}`);
+                alert(`Failed to delete reminders: ${err.error || 'Unknown error'}`);
             }
-        } catch (error) {
+        } catch {
             alert('An error occurred during deletion.');
         }
     };
@@ -157,39 +266,65 @@ export default function RemindersPage() {
             </header>
 
             <div className={styles.panelHeader}>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <h2 style={{ margin: 0 }}>📅 Active Reminders</h2>
-                    {reminders.length > 0 && (
-                        isDeletingAllReminders ? (
-                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                <button className={styles.btnDanger} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={handleDeleteAllReminders}>Yes, Delete All</button>
-                                <button className={styles.btnSecondary} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => setIsDeletingAllReminders(false)}>Cancel</button>
-                            </div>
-                        ) : (
-                            <button className={styles.logDeleteBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', color: 'var(--red)', border: '1px solid rgba(239, 68, 68, 0.3)' }} onClick={() => setIsDeletingAllReminders(true)}>
-                                🗑️ Delete All
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'wrap' }}>
+                    <h2 style={{ margin: 0 }}>Active Reminders</h2>
+                    {deleteConfirmScope === 'filtered' ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button className={styles.btnDanger} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => handleDeleteReminders('filtered')}>
+                                {getFilterDeleteEmoji()} Yes, {getFilterDeleteLabel()}
                             </button>
-                        )
+                            <button className={styles.btnSecondary} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => setDeleteConfirmScope(null)}>
+                                ❌ Cancel
+                            </button>
+                        </div>
+                    ) : deleteConfirmScope === 'everything' ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button className={styles.btnDanger} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => handleDeleteReminders('everything')}>
+                                🗑️ Yes, Delete Everything
+                            </button>
+                            <button className={styles.btnSecondary} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => setDeleteConfirmScope(null)}>
+                                ❌ Cancel
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <button className={styles.logDeleteBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', color: 'var(--yellow)', border: '1px solid rgba(245, 158, 11, 0.3)' }} onClick={() => setDeleteConfirmScope('filtered')}>
+                                {getFilterDeleteEmoji()} {getFilterDeleteLabel()}
+                            </button>
+                            <button className={styles.logDeleteBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', color: 'var(--red)', border: '1px solid rgba(239, 68, 68, 0.3)' }} onClick={() => setDeleteConfirmScope('everything')}>
+                                🗑️ Delete Everything
+                            </button>
+                        </>
                     )}
                 </div>
-                <button className={styles.miniBtn} onClick={() => {
-                    const now = new Date();
-                    const offset = now.getTimezoneOffset() * 60000;
-                    const localISOTime = (new Date(now.getTime() - offset)).toISOString().slice(0, 16);
-                    const [datePart, timePart] = localISOTime.split('T');
 
-                    let h = parseInt(timePart.split(':')[0]);
-                    const m = timePart.split(':')[1];
-                    const ampm = h >= 12 ? 'PM' : 'AM';
-                    h = h % 12 || 12;
+                <button
+                    className={styles.miniBtn}
+                    onClick={() => {
+                        const now = new Date();
+                        const offset = now.getTimezoneOffset() * 60000;
+                        const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
+                        const [datePart, timePart] = localISOTime.split('T');
+                        let hour = parseInt(timePart.split(':')[0], 10);
+                        const minute = timePart.split(':')[1];
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        hour = hour % 12 || 12;
 
-                    setRemDate(datePart);
-                    setRemHour(h.toString());
-                    setRemMinute(m);
-                    setRemAmPm(ampm);
-                    setRemTitle(''); setRemDesc(''); setRemCategory('personal'); setRemPriority('medium'); setRemRecurrence('none'); setActiveReminderId(null);
-                    setIsReminderOpen(true);
-                }}>+ Add Reminder</button>
+                        setRemDate(datePart);
+                        setRemHour(hour.toString());
+                        setRemMinute(minute);
+                        setRemAmPm(ampm);
+                        setRemTitle('');
+                        setRemDesc('');
+                        setRemCategory('personal');
+                        setRemPriority('medium');
+                        setRemRecurrence('none');
+                        setActiveReminderId(null);
+                        setIsReminderOpen(true);
+                    }}
+                >
+                    + Add Reminder
+                </button>
             </div>
 
             {reminderToast && (
@@ -198,59 +333,99 @@ export default function RemindersPage() {
                 </div>
             )}
 
-            <div className={styles.filterTabs}>
-                {['pending', 'completed', 'all'].map(f => (
-                    <button
-                        key={f}
-                        onClick={() => setReminderFilter(f)}
-                        className={`${styles.filterTab} ${reminderFilter === f ? styles.activeTab : ''}`}
-                    >
-                        {f.charAt(0).toUpperCase() + f.slice(1)}
-                    </button>
-                ))}
-            </div>
-
-            {loading ? (
-                <p className={styles.emptyText}>Loading reminders...</p>
-            ) : (
-                <div className={styles.reminderList}>
-                    {reminders.map(r => {
-                        const isOverdue = new Date(r.remind_at) < new Date() && r.status === 'pending';
-                        return (
-                            <div key={r.reminder_id} className={`${styles.reminderItem} ${r.status === 'completed' ? styles.taskDone : ''}`} style={{ borderLeft: `4px solid ${r.priority === 'high' ? 'var(--red)' : r.priority === 'low' ? 'var(--blue)' : 'var(--yellow)'}`, flexDirection: 'column', gap: '0.75rem', width: '100%', overflow: 'hidden' }}>
-                                <div className={styles.reminderHeaderRow}>
-                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flex: 1, minWidth: 0 }}>
-                                        <input type="checkbox" checked={r.status === 'completed'} onChange={() => toggleReminderStatus(r)} style={{ cursor: 'pointer', marginTop: '0.3rem', flexShrink: 0, width: '18px', height: '18px' }} />
-                                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, width: '100%' }}>
-                                            <strong style={{ fontSize: '1.05rem', textDecoration: r.status === 'completed' ? 'line-through' : 'none', wordBreak: 'break-word', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{r.title}</strong>
-                                            {r.description && <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{r.description}</p>}
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                                        <button className={styles.logDeleteBtn} onClick={() => handleEditReminder(r)}>Edit</button>
-                                        <button className={styles.logDeleteBtn} onClick={() => deleteReminder(r.reminder_id)}>Delete</button>
-                                    </div>
-                                </div>
-                                <div className={styles.reminderTime} style={{ marginLeft: '2rem', marginTop: '0', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                    <span>{new Date(r.remind_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</span>
-                                    {isOverdue && <span style={{ color: 'white', fontWeight: 'bold', fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: 'var(--red)', borderRadius: '4px' }}>OVERDUE</span>}
-                                    <span style={{ color: 'var(--text-muted)' }}>• {r.category}</span>
-                                </div>
-                            </div>
-                        )
-                    })}
-                    {reminders.length === 0 && <p className={styles.emptyText}>No reminders for this filter.</p>}
+            <section className={styles.activeReminderBox}>
+                <div className={styles.filterTabs}>
+                    {['pending', 'completed', 'all'].map((filter) => (
+                        <button
+                            key={filter}
+                            onClick={() => setReminderFilter(filter)}
+                            className={`${styles.filterTab} ${reminderFilter === filter ? styles.activeTab : ''}`}
+                        >
+                            {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                        </button>
+                    ))}
                 </div>
-            )}
 
-            {/* Reminder Creation Modal */}
+                <div className={styles.reminderListShell}>
+                    <div className={styles.reminderScrollArea}>
+                        {loading ? (
+                            <p className={styles.emptyText}>Loading reminders...</p>
+                        ) : (
+                            <div className={styles.reminderList}>
+                                {reminders.map((reminder) => {
+                                    const reminderBadge = getReminderBadge(reminder);
+                                    return (
+                                        <div
+                                            key={reminder.reminder_id}
+                                            id={`reminder-${reminder.reminder_id}`}
+                                            className={`${styles.reminderItem} ${reminder.status === 'completed' ? styles.taskDone : ''}`}
+                                            style={{
+                                                borderLeft: `4px solid ${reminder.priority === 'high' ? 'var(--red)' : reminder.priority === 'low' ? 'var(--blue)' : 'var(--yellow)'}`,
+                                                flexDirection: 'column',
+                                                gap: '0.75rem',
+                                                width: '100%',
+                                                overflow: 'hidden',
+                                            }}
+                                        >
+                                            <div className={styles.reminderHeaderRow}>
+                                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={reminder.status === 'completed'}
+                                                        onChange={() => toggleReminderStatus(reminder)}
+                                                        style={{ cursor: 'pointer', marginTop: '0.3rem', flexShrink: 0, width: '18px', height: '18px' }}
+                                                    />
+                                                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, width: '100%' }}>
+                                                        <strong style={{ fontSize: '1.05rem', textDecoration: reminder.status === 'completed' ? 'line-through' : 'none', wordBreak: 'break-word', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                                                            {reminder.title}
+                                                        </strong>
+                                                        {reminder.description && (
+                                                            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                                                                {reminder.description}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                                                    <button className={styles.logDeleteBtn} onClick={() => handleEditReminder(reminder)}>Edit</button>
+                                                    <button className={styles.logDeleteBtn} onClick={() => deleteReminder(reminder.reminder_id)}>Delete</button>
+                                                </div>
+                                            </div>
+
+                                            <div className={styles.reminderTime} style={{ marginLeft: '2rem', marginTop: '0', display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'space-between', width: 'calc(100% - 2rem)' }}>
+                                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                    <span>{new Date(reminder.remind_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                                                    {reminderBadge && (
+                                                        <span style={{ color: reminderBadge.color, fontWeight: 'bold', fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: reminderBadge.background, borderRadius: '4px' }}>
+                                                            {reminderBadge.label}
+                                                        </span>
+                                                    )}
+                                                    <span style={{ color: 'var(--text-muted)' }}>• {reminder.category}</span>
+                                                </div>
+
+                                                {reminder.status === 'snoozed' && new Date(reminder.remind_at) > new Date() && (
+                                                    <SnoozeCountdown remindAt={reminder.remind_at} />
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {reminders.length === 0 && <p className={styles.emptyText}>No reminders for this filter.</p>}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </section>
+
             {isReminderOpen && (
                 <div className={styles.modalOverlay} onClick={() => setIsReminderOpen(false)}>
-                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
                         <header className={styles.modalHeader}>
                             <h2 style={{ fontSize: '1.25rem', margin: 0 }}>{activeReminderId ? 'Edit Reminder' : 'New Reminder'}</h2>
                             <button className={styles.modalClose} onClick={() => setIsReminderOpen(false)}>×</button>
                         </header>
+
                         <div className={styles.modalBody}>
                             <div>
                                 <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Reminder Title *</label>
@@ -258,7 +433,7 @@ export default function RemindersPage() {
                                     type="text"
                                     placeholder="e.g. Doctor's Appointment"
                                     value={remTitle}
-                                    onChange={(e) => setRemTitle(e.target.value)}
+                                    onChange={(event) => setRemTitle(event.target.value)}
                                     style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', fontSize: '1rem' }}
                                     autoFocus
                                 />
@@ -269,7 +444,7 @@ export default function RemindersPage() {
                                 <textarea
                                     placeholder="Add notes..."
                                     value={remDesc}
-                                    onChange={(e) => setRemDesc(e.target.value)}
+                                    onChange={(event) => setRemDesc(event.target.value)}
                                     rows={3}
                                     className={styles.logTextarea}
                                 />
@@ -281,21 +456,29 @@ export default function RemindersPage() {
                                     <input
                                         type="date"
                                         value={remDate}
-                                        onChange={(e) => setRemDate(e.target.value)}
+                                        onChange={(event) => setRemDate(event.target.value)}
                                         style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', minWidth: '150px' }}
                                     />
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
-                                        <select value={remHour} onChange={(e) => setRemHour(e.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
-                                            {[...Array(12)].map((_, i) => <option key={i + 1} value={(i + 1).toString()}>{(i + 1).toString()}</option>)}
+                                        <select value={remHour} onChange={(event) => setRemHour(event.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
+                                            {[...Array(12)].map((_, index) => (
+                                                <option key={index + 1} value={(index + 1).toString()}>
+                                                    {(index + 1).toString()}
+                                                </option>
+                                            ))}
                                         </select>
                                         <span style={{ fontWeight: 800 }}>:</span>
-                                        <select value={remMinute} onChange={(e) => setRemMinute(e.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
-                                            {[...Array(60)].map((_, i) => {
-                                                const min = i.toString().padStart(2, '0');
-                                                return <option key={min} value={min}>{min}</option>;
+                                        <select value={remMinute} onChange={(event) => setRemMinute(event.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
+                                            {[...Array(60)].map((_, index) => {
+                                                const minute = index.toString().padStart(2, '0');
+                                                return (
+                                                    <option key={minute} value={minute}>
+                                                        {minute}
+                                                    </option>
+                                                );
                                             })}
                                         </select>
-                                        <select value={remAmPm} onChange={(e) => setRemAmPm(e.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
+                                        <select value={remAmPm} onChange={(event) => setRemAmPm(event.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
                                             <option value="AM">AM</option>
                                             <option value="PM">PM</option>
                                         </select>
@@ -306,7 +489,7 @@ export default function RemindersPage() {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1.5rem' }}>
                                 <div>
                                     <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Category</label>
-                                    <select value={remCategory} onChange={(e) => setRemCategory(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
+                                    <select value={remCategory} onChange={(event) => setRemCategory(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
                                         <option value="personal">Personal</option>
                                         <option value="task">Task</option>
                                         <option value="health">Health</option>
@@ -314,17 +497,19 @@ export default function RemindersPage() {
                                         <option value="custom">Custom</option>
                                     </select>
                                 </div>
+
                                 <div>
                                     <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Priority</label>
-                                    <select value={remPriority} onChange={(e) => setRemPriority(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
+                                    <select value={remPriority} onChange={(event) => setRemPriority(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
                                         <option value="low">Low</option>
                                         <option value="medium">Medium</option>
                                         <option value="high">High</option>
                                     </select>
                                 </div>
+
                                 <div>
                                     <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Recurrence</label>
-                                    <select value={remRecurrence} onChange={(e) => setRemRecurrence(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
+                                    <select value={remRecurrence} onChange={(event) => setRemRecurrence(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
                                         <option value="none">One-time</option>
                                         <option value="daily">Daily</option>
                                         <option value="weekly">Weekly</option>
@@ -336,7 +521,7 @@ export default function RemindersPage() {
                         <footer className={styles.modalFooter}>
                             <button className={styles.btnSecondary} onClick={() => setIsReminderOpen(false)}>Cancel</button>
                             <button className={styles.btnPrimary} onClick={handleAddReminder} disabled={isSaving || !remTitle || !remDate}>
-                                {isSaving ? 'Saving...' : (activeReminderId ? 'Save Changes' : 'Set Reminder')}
+                                {isSaving ? 'Saving...' : activeReminderId ? 'Save Changes' : 'Set Reminder'}
                             </button>
                         </footer>
                     </div>

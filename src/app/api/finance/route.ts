@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculateFinanceScore } from '@/lib/scoreCalculator'
-import { sendPushNotification } from '@/lib/pushbullet'
+import { logActivity } from '@/lib/activity-logger'
 
 export async function POST(request: Request) {
     try {
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
         const body = await request.json()
         const { amount, category, transaction_type, description, transaction_date } = body
 
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
             .from('finance')
             .insert([
                 {
@@ -28,15 +28,19 @@ export async function POST(request: Request) {
                     created_at: transaction_date || new Date().toISOString()
                 }
             ])
+            .select()
+            .single()
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(
-            user.id, 
-            '💰 Finance Logged', 
-            `${transaction_type === 'income' ? 'Received' : 'Spent'} $${amount} on ${category}`
-        );
+        await logActivity({
+            area: 'Finance',
+            action: transaction_type === 'income' ? 'Credit Logged' : 'Debit Logged',
+            detail: `${transaction_type === 'income' ? '+' : '-'}₹${amount} for ${category}${description ? `\n📝 ${description}` : ''}`,
+            icon: '💰',
+            reference_id: insertedData.id.toString(),
+            userId: user.id
+        })
 
         await calculateFinanceScore(supabase, user.id);
 
@@ -68,6 +72,7 @@ export async function GET() {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
+
 export async function DELETE(request: Request) {
     try {
         const supabase = await createClient()
@@ -84,17 +89,61 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
         }
 
-        let query = supabase.from('finance').delete().eq('user_id', user.id)
+        if (id === 'all') {
+            const { count, error: countError } = await supabase
+                .from('finance')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
 
-        if (id !== 'all') {
-            query = query.eq('id', id)
+            if (countError) throw countError
+
+            const { error } = await supabase
+                .from('finance')
+                .delete()
+                .eq('user_id', user.id)
+
+            if (error) throw error
+
+            await calculateFinanceScore(supabase, user.id);
+
+            await logActivity({
+                area: 'Finance',
+                action: 'History Cleared',
+                detail: `All ${count || 0} finance records were removed from history.`,
+                icon: '🗑️',
+                userId: user.id
+            });
+
+            return NextResponse.json({ success: true })
         }
 
-        const { error } = await query
+        const { data: financeEntry, error: fetchError } = await supabase
+            .from('finance')
+            .select('amount, category, transaction_type')
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .single()
+
+        if (fetchError) throw fetchError
+
+        const { error } = await supabase
+            .from('finance')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id)
 
         if (error) throw error
 
         await calculateFinanceScore(supabase, user.id);
+
+        await logActivity({
+            area: 'Finance',
+            action: 'Transaction Deleted',
+            detail: `Removed ${financeEntry.transaction_type}: ₹${financeEntry.amount} (${financeEntry.category})`,
+            icon: '🗑️',
+            reference_id: id,
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true })
     } catch (error: any) {

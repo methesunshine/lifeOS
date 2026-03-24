@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
-import { sendPushNotification } from '@/lib/pushbullet'
+import { logActivity } from '@/lib/activity-logger'
 
 export async function GET(request: Request) {
     try {
@@ -68,8 +68,14 @@ export async function POST(request: Request) {
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '📓 Note Created', `Title: ${title}\nCategory: ${category || 'General'}`);
+        await logActivity({
+            area: 'Journey',
+            action: 'Note Created',
+            detail: `📌 ${title} (${category || 'General'})${content ? `\n📄 ${content.length > 100 ? content.substring(0, 97) + '...' : content}` : ''}`,
+            icon: '📓',
+            reference_id: data.note_id.toString(),
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true, note: data })
     } catch (error: any) {
@@ -102,8 +108,14 @@ export async function PATCH(request: Request) {
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '📓 Note Updated', `Title: ${data.title}`);
+        await logActivity({
+            area: 'Journey',
+            action: 'Note Updated',
+            detail: `Refined: ${data.title}`,
+            icon: '📓',
+            reference_id: data.note_id.toString(),
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true, note: data })
     } catch (error: any) {
@@ -123,17 +135,40 @@ export async function DELETE(request: Request) {
         const category = searchParams.get('category')
 
         if (deleteAll) {
+            let countQuery = supabase.from('notes').select('note_id', { count: 'exact', head: true }).eq('user_id', user.id)
             let query = supabase.from('notes').delete().eq('user_id', user.id)
             if (category && category !== 'All') {
+                countQuery = countQuery.eq('category', category)
                 query = query.eq('category', category)
             }
-            const { error } = await query
 
+            const { count, error: countError } = await countQuery
+            if (countError) throw countError
+
+            const { error } = await query
             if (error) throw error
+
+            await logActivity({
+                area: 'Journey',
+                action: 'Notes Reset',
+                detail: `All ${count || 0} notes were deleted from history.`,
+                icon: '🗑️',
+                userId: user.id
+            });
+
             return NextResponse.json({ success: true, message: 'Notes deleted' })
         }
 
         if (!id) return NextResponse.json({ error: 'Note ID required' }, { status: 400 })
+
+        const { data: noteToDelete, error: fetchError } = await supabase
+            .from('notes')
+            .select('title')
+            .eq('note_id', id)
+            .eq('user_id', user.id)
+            .single()
+
+        if (fetchError) throw fetchError
 
         const { error } = await supabase
             .from('notes')
@@ -142,6 +177,16 @@ export async function DELETE(request: Request) {
             .eq('user_id', user.id)
 
         if (error) throw error
+
+        await logActivity({
+            area: 'Journey',
+            action: 'Note Deleted',
+            detail: `Removed note: "${noteToDelete.title}"`,
+            icon: '🗑️',
+            reference_id: id,
+            userId: user.id
+        });
+
         return NextResponse.json({ success: true })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })

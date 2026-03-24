@@ -197,7 +197,7 @@
 }
 
 .historyCardStandard {
-    height: 220px;
+    height: 260px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -207,7 +207,7 @@
 }
 
 .gratitudeSectionWrapper {
-    height: 220px;
+    height: 260px;
     display: flex;
     flex-direction: column;
     margin-top: 2rem;
@@ -513,4 +513,33 @@
     background: var(--primary);
     color: white;
     border-style: solid;
+}
+
+.highlightedItem {
+    animation: highlight-pulse 2s ease-out;
+    border: 2px solid var(--primary) !important;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3) !important;
+    position: relative;
+    z-index: 10;
+}
+
+@keyframes highlight-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+    50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+}
+/* Enhanced Focus Styles */
+.highlightedItem {
+    animation: focusPulse 2.5s infinite !important;
+    border: 3px solid var(--primary) !important;
+    transform: scale(1.02);
+    z-index: 20;
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.4) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes focusPulse {
+    0% { border-color: var(--primary); transform: scale(1.02); }
+    50% { border-color: var(--accent); transform: scale(1.03); box-shadow: 0 0 40px rgba(99, 102, 241, 0.6) !important; }
+    100% { border-color: var(--primary); transform: scale(1.02); }
 }

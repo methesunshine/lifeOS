@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
-import { sendPushNotification } from '@/lib/pushbullet';
+import { sendTelegramNotification } from '@/lib/telegram';
 
 export async function POST() {
     try {
@@ -29,12 +29,12 @@ export async function POST() {
         // Send notifications for overdue items (limit to 3 to avoid spamming for now)
         let sentCount = 0;
         for (const rem of overdueReminders.slice(0, 3)) {
-            const success = await sendPushNotification(
+            const result = await sendTelegramNotification(
                 user.id,
                 `⚠️ Overdue: ${rem.title}`,
                 `This reminder was set for ${new Date(rem.remind_at).toLocaleString()}. Check your dashboard for details.`
             );
-            if (success) sentCount++;
+            if (result.success) sentCount++;
         }
 
         return NextResponse.json({ 

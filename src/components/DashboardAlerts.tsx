@@ -4,8 +4,18 @@ import { useEffect, useState } from 'react';
 import styles from '@/app/page.module.css';
 import Link from 'next/link';
 
-export default function DashboardAlerts({ userId, areaScores = [] }: { userId?: string, areaScores?: any[] }) {
-    const [alerts, setAlerts] = useState<any[]>([]);
+type DashboardAlert = {
+    title: string;
+    message: string;
+};
+
+type AreaScore = {
+    area: string;
+    score: number;
+};
+
+export default function DashboardAlerts({ areaScores = [] }: { areaScores?: AreaScore[] }) {
+    const [alerts, setAlerts] = useState<DashboardAlert[]>([]);
     const [loading, setLoading] = useState(true);
     const [lastSync, setLastSync] = useState<string>('');
 
@@ -38,7 +48,7 @@ export default function DashboardAlerts({ userId, areaScores = [] }: { userId?: 
     );
 
     // Calculate aggregated score for the monitor display
-    const onlineAreas = areaScores.length > 0 ? areaScores.length : 6;
+    const onlineAreas = areaScores.length > 0 ? areaScores.length : 8;
     const avgOpt = areaScores.length > 0
         ? (areaScores.reduce((acc, curr) => acc + curr.score, 0) / areaScores.length).toFixed(1)
         : "94.2";
@@ -59,7 +69,9 @@ export default function DashboardAlerts({ userId, areaScores = [] }: { userId?: 
             'Finance': '/finance',
             'Skills': '/skills',
             'Goals': '/goals',
-            'Journey': '/journey'
+            'Reminders': '/reminders',
+            'Journey': '/journey',
+            'Settings': '/settings'
         };
 
         return {

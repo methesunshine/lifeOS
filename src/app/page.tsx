@@ -1,11 +1,82 @@
 import { createClient } from '@/lib/supabase-server';
 import styles from './page.module.css';
 import DashboardAlerts from '@/components/DashboardAlerts';
-import DashboardReminders from '@/components/DashboardReminders';
+
 import Link from 'next/link';
 import RecentActivity from '@/components/RecentActivity';
 import JourneyNoteCard from '@/components/JourneyNoteCard';
 import SystemsPerformanceChart from '@/components/SystemsPerformanceChart';
+import DashboardTelegramSync from '@/components/DashboardTelegramSync';
+import {
+  buildSystemActivityFeed,
+  calculateFinanceModuleScore,
+  calculateGoalsModuleScore,
+  calculateJourneyModuleScore,
+  calculateMentalModuleScore,
+  calculateOverallLifeScore,
+  calculatePhysicalModuleScore,
+  calculateReminderModuleScore,
+  calculateSettingsModuleScore,
+  calculateSkillsModuleScore,
+  getDashboardAreaScores
+} from '@/lib/dashboardMetrics';
+
+// ... (skipping types for brevity, will apply carefully to lines 9-22 range)
+
+type ActivityItem = {
+  area: string;
+  action: string;
+  detail: string;
+  time: string;
+  icon: string;
+  id?: string;
+};
+
+type AreaCard = {
+  id: string;
+  name: string;
+  score: number;
+  trend: string;
+  color: string;
+  icon: string;
+  status: string;
+};
+
+type DashboardData = {
+  scores: Record<string, number>;
+  areaScores: ReturnType<typeof getDashboardAreaScores>;
+  recentLogs: ActivityItem[];
+  vitals: {
+    overallLifeScore: number;
+    lifeScoreTrend: string;
+    trendValue: number;
+    totalFocusHours: number;
+    tasksToday: number;
+    pendingTasks: number;
+    completedTasksCount: number;
+    totalTasksCount: number;
+    journeyProgress: number;
+    totalNotes: number;
+    totalStickies: number;
+    overdueTasksCount: number;
+    hasLogToday: boolean;
+    latestMood: number | string;
+    latestReflection: string;
+    latestReflectionTime: string;
+    latestNote: string;
+    recentNotes: unknown[];
+    recentTasks: unknown[];
+    recentDailyLogs: unknown[];
+    latestJourneyActivity: ActivityItem | null;
+  };
+  areas: AreaCard[];
+};
+
+type SkillActivityRow = {
+  skills?: Array<{ name?: string }> | null;
+  hours_invested?: number | string | null;
+  created_at: string;
+};
 
 function getLifeScoreStatus(score: number) {
   if (score >= 90) return { label: 'Elite', color: 'var(--indigo)' };
@@ -15,15 +86,7 @@ function getLifeScoreStatus(score: number) {
   return { label: 'Critical', color: 'var(--red)' };
 }
 
-function getMentalStatus(mood: number, stress: number) {
-  if (mood >= 8 && stress <= 3) return { label: 'Optimal', color: 'var(--green)' };
-  if (mood >= 5 && stress <= 5) return { label: 'Stable', color: 'var(--primary)' };
-  if (mood < 4 || stress > 7) return { label: 'Critical', color: 'var(--red)' };
-  return { label: 'Neutral', color: 'var(--orange)' };
-}
-
 function getJourneyStatus(progress: number, overdue: number, totalTasks: number, hasLog: boolean, totalNotes: number, totalStickies: number) {
-  // If literally nothing exists in the journey, don't show any status
   if (totalTasks === 0 && !hasLog && totalNotes === 0 && totalStickies === 0 && overdue === 0) {
     return null;
   }
@@ -33,7 +96,6 @@ function getJourneyStatus(progress: number, overdue: number, totalTasks: number,
   if (progress >= 75) return { label: 'High Momentum', color: 'var(--green)' };
   if (progress >= 40) return { label: 'Active Progress', color: 'var(--primary)' };
 
-  // Specific Low Progress states
   if (progress > 0) {
     if (totalTasks > 0 && !hasLog && totalNotes === 0) return { label: 'Objectives Pending', color: 'var(--orange)' };
     if (totalTasks === 0 && hasLog) return { label: 'Static Baseline', color: 'var(--orange)' };
@@ -49,26 +111,18 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    // This should be handled by middleware, but safety check
     return <div>Redirecting...</div>;
   }
 
   const today = new Date().toLocaleDateString('en-CA');
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
 
-  // Default score variables for all areas to prevent RefereneErrors
-  let journeyProgress = 0;
-  let mentalScore = 0;
-  let physicalScore = 0;
-  let financeScore = 0;
-  let skillsScore = 0;
-  let goalsScore = 0;
-  let completedGoalsList = 0;
-  let totalGoalsList = 0;
-
-  let dashboardData: any = {
-    scores: {} as any,
-    areaScores: [] as any[],
-    recentLogs: [] as any[],
+  let dashboardData: DashboardData = {
+    scores: {},
+    areaScores: [],
+    recentLogs: [],
     vitals: {
       overallLifeScore: 0,
       lifeScoreTrend: 'neutral',
@@ -84,218 +138,245 @@ export default async function Home() {
       overdueTasksCount: 0,
       hasLogToday: false,
       latestMood: '-',
-      latestGratitude: '',
-      latestStress: 0,
-      latestFocus: 0,
+      latestReflection: '',
+      latestReflectionTime: '',
       latestNote: 'No recent notes',
-      recentNotes: [] as any[],
-      recentTasks: [] as any[],
-      recentDailyLogs: [] as any[],
-      latestJourneyActivity: null as any,
-    }
+      recentNotes: [],
+      recentTasks: [],
+      recentDailyLogs: [],
+      latestJourneyActivity: null,
+    },
+    areas: []
   };
 
   try {
-    // Replicating API logic directly in Server Component for robustness
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    const [scores, pastScoresData, mental, physical, finance, skills, goals, notes, tasks, dailyLogs, productivity, stickies] = await Promise.all([
-      supabase.from('life_scores').select('area, score, calculated_at').eq('user_id', user.id).order('calculated_at', { ascending: false }),
-      supabase.from('life_scores').select('area, score, calculated_at').eq('user_id', user.id).lte('calculated_at', sevenDaysAgo).order('calculated_at', { ascending: false }),
-      supabase.from('mental_health').select('mood, stress_level, focus_level, gratitude_note, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('physical_health').select('workout_completed, sleep_hours, water_intake_ml, steps, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('finance').select('amount, category, transaction_type, transaction_date').eq('user_id', user.id).order('transaction_date', { ascending: false }).limit(3),
-      supabase.from('skill_logs').select('skill_id, hours_invested, created_at, skills(name)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-      supabase.from('goals').select('title, status, created_at, updated_at, note').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(5),
-      supabase.from('notes').select('note_id, title, category, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(5),
-      supabase.from('tasks').select('title, status, due_date, priority, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
-      supabase.from('daily_logs').select('mood, date, summary, created_at').eq('user_id', user.id).order('date', { ascending: false }).limit(3),
-      supabase.from('productivity').select('tasks_completed, focus_hours, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('sticky_notes').select('sticky_id, content, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+    const [mental, physical, finance, skills, goals, notes, tasks, dailyLogs, reminders, profile, stickies] = await Promise.all([
+      supabase.from('mental_health').select('mood, stress_level, focus_level, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+      supabase.from('physical_health').select('workout_completed, sleep_hours, water_intake_ml, steps, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+      supabase.from('finance').select('amount, category, transaction_type, transaction_date, created_at').eq('user_id', user.id).gte('transaction_date', startOfMonth.toISOString().split('T')[0]).order('transaction_date', { ascending: false }),
+      supabase.from('skill_logs').select('skill_id, hours_invested, created_at, skills(name)').eq('user_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('goals').select('title, status, created_at, updated_at, note').eq('user_id', user.id).order('updated_at', { ascending: false }),
+      supabase.from('notes').select('note_id, title, category, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(12),
+      supabase.from('tasks').select('task_id, title, status, due_date, priority, created_at, updated_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(16),
+      supabase.from('daily_logs').select('log_id, mood, date, summary, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+      supabase.from('reminders').select('reminder_id, title, status, remind_at, created_at, category, priority').eq('user_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('profiles').select('telegram_bot_token, telegram_chat_id, notifications_enabled, updated_at').eq('user_id', user.id).single(),
+      supabase.from('sticky_notes').select('sticky_id, content, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
     ]);
 
-    const recentScores: Record<string, number> = {};
-    scores.data?.forEach(s => {
-      if (!(s.area in recentScores)) recentScores[s.area] = s.score;
-    });
-
-    const combinedActivity: any[] = [];
-    mental.data?.forEach(d => combinedActivity.push({ area: 'Mental', action: 'Mood Synced', detail: `State: ${d.mood}/10`, time: d.created_at, icon: '🧠' }));
-    physical.data?.forEach(d => combinedActivity.push({ area: 'Physical', action: d.workout_completed ? 'Protocol Done' : 'Stats Logged', detail: d.workout_completed ? 'Workout complete' : `${d.sleep_hours}h sleep`, time: d.created_at, icon: '💪' }));
-    finance.data?.forEach(d => combinedActivity.push({ area: 'Finance', action: d.transaction_type === 'expense' ? 'Debit' : 'Credit', detail: `${d.transaction_type === 'expense' ? '-' : '+'}₹${d.amount}`, time: d.transaction_date, icon: '💰' }));
-    skills.data?.forEach((d: any) => combinedActivity.push({ area: 'Skills', action: 'Practice Done', detail: `${d.skills?.name || 'Skill'} • ${d.hours_invested}h`, time: d.created_at, icon: '📚' }));
-    goals.data?.forEach(d => {
-      combinedActivity.push({ area: 'Goals', action: d.status === 'completed' ? 'Mission Success' : 'Objective Logged', detail: d.title, time: d.created_at, icon: '🎯' });
-      if (d.note) {
-        combinedActivity.push({ area: 'Goals', action: 'Mission Note', detail: 'Takeaway logged', time: d.updated_at || d.created_at, icon: '📝' });
-      }
-    });
-    notes.data?.forEach(d => combinedActivity.push({ area: 'Journey', action: 'Note Written', detail: d.title, time: d.updated_at, icon: '📓', id: d.note_id }));
-    tasks.data?.forEach(d => combinedActivity.push({ area: 'Journey', action: d.status === 'Completed' ? 'Task Done' : 'Task Added', detail: d.title, time: d.created_at || new Date().toISOString(), icon: d.status === 'Completed' ? '✅' : '⏳' }));
-    stickies.data?.forEach(d => combinedActivity.push({ area: 'Journey', action: 'Sticky Note', detail: d.content?.substring(0, 60) || 'Sticky note added', time: d.created_at, icon: '📌' }));
-    dailyLogs.data?.forEach(d => combinedActivity.push({ area: 'Journey', action: 'Daily Reflection', detail: d.summary ? d.summary.substring(0, 60) : `Mood logged: ${d.mood}/10`, time: d.created_at || (d.date + 'T23:59:59'), icon: '📅' }));
-    productivity.data?.forEach(d => combinedActivity.push({ area: 'Productivity', action: 'System Active', detail: `${d.focus_hours}h focus • ${d.tasks_completed} tasks`, time: d.created_at, icon: '⚡' }));
-
-    combinedActivity.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-
-    const overallLifeScore = Object.values(recentScores).length > 0
-      ? Math.round(Object.values(recentScores).reduce((a: number, b: number) => a + b, 0) / Object.values(recentScores).length)
-      : 0;
-
-    const pastScores: Record<string, number> = {};
-    pastScoresData.data?.forEach((s: any) => {
-      if (!(s.area in pastScores)) pastScores[s.area] = s.score;
-    });
-
-    const pastLifeScore = Object.values(pastScores).length > 0
-      ? Math.round(Object.values(pastScores).reduce((a: number, b: number) => a + b, 0) / Object.values(pastScores).length)
-      : 0;
-
-    let trendValue = overallLifeScore - pastLifeScore;
-    let lifeScoreTrend = trendValue > 0 ? 'positive' : trendValue < 0 ? 'negative' : 'neutral';
-
-    if (Object.values(pastScores).length === 0) {
-      trendValue = 0;
-      lifeScoreTrend = 'neutral';
-    }
-
-    const totalFocusHours = productivity.data?.reduce((acc, curr) => acc + Number(curr.focus_hours), 0) || 0;
     const { count: totalTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
     const { count: completedTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'Completed');
     const { count: overdueTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id).neq('status', 'Completed').lt('due_date', today);
-    const { count: overdueRemindersCount } = await supabase.from('reminders').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'pending').lt('remind_at', new Date().toISOString());
-
+    const { count: overdueRemindersCount } = await supabase.from('reminders').select('*', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ['pending', 'snoozed']).lt('remind_at', new Date().toISOString());
     const { count: totalNotes } = await supabase.from('notes').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
     const { count: totalStickies } = await supabase.from('sticky_notes').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
     const { data: todayLog } = await supabase.from('daily_logs').select('log_id').eq('user_id', user.id).eq('date', today).single();
 
-    const pendingTasks = (totalTasksCount || 0) - (completedTasksCount || 0);
     const hasLogToday = !!todayLog;
-    const totalOverdue = (overdueTasksCount || 0) + (overdueRemindersCount || 0);
+    const journeyProgress = calculateJourneyModuleScore({
+      totalTasksCount: totalTasksCount || 0,
+      completedTasksCount: completedTasksCount || 0,
+      hasLogToday,
+      totalNotes: totalNotes || 0,
+      totalStickies: totalStickies || 0,
+    });
 
-    // Consolidated Journey Activity Score (0-100)
-    // Adjusted: If there are tasks, progress is heavily weighted on completion.
-    // If no tasks exist, it's based on log/notes.
-    const taskProgress = totalTasksCount && totalTasksCount > 0 ? (completedTasksCount || 0) / totalTasksCount : (totalTasksCount === 0 ? 1 : 0);
-    const logFactor = hasLogToday ? 1 : 0;
-    const creationFactor = (totalNotes || 0) > 0 || (totalStickies || 0) > 0 ? 1 : 0;
-
-    journeyProgress = Math.round((taskProgress * 0.5 + logFactor * 0.25 + creationFactor * 0.25) * 100);
-
-    // ── 7-Area performance scores (today's snapshot) ──
-    const latestMental = mental.data?.[0];
-    mentalScore = latestMental
-      ? Math.min(100, Math.max(0, Math.round((Number(latestMental.mood) / 10) * 60 + (Number(latestMental.focus_level) / 10) * 25 - (Number(latestMental.stress_level) / 10) * 15 + 15)))
-      : 0;
-
-    const latestPhysical = physical.data?.[0];
-    physicalScore = latestPhysical
-      ? Math.min(100, Math.max(0, Math.round(Math.min(10, Number(latestPhysical.sleep_hours) || 0) * 5 + (latestPhysical.workout_completed ? 30 : 0) + Math.min(20, Math.round((Number(latestPhysical.water_intake_ml) || 0) / 100)))))
-      : 0;
-
-    financeScore = Math.min(100, (finance.data?.length || 0) * 25);
-
-    const skillsHours = skills.data?.reduce((a: number, d: any) => a + (Number(d.hours_invested) || 0), 0) || 0;
-    skillsScore = Math.min(100, Math.round(skillsHours * 12));
-
-    totalGoalsList = goals.data?.length || 0;
-    completedGoalsList = goals.data?.filter((g: any) => g.status === 'completed').length || 0;
-    goalsScore = totalGoalsList > 0 ? Math.round((completedGoalsList / totalGoalsList) * 100) : 0;
-
-    const areaScores = [
-      { area: 'Mental', icon: '🧠', score: mentalScore, color: '#8b5cf6' },
-      { area: 'Physical', icon: '💪', score: physicalScore, color: '#10b981' },
-      { area: 'Finance', icon: '💰', score: financeScore, color: '#f59e0b' },
-      { area: 'Skills', icon: '📚', score: skillsScore, color: '#3b82f6' },
-      { area: 'Goals', icon: '🎯', score: goalsScore, color: '#ef4444' },
-      { area: 'Journey', icon: '📓', score: journeyProgress, color: '#ec4899' },
-    ];
-
-    // Helper to calculate trend string
-    const getTrend = (current: number, areaName: string) => {
-      const past = pastScores[areaName] || 0;
-      const diff = current - past;
-      if (diff === 0) return '+0%';
-      return `${diff > 0 ? '+' : ''}${diff}%`;
+    const moduleScores = {
+      mental: calculateMentalModuleScore(mental.data || []),
+      physical: calculatePhysicalModuleScore(physical.data || []),
+      finance: calculateFinanceModuleScore(finance.data || []),
+      skills: calculateSkillsModuleScore(skills.data || []),
+      goals: calculateGoalsModuleScore(goals.data || []),
+      reminders: calculateReminderModuleScore(reminders.data || []),
+      journey: journeyProgress,
+      settings: calculateSettingsModuleScore(profile.data || null),
     };
 
-    // ── Persistent Activity Filtering ──
-    const cookieStore = await supabase.auth.getSession(); // Just to trigger a thought about cookies, but I'll use next/headers
+    const overallLifeScore = calculateOverallLifeScore(moduleScores);
+    const areaScores = getDashboardAreaScores(moduleScores);
+    const totalOverdue = (overdueTasksCount || 0) + (overdueRemindersCount || 0);
+    const pendingTasks = (totalTasksCount || 0) - (completedTasksCount || 0);
+    const pendingRemindersCount = reminders.data?.filter((item) => item.status === 'pending' || item.status === 'snoozed').length || 0;
+    const completedRemindersCount = reminders.data?.filter((item) => item.status === 'completed').length || 0;
+
+    const latestDailyLog = dailyLogs.data?.[0];
+    const latestReflection = latestDailyLog?.summary || 'No reflection logged yet.';
+    const latestReflectionTime = latestDailyLog?.created_at || '';
+
+    // 1. Fetch persistent activity logs
+    const { data: persistentLogs } = await supabase
+      .from('system_activity_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    const combinedActivity: ActivityItem[] = (persistentLogs || []).map(log => ({
+      area: log.area,
+      action: log.action,
+      detail: log.detail || '',
+      time: log.created_at,
+      icon: log.icon || '📌',
+      id: log.reference_id || log.id.toString()
+    }));
+
+    // 2. Add dynamic "Logic Center" snapshot if empty
+    if (combinedActivity.length === 0) {
+      combinedActivity.push({
+        area: 'Dashboard',
+        action: 'Logic Center Synced',
+        detail: `Overall score ${overallLifeScore} across 8 core systems`,
+        time: new Date().toISOString(),
+        icon: '🧭',
+        id: 'dashboard-snapshot'
+      });
+    }
+
+    // 3. Sync summary items for each area (keeping these as they are useful snapshots)
+    combinedActivity.push({
+      area: 'Reminders',
+      action: overdueRemindersCount ? 'Reminder Attention Needed' : 'Reminder Status Synced',
+      detail: `${pendingRemindersCount} active • ${completedRemindersCount} completed • ${overdueRemindersCount || 0} overdue`,
+      time: reminders.data?.[0]?.created_at || new Date().toISOString(),
+      icon: '📅',
+      id: 'reminders-summary'
+    });
+
+    combinedActivity.push({
+      area: 'Settings',
+      action: profile.data?.notifications_enabled ? 'Settings Synced' : 'Settings Review Needed',
+      detail: profile.data?.telegram_bot_token ? 'Telegram Bot connected' : 'Telegram Bot token missing',
+      time: profile.data?.updated_at || new Date().toISOString(),
+      icon: '⚙️',
+      id: 'settings-summary'
+    });
+
+    // --- TIMELINE EVENT ALERTS (Priority) ---
+    if ((overdueTasksCount || 0) > 0) {
+      combinedActivity.push({
+        area: 'Journey',
+        action: '🚨 Action Required: Overdue Tasks',
+        detail: `You have ${overdueTasksCount} tasks past their due date. Click to resolve.`,
+        time: new Date().toISOString(),
+        icon: '🚨',
+        id: 'alert-overdue-tasks'
+      });
+    }
+
+    if (!hasLogToday) {
+      combinedActivity.push({
+        area: 'Journey',
+        action: '⚠️ Action Required: Missing Daily Reflection',
+        detail: "You haven't logged your daily reflection yet. Click to record your state.",
+        time: new Date().toISOString(),
+        icon: '⚠️',
+        id: 'alert-missing-log'
+      });
+    }
+
+    Object.entries(moduleScores).forEach(([key, score]) => {
+      if (score < 60 && key !== 'settings' && key !== 'journey') {
+        const areaName = key === 'mental' ? 'Mental Health' : 
+                         key === 'physical' ? 'Physical Health' : 
+                         key.charAt(0).toUpperCase() + key.slice(1);
+        combinedActivity.push({
+          area: areaName,
+          action: '⚠️ Review Needed: Low Area Integrity',
+          detail: `Your ${areaName} score is currently ${score}. Click to investigate.`,
+          time: new Date().toISOString(),
+          icon: '⚠️',
+          id: `alert-low-score-${key}`
+        });
+      }
+    });
+    // ----------------------------------------
+
+    combinedActivity.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
     const { cookies } = await import('next/headers');
     const cookieJar = await cookies();
     const clearPoint = cookieJar.get('activity_cleared_at')?.value;
     const hiddenItems = cookieJar.get('hidden_activities')?.value?.split(',') || [];
 
-    const filteredLogs = combinedActivity.filter(log => {
+    const filteredLogs = combinedActivity.filter((log) => {
       const logTime = new Date(log.time).getTime();
       const clearTime = clearPoint ? new Date(clearPoint).getTime() : 0;
-      
-      // Generate a unique ID for the log if it doesn't have one (e.g., for mood logs)
       const logId = log.id || `${log.area}-${log.action}-${log.time}`;
-      
       return logTime > clearTime && !hiddenItems.includes(logId);
     });
+    const recentLogs = buildSystemActivityFeed(filteredLogs, 24);
+
+    const areas = [
+      { id: 'mental', name: 'Mental Health', score: moduleScores.mental, trend: 'Live', color: '#a855f7', icon: '🧠', status: moduleScores.mental >= 75 ? 'Optimal' : 'Active' },
+      { id: 'physical', name: 'Physical Health', score: moduleScores.physical, trend: 'Live', color: '#ef4444', icon: '💪', status: moduleScores.physical >= 75 ? 'Optimal' : 'Improving' },
+      { id: 'finance', name: 'Finance', score: moduleScores.finance, trend: 'Live', color: '#10b981', icon: '💰', status: moduleScores.finance >= 60 ? 'Stable' : 'Needs Attention' },
+      { id: 'skills', name: 'Skills', score: moduleScores.skills, trend: 'Live', color: '#3b82f6', icon: '📚', status: moduleScores.skills >= 60 ? 'On Track' : 'Practice Needed' },
+      { id: 'goals', name: 'Goals', score: moduleScores.goals, trend: 'Live', color: '#f59e0b', icon: '🎯', status: `${goals.data?.filter((goal: { status?: string | null }) => goal.status === 'completed').length || 0}/${goals.data?.length || 0} Done` },
+      { id: 'reminders', name: 'Reminders', score: moduleScores.reminders, trend: 'Live', color: '#f97316', icon: '📅', status: `${overdueRemindersCount || 0} Overdue` },
+      { id: 'journey', name: 'Journey', score: moduleScores.journey, trend: 'Live', color: '#6366f1', icon: '📓', status: `${tasks.data?.filter((task) => task.due_date === today).length || 0} Tasks Today` },
+      { id: 'settings', name: 'Settings', score: moduleScores.settings, trend: 'Live', color: '#14b8a6', icon: '⚙️', status: profile.data?.notifications_enabled ? 'Synced' : 'Review Needed' },
+    ];
 
     dashboardData = {
-      scores: recentScores,
+      scores: moduleScores,
       areaScores,
-      recentLogs: filteredLogs.slice(0, 10),
+      recentLogs,
       vitals: {
         overallLifeScore,
-        lifeScoreTrend,
-        trendValue,
-        totalFocusHours,
-        tasksToday: tasks.data?.filter(t => t.due_date === today).length || 0,
+        lifeScoreTrend: 'neutral',
+        trendValue: 0,
+        totalFocusHours: 0,
+        tasksToday: tasks.data?.filter((task) => task.due_date === today).length || 0,
         pendingTasks,
         completedTasksCount: completedTasksCount || 0,
         totalTasksCount: totalTasksCount || 0,
-        journeyProgress: journeyProgress || 0,
+        journeyProgress,
         totalNotes: totalNotes || 0,
         totalStickies: totalStickies || 0,
         overdueTasksCount: totalOverdue,
-        hasLogToday: !!hasLogToday,
-        latestMood: mental.data?.[0]?.mood ?? '-',
-        latestGratitude: mental.data?.[0]?.gratitude_note || '',
-        latestStress: mental.data?.[0]?.stress_level || 0,
-        latestFocus: mental.data?.[0]?.focus_level || 0,
+        hasLogToday,
+        latestMood: latestDailyLog?.mood ?? '-',
+        latestReflection,
+        latestReflectionTime,
         latestNote: notes.data?.[0]?.title || 'No recent notes',
         recentNotes: notes.data?.slice(0, 5) || [],
         recentTasks: tasks.data?.slice(0, 5) || [],
         recentDailyLogs: dailyLogs.data?.slice(0, 3) || [],
-        latestJourneyActivity: combinedActivity.find(a => a.area === 'Journey') || null,
+        latestJourneyActivity: filteredLogs.find((item) => item.area === 'Journey') || null,
       },
-      areas: [
-        { id: 'journey', name: 'Life Journey', score: journeyProgress, trend: getTrend(journeyProgress, 'Journey'), color: '#6366f1', icon: '📓', status: `${tasks.data?.filter(t => t.due_date === today).length || 0} Tasks Today` },
-        { id: 'mental', name: 'Mental Health', score: mentalScore, trend: getTrend(mentalScore, 'Mental'), color: '#a855f7', icon: '🧠', status: mentalScore > 80 ? 'Optimal' : 'Active' },
-        { id: 'physical', name: 'Physical Health', score: physicalScore, trend: getTrend(physicalScore, 'Physical'), color: '#ef4444', icon: '💪', status: physicalScore > 70 ? 'Optimal' : 'Improving' },
-        { id: 'finance', name: 'Finance', score: financeScore, trend: getTrend(financeScore, 'Finance'), color: '#10b981', icon: '💰', status: 'Stable' },
-        { id: 'skills', name: 'Skills & Study', score: skillsScore, trend: getTrend(skillsScore, 'Skills'), color: '#3b82f6', icon: '📚', status: 'In Progress' },
-        { id: 'goals', name: 'Goals', score: goalsScore, trend: getTrend(goalsScore, 'Goals'), color: '#f59e0b', icon: '🎯', status: `${completedGoalsList}/${totalGoalsList} Done` },
-      ]
+      areas,
     };
   } catch (e) {
     console.error('Direct dashboard data load failed:', e);
   }
 
-  const areas = dashboardData.areas || [
-    { id: 'journey', name: 'Life Journey', score: 0, trend: '+0%', color: '#6366f1', icon: '📓', status: '0 Tasks Today' },
-    { id: 'mental', name: 'Mental Health', score: 0, trend: '+0%', color: '#a855f7', icon: '🧠', status: 'Active' },
-    { id: 'physical', name: 'Physical Health', score: 0, trend: '+0%', color: '#ef4444', icon: '💪', status: 'Improving' },
-    { id: 'finance', name: 'Finance', score: 0, trend: '+0%', color: '#10b981', icon: '💰', status: 'Stable' },
-  ];
+  const areas = dashboardData.areas || [];
 
   return (
     <div className={styles.container}>
+      <DashboardTelegramSync
+        initialSnapshot={{
+          overallLifeScore: dashboardData.vitals.overallLifeScore,
+          latestJourneyActivity: dashboardData.vitals.latestJourneyActivity,
+          latestReflection: dashboardData.vitals.latestReflection,
+          topAlertTitle: '',
+          topAlertMessage: ''
+        }}
+      />
+
       <header className={styles.header}>
         <div className={styles.welcome}>
           <h1>Logic Center</h1>
           <p>Welcome back, {user?.email?.split('@')[0]}. All systems are currently active.</p>
+          <div className={styles.pushbulletNotice}>
+            Stay synchronized with real-time Telegram alerts. Configure your Bot Token and Chat ID in <strong>Settings</strong> to receive project updates on your phone.
+          </div>
         </div>
         <div className={styles.actions}>
           <div className={styles.dateRange}>
             <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
           </div>
-          <Link href="/mental">
+          <Link href="/journey">
             <button className="primary-btn">Initialize Log</button>
           </Link>
         </div>
@@ -307,12 +388,12 @@ export default async function Home() {
             <p className={styles.label}>Overall Life Score</p>
             <div className={styles.bigScore}>
               <span className={styles.scoreNum}>{dashboardData.vitals.overallLifeScore}</span>
-              <span className={styles.scoreTrend} style={{ color: dashboardData.vitals.lifeScoreTrend === 'positive' ? 'var(--green)' : dashboardData.vitals.lifeScoreTrend === 'negative' ? 'var(--red)' : 'var(--text-muted)' }}>
-                {dashboardData.vitals.lifeScoreTrend === 'positive' ? `↑ ${dashboardData.vitals.trendValue}` : dashboardData.vitals.lifeScoreTrend === 'negative' ? `↓ ${Math.abs(dashboardData.vitals.trendValue)}` : '− No Change'}
+              <span className={styles.scoreTrend} style={{ color: 'var(--text-muted)' }}>
+                − Live Snapshot
               </span>
             </div>
             <div className={styles.progressLabel}>
-              Status: <span style={{ color: getLifeScoreStatus(dashboardData.vitals.overallLifeScore).color, fontWeight: '800' }}>{getLifeScoreStatus(dashboardData.vitals.overallLifeScore).label}</span> <span style={{ opacity: 0.5, margin: '0 0.5rem' }}>|</span> Aggregated from 7 Core Areas
+              Status: <span style={{ color: getLifeScoreStatus(dashboardData.vitals.overallLifeScore).color, fontWeight: '800' }}>{getLifeScoreStatus(dashboardData.vitals.overallLifeScore).label}</span> <span style={{ opacity: 0.5, margin: '0 0.5rem' }}>|</span> Aggregated from 8 Core Areas
             </div>
             <div className={styles.miniBar}>
               <div style={{ width: `${dashboardData.vitals.overallLifeScore}%`, background: getLifeScoreStatus(dashboardData.vitals.overallLifeScore).color }}></div>
@@ -363,9 +444,9 @@ export default async function Home() {
                   fontSize: '0.7rem',
                   fontWeight: '800',
                   textTransform: 'uppercase',
-                  color: getMentalStatus(Number(dashboardData.vitals.latestMood), dashboardData.vitals.latestStress).color
+                  color: getLifeScoreStatus(Number(dashboardData.vitals.latestMood) * 10).color
                 }}>
-                  {getMentalStatus(Number(dashboardData.vitals.latestMood), dashboardData.vitals.latestStress).label}
+                  {getLifeScoreStatus(Number(dashboardData.vitals.latestMood) * 10).label}
                 </span>
               )}
             </div>
@@ -373,25 +454,29 @@ export default async function Home() {
               <span className={styles.scoreNum}>{dashboardData.vitals.latestMood}<span className={styles.scoreDenom}>/10</span></span>
             </div>
 
-            {dashboardData.vitals.latestGratitude && (
+            {dashboardData.vitals.latestReflection && (
               <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '1rem', fontStyle: 'italic', opacity: 0.9 }}>
-                " {dashboardData.vitals.latestGratitude.length > 60 ? dashboardData.vitals.latestGratitude.substring(0, 60) + '...' : dashboardData.vitals.latestGratitude} "
+                &quot; {dashboardData.vitals.latestReflection.length > 60 ? dashboardData.vitals.latestReflection.substring(0, 60) + '...' : dashboardData.vitals.latestReflection} &quot;
               </div>
             )}
 
             <div className={styles.progressLabel} style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Latest Mood Score</span>
-              <span style={{ opacity: 0.7 }}>⚡ {dashboardData.vitals.latestStress} stress | 🎯 {dashboardData.vitals.latestFocus} focus</span>
+              <span>Latest Journal Mood</span>
+              <span style={{ opacity: 0.7 }}>
+                {dashboardData.vitals.latestReflectionTime
+                  ? new Date(dashboardData.vitals.latestReflectionTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+                  : 'No reflection yet'}
+              </span>
             </div>
             <div className={styles.miniBar}>
               <div style={{
                 width: `${Number(dashboardData.vitals.latestMood) * 10}%`,
-                background: getMentalStatus(Number(dashboardData.vitals.latestMood), dashboardData.vitals.latestStress).color
+                background: getLifeScoreStatus(Number(dashboardData.vitals.latestMood) * 10).color
               }}></div>
             </div>
           </div>
 
-          <div className="card glass">
+          <Link href="/journey" className="card glass" style={{ textDecoration: 'none', display: 'block', color: 'inherit' }}>
             <p className={styles.label}>Latest Journey Activity</p>
             {dashboardData.vitals.latestJourneyActivity ? (
               <div className={styles.milestone}>
@@ -416,19 +501,19 @@ export default async function Home() {
                 <p>Start writing notes or adding tasks in Journey</p>
               </div>
             )}
-          </div>
+          </Link>
         </section>
 
         <section className={styles.draftRow}>
           <JourneyNoteCard />
-          <DashboardAlerts userId={user?.id} areaScores={dashboardData.areaScores} />
+          <DashboardAlerts areaScores={dashboardData.areaScores} />
           <section className={`${styles.areaDeck} card glass`}>
             <div className={styles.cardHeader}>
               <h2>Integrity Snapshot</h2>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>Area Optimization Metrics</p>
             </div>
             <div className={styles.areaScroll}>
-              {areas.map((area: any) => (
+              {areas.map((area: AreaCard) => (
                 <Link href={`/${area.id}`} key={area.id} className={styles.areaListItem}>
                   <div className={styles.areaListItemHead}>
                     <div className={styles.areaListItemIcon} style={{ background: `${area.color}20`, color: area.color }}>
@@ -463,11 +548,10 @@ export default async function Home() {
               </div>
               <SystemsPerformanceChart areaScores={dashboardData.areaScores} />
             </section>
-
           </div>
 
           <aside className={styles.sideColumn}>
-            <DashboardReminders />
+            {/* Action Required section removed as per user request to avoid redundancy with System Activity */}
           </aside>
         </div>
       </div>

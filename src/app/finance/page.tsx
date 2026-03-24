@@ -1,19 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from './finance.module.css';
 
 const CATEGORIES = ['Housing', 'Food', 'Transport', 'Healthcare', 'Entertainment', 'Shopping', 'Utilities', 'Income', 'Savings', 'Other'];
 
 export default function FinancePage() {
+    return (
+        <Suspense fallback={<div>Loading Finance...</div>}>
+            <FinanceContent />
+        </Suspense>
+    );
+}
+
+function FinanceContent() {
     const [viewMode, setViewMode] = useState<'entry' | 'history'>('entry');
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('Food');
-    const [type, setType] = useState<'expense' | 'income' | 'savings'>('expense');
+    const [type, setType] = useState<'credit' | 'debit'>('debit');
     const [description, setDescription] = useState('');
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [isTimeEdited, setIsTimeEdited] = useState(false);
+    const searchParams = useSearchParams();
+    const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
 
     const [loading, setLoading] = useState(false);
@@ -44,6 +55,24 @@ export default function FinancePage() {
 
         return () => clearInterval(intervalId);
     }, [isTimeEdited]);
+
+    useEffect(() => {
+        const id = searchParams.get('id');
+        if (id) {
+            setHighlightedId(id);
+            setViewMode('history');
+            
+            // Wait for history to load/render
+            setTimeout(() => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Remove highlight after 3 seconds
+                    setTimeout(() => setHighlightedId(null), 3000);
+                }
+            }, 500);
+        }
+    }, [searchParams]);
 
     const formatDateTime = (dateStr: string) => {
         const d = new Date(dateStr);
@@ -93,7 +122,7 @@ export default function FinancePage() {
                 body: JSON.stringify({
                     amount: parseFloat(amount),
                     category,
-                    transaction_type: type,
+                    transaction_type: type === 'credit' ? 'income' : 'expense',
                     description,
                     transaction_date: timestamp
                 }),
@@ -155,10 +184,17 @@ export default function FinancePage() {
         setTimeout(() => setMessage(null), 3000);
     }
 
-    // Calculations
-    const totalIncome = history.filter(h => h.transaction_type === 'income').reduce((acc, h) => acc + parseFloat(h.amount), 0);
-    const totalExpenses = history.filter(h => h.transaction_type === 'expense').reduce((acc, h) => acc + parseFloat(h.amount), 0);
-    const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome * 100).toFixed(1) : 0;
+    // Calculations (Supporting legacy 'income', 'expense', 'savings' types)
+    const totalCredit = history.filter(h => h.transaction_type === 'credit' || h.transaction_type === 'income').reduce((acc, h) => acc + parseFloat(h.amount), 0);
+    const totalDebit = history.filter(h => h.transaction_type === 'debit' || h.transaction_type === 'expense' || h.transaction_type === 'savings').reduce((acc, h) => acc + parseFloat(h.amount), 0);
+    
+    // Savings Rate logic: Now represents the surplus rate
+    const savingsRate = totalCredit > 0 
+        ? ((Math.max(0, totalCredit - totalDebit) / totalCredit) * 100).toFixed(1) 
+        : '0.0';
+
+    // Cashflow: Net Surplus
+    const cashflow = totalCredit - totalDebit;
 
     return (
         <main className={styles.container}>
@@ -213,19 +249,14 @@ export default function FinancePage() {
                                         <div className={styles.typeSelector}>
                                             <button
                                                 type="button"
-                                                className={type === 'income' ? styles.activeType : ''}
-                                                onClick={() => setType('income')}
-                                            >Income</button>
+                                                className={type === 'credit' ? styles.activeCredit : ''}
+                                                onClick={() => setType('credit')}
+                                            >Credit</button>
                                             <button
                                                 type="button"
-                                                className={type === 'expense' ? styles.activeType : ''}
-                                                onClick={() => setType('expense')}
-                                            >Expense</button>
-                                            <button
-                                                type="button"
-                                                className={type === 'savings' ? styles.activeType : ''}
-                                                onClick={() => setType('savings')}
-                                            >Savings</button>
+                                                className={type === 'debit' ? styles.activeDebit : ''}
+                                                onClick={() => setType('debit')}
+                                            >Debit</button>
                                         </div>
                                     </div>
 
@@ -284,27 +315,31 @@ export default function FinancePage() {
                     </section>
 
                     <aside className={styles.sideCol}>
-                        <div className="card glass">
+                        <div className="card glass" style={{ padding: '0.65rem' }}>
                             <h3 className={styles.sideTitle}>Financial Vitals</h3>
-                            <div className={styles.statBox}>
-                                <p className={styles.statLabel}>Savings Rate</p>
-                                <p className={styles.statValue} style={{ color: 'var(--accent)' }}>{savingsRate}%</p>
+                            <div className={styles.statGrid}>
+                                <div className={styles.statBox}>
+                                    <p className={styles.statLabel}>Savings Rate</p>
+                                    <p className={styles.statValue} style={{ color: 'var(--accent)' }}>{savingsRate}%</p>
+                                </div>
+                                <div className={styles.statBox}>
+                                    <p className={styles.statLabel}>Cashflow</p>
+                                    <p className={styles.statValue} style={{ color: cashflow >= 0 ? 'var(--accent)' : '#ff4d4d' }}>
+                                        ₹{cashflow.toLocaleString()}
+                                    </p>
+                                </div>
                             </div>
                             <div className={styles.miniCharts}>
-                                <div className={styles.progressLabel}>
-                                    <span>Income</span>
-                                    <span>₹{totalIncome.toLocaleString()}</span>
-                                </div>
-                                <div className={styles.progressBar}><div style={{ width: '100%', background: 'var(--accent)' }}></div></div>
-
-                                <div className={styles.progressLabel} style={{ marginTop: '1rem' }}>
-                                    <span>Expenses</span>
-                                    <span>₹{totalExpenses.toLocaleString()}</span>
+                                <div className={styles.progressLabel} style={{ fontSize: '0.65rem' }}>
+                                    <span>Debit vs Credit</span>
+                                    <span>₹{totalDebit.toLocaleString()} / ₹{totalCredit.toLocaleString()}</span>
                                 </div>
                                 <div className={styles.progressBar}>
                                     <div style={{
-                                        width: totalIncome > 0 ? `${Math.min((totalExpenses / totalIncome) * 100, 100)}%` : '0%',
-                                        background: 'var(--secondary)'
+                                        width: totalCredit > 0 
+                                            ? `${Math.min((totalDebit / totalCredit) * 100, 100)}%` 
+                                            : (totalDebit > 0 ? '100%' : '0%'),
+                                        background: cashflow >= 0 ? 'var(--accent)' : '#ff4d4d'
                                     }}></div>
                                 </div>
                             </div>
@@ -328,15 +363,15 @@ export default function FinancePage() {
                                 <div className={styles.historyList}>
                                     {history.length > 0 ? (
                                         history.map((entry) => (
-                                            <div key={entry.id} className={styles.historyItem}>
+                                            <div key={entry.id} id={entry.id} className={`${styles.historyItem} ${highlightedId === entry.id ? styles.highlightedItem : ''}`}>
                                                 <div className={styles.historyHeader}>
                                                     <div className={styles.historyDate}>
                                                         <div>{formatDateTime(entry.transaction_date || entry.created_at).date}</div>
                                                         <div style={{ opacity: 0.6 }}>{formatDateTime(entry.transaction_date || entry.created_at).time}</div>
                                                     </div>
                                                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: entry.transaction_type === 'income' ? 'var(--accent)' : (entry.transaction_type === 'expense' ? '#ff4d4d' : '#ff9f43') }}>
-                                                            {entry.transaction_type === 'income' ? '+' : '-'}₹{parseFloat(entry.amount).toLocaleString()}
+                                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: (entry.transaction_type === 'credit' || entry.transaction_type === 'income') ? 'var(--accent)' : '#ff4d4d' }}>
+                                                            {(entry.transaction_type === 'credit' || entry.transaction_type === 'income') ? '+' : '-'}₹{parseFloat(entry.amount).toLocaleString()}
                                                         </span>
                                                         {isDeletingFinanceId === entry.id ? (
                                                             <div style={{ display: 'flex', gap: '0.25rem' }}>
@@ -358,8 +393,8 @@ export default function FinancePage() {
                                         <p className={styles.hint}>No transactions found.</p>
                                     )}
                                 </div>
-                                <button className="secondary-btn" style={{ width: '100%', marginTop: '0.75rem', fontSize: '0.7rem', padding: '0.4rem' }} onClick={() => setViewMode('history')}>
-                                    Enter Full Tracking Dashboard
+                                <button className={styles.historyViewBtn} onClick={() => setViewMode('history')}>
+                                    ENTER FULL TRACKING DASHBOARD
                                 </button>
                             </div>
                         </div>
@@ -369,25 +404,15 @@ export default function FinancePage() {
                 <div className={styles.historyTrackingContainer}>
                     <div className={styles.dashboardGrid}>
                         <div className={styles.statCard}>
-                            <div className={styles.statValue}>
-                                ₹{history.filter(h => h.transaction_type === 'income').reduce((acc, h) => acc + parseFloat(h.amount), 0).toLocaleString()}
-                            </div>
-                            <div className={styles.statLabel}>Total Income</div>
+                            <div className={styles.statValue}>₹{totalCredit.toLocaleString()}</div>
+                            <div className={styles.statLabel}>Total Credit</div>
                         </div>
                         <div className={styles.statCard}>
-                            <div className={styles.statValue}>
-                                ₹{history.filter(h => h.transaction_type === 'expense').reduce((acc, h) => acc + parseFloat(h.amount), 0).toLocaleString()}
-                            </div>
-                            <div className={styles.statLabel}>Total Expenses</div>
+                            <div className={styles.statValue}>₹{totalDebit.toLocaleString()}</div>
+                            <div className={styles.statLabel}>Total Debit</div>
                         </div>
                         <div className={styles.statCard}>
-                            <div className={styles.statValue}>
-                                {history.length > 0 ? (
-                                    ((history.filter(h => h.transaction_type === 'income').reduce((acc, h) => acc + parseFloat(h.amount), 0) -
-                                        history.filter(h => h.transaction_type === 'expense').reduce((acc, h) => acc + parseFloat(h.amount), 0)) /
-                                        Math.max(1, history.filter(h => h.transaction_type === 'income').reduce((acc, h) => acc + parseFloat(h.amount), 0)) * 100).toFixed(1)
-                                ) : '0'}%
-                            </div>
+                            <div className={styles.statValue}>{savingsRate}%</div>
                             <div className={styles.statLabel}>Savings Rate</div>
                         </div>
                         <div className={styles.statCard}>
@@ -412,7 +437,7 @@ export default function FinancePage() {
                             )}
                         </div>
                         {history.map((entry) => (
-                            <div key={entry.id} className={styles.expandedHistoryItem}>
+                            <div key={entry.id} id={entry.id} className={`${styles.expandedHistoryItem} ${highlightedId === entry.id ? styles.highlightedItem : ''}`}>
                                 <div className={styles.expandedHeader}>
                                     <div className={styles.expandedHistoryDate}>
                                         <h3>
@@ -425,11 +450,11 @@ export default function FinancePage() {
                                         <p>{new Date(entry.created_at).getFullYear()} • {formatDateTime(entry.created_at).time}</p>
                                     </div>
                                     <div className={styles.expandedScores}>
-                                        <div className={styles.scoreBadge} style={{ color: entry.transaction_type === 'income' ? 'var(--accent)' : '#ff4d4d' }}>
-                                            {entry.transaction_type === 'income' ? '+' : '-'}₹{parseFloat(entry.amount).toLocaleString()}
+                                        <div className={styles.scoreBadge} style={{ color: (entry.transaction_type === 'credit' || entry.transaction_type === 'income') ? 'var(--accent)' : '#ff4d4d' }}>
+                                            {(entry.transaction_type === 'credit' || entry.transaction_type === 'income') ? '+' : '-'}₹{parseFloat(entry.amount).toLocaleString()}
                                         </div>
                                         <div className={styles.scoreBadge}>{entry.category}</div>
-                                        <div className={styles.scoreBadge} style={{ textTransform: 'capitalize' }}>{entry.transaction_type}</div>
+                                        <div className={styles.scoreBadge} style={{ textTransform: 'capitalize' }}>{entry.transaction_type === 'income' ? 'credit' : (entry.transaction_type === 'expense' || entry.transaction_type === 'savings' ? 'debit' : entry.transaction_type)}</div>
                                     </div>
                                 </div>
                                 {entry.description && <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>{entry.description}</p>}

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculateGoalsScore } from '@/lib/scoreCalculator'
-import { sendPushNotification } from '@/lib/pushbullet'
+import { logActivity } from '@/lib/activity-logger'
 
 export async function GET() {
     try {
@@ -12,13 +12,9 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        // Fetch goals with their subtasks
         const { data: goals, error: goalsError } = await supabase
             .from('goals')
-            .select(`
-                *,
-                subtasks (*)
-            `)
+            .select(`*, subtasks (*)`)
             .order('created_at', { ascending: false })
 
         if (goalsError) throw goalsError
@@ -41,7 +37,6 @@ export async function POST(request: Request) {
         const body = await request.json()
         const { title, deadline, priority, subtasks, created_at, goal_id, subtask_title } = body
 
-        // Handle adding a single subtask to an existing goal
         if (goal_id && subtask_title) {
             const { data: newSubtask, error } = await supabase
                 .from('subtasks')
@@ -56,7 +51,6 @@ export async function POST(request: Request) {
 
             if (error) throw error
 
-            // Re-calculate goal progress
             const { data: allSubtasks } = await supabase
                 .from('subtasks')
                 .select('is_completed')
@@ -74,15 +68,20 @@ export async function POST(request: Request) {
                     .eq('id', goal_id)
                     .eq('user_id', user.id)
                 
-                // Pushbullet Notification for subtask
-                await sendPushNotification(user.id, '📝 Subtask Added', `Goal: ${goal_id}\nSubtask: ${subtask_title}`);
+                await logActivity({
+                    area: 'Goals',
+                    action: 'Subtask Added',
+                    detail: `To goal ID ${goal_id}: ${subtask_title}`,
+                    icon: '📝',
+                    reference_id: goal_id.toString(),
+                    userId: user.id
+                });
             }
 
             await calculateGoalsScore(supabase, user.id);
             return NextResponse.json({ success: true, subtask: newSubtask })
         }
 
-        // 1. Insert New Goal
         const insertData: any = {
             user_id: user.id,
             title,
@@ -103,7 +102,6 @@ export async function POST(request: Request) {
 
         if (goalError) throw goalError
 
-        // 2. Insert Subtasks if any
         if (subtasks && subtasks.length > 0) {
             const subtasksToInsert = subtasks.map((st: string) => ({
                 goal_id: goal.id,
@@ -117,9 +115,15 @@ export async function POST(request: Request) {
 
             if (subtasksError) throw subtasksError
         }
-
-        // Pushbullet Notification for new goal
-        await sendPushNotification(user.id, '🎯 New Goal Set', `${title}\nPriority: ${priority}`);
+        
+        await logActivity({
+            area: 'Goals',
+            action: 'Goal Created',
+            detail: `🎯 ${title} (Priority: ${priority})${deadline ? `\n📅 Deadline: ${new Date(deadline).toLocaleDateString()}` : ''}`,
+            icon: '🎯',
+            reference_id: goal.id.toString(),
+            userId: user.id
+        });
 
         await calculateGoalsScore(supabase, user.id);
         return NextResponse.json({ success: true, goal })
@@ -141,7 +145,6 @@ export async function PATCH(request: Request) {
         const { goal_id, subtask_id, is_completed, status, progress_percent, note } = body
 
         if (subtask_id !== undefined) {
-            // Update subtask
             const { error } = await supabase
                 .from('subtasks')
                 .update({ is_completed })
@@ -150,7 +153,6 @@ export async function PATCH(request: Request) {
 
             if (error) throw error
 
-            // Re-calculate progress percent for the goal
             const { data: subtasks } = await supabase
                 .from('subtasks')
                 .select('is_completed')
@@ -167,13 +169,18 @@ export async function PATCH(request: Request) {
                     .eq('id', goal_id)
                     .eq('user_id', user.id)
                 
-                // Pushbullet Notification for progress
                 if (is_completed) {
-                    await sendPushNotification(user.id, '✅ Subtask Completed', `Goal progress: ${newProgress}%`);
+                    await logActivity({
+                        area: 'Goals',
+                        action: 'Subtask Completed',
+                        detail: `Progress: ${newProgress}%`,
+                        icon: '✅',
+                        reference_id: goal_id.toString(),
+                        userId: user.id
+                    });
                 }
             }
         } else if (goal_id) {
-            // Update goal directly
             const updates: any = { updated_at: new Date().toISOString() }
             if (status !== undefined) updates.status = status
             if (progress_percent !== undefined) updates.progress_percent = progress_percent
@@ -187,8 +194,14 @@ export async function PATCH(request: Request) {
 
             if (error) throw error
 
-            // Pushbullet Notification for goal update
-            await sendPushNotification(user.id, '🎯 Goal Updated', `Status: ${status || 'Updated'}\nProgress: ${progress_percent || 'N/A'}%`);
+            await logActivity({
+                area: 'Goals',
+                action: 'Goal Updated',
+                detail: `🎯 Status: ${status || 'Updated'}, Progress: ${progress_percent || '0'}%${note ? `\n📝 ${note}` : ''}`,
+                icon: '🎯',
+                reference_id: goal_id.toString(),
+                userId: user.id
+            });
         }
 
         await calculateGoalsScore(supabase, user.id);
@@ -197,7 +210,6 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
-
 
 export async function DELETE(request: Request) {
     try {
@@ -213,6 +225,13 @@ export async function DELETE(request: Request) {
         const deleteAll = searchParams.get('deleteAll') === 'true'
 
         if (deleteAll) {
+            const { count, error: countError } = await supabase
+                .from('goals')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+
+            if (countError) throw countError
+
             const { error } = await supabase
                 .from('goals')
                 .delete()
@@ -221,12 +240,30 @@ export async function DELETE(request: Request) {
             if (error) throw error
 
             await calculateGoalsScore(supabase, user.id);
+
+            await logActivity({
+                area: 'Goals',
+                action: 'All Goals Reset',
+                detail: `Removed ${count || 0} goals from system.`,
+                icon: '🗑️',
+                userId: user.id
+            });
+
             return NextResponse.json({ success: true })
         }
 
         if (!id) {
             return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
         }
+
+        const { data: goalToDelete, error: fetchError } = await supabase
+            .from('goals')
+            .select('title, status')
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .single()
+
+        if (fetchError) throw fetchError
 
         const { error } = await supabase
             .from('goals')
@@ -237,6 +274,16 @@ export async function DELETE(request: Request) {
         if (error) throw error
 
         await calculateGoalsScore(supabase, user.id);
+
+        await logActivity({
+            area: 'Goals',
+            action: 'Goal Deleted',
+            detail: `Removed "${goalToDelete.title}" (Status: ${goalToDelete.status})`,
+            icon: '🗑️',
+            reference_id: id,
+            userId: user.id
+        });
+
         return NextResponse.json({ success: true })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })

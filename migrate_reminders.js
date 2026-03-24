@@ -54,10 +54,17 @@ async function migrateReminders() {
             console.log('Legacy is_completed column not found. Skipping data migration for it.');
         }
 
-        // Enforce constraints (optional but good practice)
+        // Rebuild constraints so the snoozed flow is supported and the script stays idempotent.
         await client.query(`
             ALTER TABLE public.reminders 
-            ADD CONSTRAINT check_reminder_status CHECK (status IN ('pending', 'completed')),
+            DROP CONSTRAINT IF EXISTS check_reminder_status,
+            DROP CONSTRAINT IF EXISTS check_reminder_priority,
+            DROP CONSTRAINT IF EXISTS check_reminder_recurrence;
+        `);
+
+        await client.query(`
+            ALTER TABLE public.reminders 
+            ADD CONSTRAINT check_reminder_status CHECK (status IN ('pending', 'completed', 'snoozed', 'cancelled')),
             ADD CONSTRAINT check_reminder_priority CHECK (priority IN ('low', 'medium', 'high')),
             ADD CONSTRAINT check_reminder_recurrence CHECK (recurrence IN ('none', 'daily', 'weekly'));
         `);

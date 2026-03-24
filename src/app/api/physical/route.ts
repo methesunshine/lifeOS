@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculatePhysicalScore } from '@/lib/scoreCalculator'
-import { sendPushNotification } from '@/lib/pushbullet'
+import { logActivity } from '@/lib/activity-logger'
 
 export async function POST(request: Request) {
     try {
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
         const body = await request.json()
         const { sleep_hours, workout_completed, water_intake_ml, steps, weight_kg, created_at } = body
 
-        const { error } = await supabase
+        const { data: logData, error } = await supabase
             .from('physical_health')
             .insert([
                 {
@@ -28,15 +28,20 @@ export async function POST(request: Request) {
                     created_at: created_at || new Date().toISOString()
                 }
             ])
+            .select()
+            .single()
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(
-            user.id, 
-            '💪 Physical Health Logged', 
-            `${steps} steps, ${sleep_hours}h sleep, Workout: ${workout_completed ? 'Yes' : 'No'}`
-        );
+        // Persistent Activity Log
+        await logActivity({
+            area: 'Physical Health',
+            action: 'Health metrics logged',
+            detail: `🚶 ${steps} steps, 😴 ${sleep_hours}h sleep, 💧 ${water_intake_ml}ml water, ⚖️ ${weight_kg}kg${workout_completed ? '\n🔥 Workout Completed' : ''}`,
+            icon: '💪',
+            reference_id: logData.id.toString(),
+            userId: user.id
+        });
 
         await calculatePhysicalScore(supabase, user.id);
 
@@ -84,21 +89,64 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 })
         }
 
-        let query = supabase.from('physical_health').delete().eq('user_id', user.id)
+        if (id === 'all') {
+            const { count, error: countError } = await supabase
+                .from('physical_health')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
 
-        if (id !== 'all') {
-            query = query.eq('id', id)
+            if (countError) throw countError
+
+            const { error } = await supabase
+                .from('physical_health')
+                .delete()
+                .eq('user_id', user.id)
+
+            if (error) throw error
+
+            await calculatePhysicalScore(supabase, user.id);
+
+            await logActivity({
+                area: 'Physical Health',
+                action: 'History Cleared',
+                detail: `All ${count || 0} physical health logs were removed from history.`,
+                icon: '🗑️',
+                userId: user.id
+            });
+
+            return NextResponse.json({ success: true })
         }
 
-        const { error } = await query
+        const { data: physicalEntry, error: fetchError } = await supabase
+            .from('physical_health')
+            .select('created_at')
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .single()
+
+        if (fetchError) throw fetchError
+
+        const { error } = await supabase
+            .from('physical_health')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id)
 
         if (error) throw error
 
         await calculatePhysicalScore(supabase, user.id);
+
+        await logActivity({
+            area: 'Physical Health',
+            action: 'Log Entry Deleted',
+            detail: `Removed physical entry from ${new Date(physicalEntry.created_at || '').toLocaleDateString()}`,
+            icon: '🗑️',
+            reference_id: id,
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
-

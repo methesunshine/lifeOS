@@ -1,9 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from './mental.module.css';
 
 export default function MentalHealthPage() {
+    return (
+        <Suspense fallback={<div>Loading Mental Health...</div>}>
+            <MentalHealthContent />
+        </Suspense>
+    );
+}
+
+function MentalHealthContent() {
     const [mood, setMood] = useState(0);
     const [stress, setStress] = useState(0);
     const [focus, setFocus] = useState(0);
@@ -11,11 +20,43 @@ export default function MentalHealthPage() {
     const [reflection, setReflection] = useState('');
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState<any[]>([]);
+    const searchParams = useSearchParams();
+    const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchHistory();
         fetchInsights();
     }, []);
+
+    useEffect(() => {
+        const id = searchParams.get('id');
+        if (id) {
+            setHighlightedId(id);
+            setViewMode('history');
+            
+            // Wait for history to load/render
+            setTimeout(() => {
+                const element = document.getElementById(`mental-item-${id}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Remove highlight after 5 seconds to let user focus
+                    setTimeout(() => setHighlightedId(null), 5000);
+                }
+            }, 600);
+        }
+    }, [searchParams, history]);
+
+    const handleItemClick = (id: string) => {
+        setHighlightedId(id);
+        const element = document.getElementById(`mental-item-${id}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        // Update URL without reload to support "previous one" clicks
+        const url = new URL(window.location.href);
+        url.searchParams.set('id', id);
+        window.history.pushState({}, '', url.toString());
+    };
 
     // Filter history based on mentalClearPoint
     const filteredHistory = history; // Reverting to full history, handled by deletion
@@ -281,7 +322,13 @@ export default function MentalHealthPage() {
                                     {filteredHistory.length > 0 ? (
                                         <>
                                             {filteredHistory.map((entry) => (
-                                                <div key={entry.id} className={styles.historyItem}>
+                                                <div 
+                                                    key={entry.id} 
+                                                    id={`mental-item-${entry.id}`} 
+                                                    className={`${styles.historyItem} ${highlightedId === entry.id ? styles.highlightedItem : ''}`}
+                                                    onClick={() => handleItemClick(entry.id)}
+                                                    style={{ cursor: 'pointer' }}
+                                                >
                                                     <div className={styles.historyHeader}>
                                                         <div className={styles.historyDate}>
                                                             <div>{new Date(entry.created_at).toLocaleDateString()}</div>
@@ -355,7 +402,13 @@ export default function MentalHealthPage() {
                             )}
                         </div>
                         {history.map((entry) => (
-                            <div key={entry.id} className={styles.expandedHistoryItem}>
+                            <div 
+                                key={entry.id} 
+                                id={`mental-item-${entry.id}`} 
+                                className={`${styles.expandedHistoryItem} ${highlightedId === entry.id ? styles.highlightedItem : ''}`}
+                                onClick={() => handleItemClick(entry.id)}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 <div className={styles.expandedHeader}>
                                     <div className={styles.expandedDate}>
                                         <h3>

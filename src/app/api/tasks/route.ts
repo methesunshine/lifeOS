@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculateProductivityScore } from '@/lib/scoreCalculator'
-import { sendPushNotification } from '@/lib/pushbullet'
+import { logActivity } from '@/lib/activity-logger'
 
 export async function GET(request: Request) {
     try {
@@ -72,8 +72,15 @@ export async function POST(request: Request) {
 
         await calculateProductivityScore(supabase, user.id)
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '✅ Task Added', `Title: ${title}\nPriority: ${priority || 'Medium'}`);
+        // Persistent Activity Log
+        await logActivity({
+            area: 'Journey',
+            action: 'Task Created',
+            detail: `✅ ${title}\n❗ Priority: ${priority || 'Medium'}${due_date ? `\n📅 Due: ${new Date(due_date).toLocaleDateString()}` : ''}`,
+            icon: '✅',
+            reference_id: data.task_id.toString(),
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true, task: data })
     } catch (error: any) {
@@ -110,11 +117,17 @@ export async function PATCH(request: Request) {
 
         await calculateProductivityScore(supabase, user.id)
 
-        // Pushbullet Notification
+        // Persistent Activity Log
         if (status) {
-            await sendPushNotification(user.id, '✅ Task Updated', `Title: ${data.title}\nStatus: ${status}`);
-        } else {
-            await sendPushNotification(user.id, '✅ Task Updated', `Title: ${data.title}`);
+            // Persistent Activity Log
+            await logActivity({
+                area: 'Journey',
+                action: 'Task Updated',
+                detail: `🔄 ${data.title}\n📍 Status: ${status}`,
+                icon: '✅',
+                reference_id: data.task_id.toString(),
+                userId: user.id
+            });
         }
 
         return NextResponse.json({ success: true, task: data })
@@ -134,6 +147,13 @@ export async function DELETE(request: Request) {
         const deleteAll = searchParams.get('all') === 'true'
 
         if (deleteAll) {
+            const { count, error: countError } = await supabase
+                .from('tasks')
+                .select('task_id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+
+            if (countError) throw countError
+
             const { error } = await supabase
                 .from('tasks')
                 .delete()
@@ -147,6 +167,15 @@ export async function DELETE(request: Request) {
 
         if (!id) return NextResponse.json({ error: 'Task ID required' }, { status: 400 })
 
+        const { data: taskToDelete, error: fetchError } = await supabase
+            .from('tasks')
+            .select('title, status')
+            .eq('task_id', id)
+            .eq('user_id', user.id)
+            .single()
+
+        if (fetchError) throw fetchError
+
         const { error } = await supabase
             .from('tasks')
             .delete()
@@ -156,6 +185,16 @@ export async function DELETE(request: Request) {
         if (error) throw error
 
         await calculateProductivityScore(supabase, user.id)
+
+        await logActivity({
+            area: 'Journey',
+            action: 'Task Deleted',
+            detail: `🗑️ Removed task: "${taskToDelete.title}" (Status: ${taskToDelete.status})`,
+            icon: '🗑️',
+            reference_id: id,
+            userId: user.id
+        });
+
         return NextResponse.json({ success: true })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })

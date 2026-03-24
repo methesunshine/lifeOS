@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
-import { sendPushNotification } from '@/lib/pushbullet';
+import { logActivity } from '@/lib/activity-logger';
 
 export async function GET() {
     try {
@@ -36,13 +36,18 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { pushbullet_token, notifications_enabled } = await request.json();
+        const {
+            telegram_bot_token,
+            telegram_chat_id,
+            notifications_enabled
+        } = await request.json();
 
         const { data: profile, error } = await supabase
             .from('profiles')
             .upsert({
                 user_id: user.id,
-                pushbullet_token,
+                telegram_bot_token,
+                telegram_chat_id,
                 notifications_enabled,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'user_id' })
@@ -53,8 +58,15 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '⚙️ Profile Updated', 'Your notification and profile settings have been updated.');
+        // Activity Log
+        await logActivity({
+            userId: user.id,
+            area: 'Settings',
+            action: 'System Settings Updated',
+            detail: 'You updated your Telegram notification bot credentials.',
+            icon: '⚙️',
+            reference_id: user.id
+        });
 
         return NextResponse.json({ profile });
     } catch (error: any) {

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calculateMentalScore } from '@/lib/scoreCalculator'
-import { sendPushNotification } from '@/lib/pushbullet'
+import { logActivity } from '@/lib/activity-logger'
 
 export async function POST(request: Request) {
     try {
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
         const body = await request.json()
         const { mood, stress, focus, gratitude, reflection } = body
 
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
             .from('mental_health')
             .insert([
                 {
@@ -27,11 +27,19 @@ export async function POST(request: Request) {
                     daily_reflection: reflection
                 }
             ])
+            .select()
+            .single()
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '🧠 Mental Health Logged', `Mood: ${mood}, Stress: ${stress}, Focus: ${focus}`);
+        await logActivity({
+            area: 'Mental Health',
+            action: 'Mood recorded',
+            detail: `Mood: ${mood}/10, Stress: ${stress}/10, Focus: ${focus}/10${gratitude ? `\n🙏 Gratitude: ${gratitude}` : ''}${reflection ? `\n💭 Reflection: ${reflection}` : ''}`,
+            icon: '🧠',
+            reference_id: insertedData.id.toString(),
+            userId: user.id
+        })
 
         await calculateMentalScore(supabase, user.id);
 
@@ -79,17 +87,61 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 })
         }
 
-        let query = supabase.from('mental_health').delete().eq('user_id', user.id)
+        if (id === 'all') {
+            const { count, error: countError } = await supabase
+                .from('mental_health')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
 
-        if (id !== 'all') {
-            query = query.eq('id', id)
+            if (countError) throw countError
+
+            const { error } = await supabase
+                .from('mental_health')
+                .delete()
+                .eq('user_id', user.id)
+
+            if (error) throw error
+
+            await calculateMentalScore(supabase, user.id);
+
+            await logActivity({
+                area: 'Mental Health',
+                action: 'History Cleared',
+                detail: `All ${count || 0} mental health logs were removed from history.`,
+                icon: '🗑️',
+                userId: user.id
+            });
+
+            return NextResponse.json({ success: true })
         }
 
-        const { error } = await query
+        const { data: mentalEntry, error: fetchError } = await supabase
+            .from('mental_health')
+            .select('mood')
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .single()
+
+        if (fetchError) throw fetchError
+
+        const { error } = await supabase
+            .from('mental_health')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id)
 
         if (error) throw error
 
         await calculateMentalScore(supabase, user.id);
+
+        await logActivity({
+            area: 'Mental Health',
+            action: 'Mood Log Deleted',
+            detail: `Removed entry with Mood: ${mentalEntry.mood}/10`,
+            icon: '🗑️',
+            reference_id: id,
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true })
     } catch (error: any) {
@@ -127,14 +179,19 @@ export async function PATCH(request: Request) {
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '🧠 Mental Health Updated', `Your mental health log has been successfully updated.`);
-
         await calculateMentalScore(supabase, user.id);
+
+        await logActivity({
+            area: 'Mental Health',
+            action: 'Mood Log Updated',
+            detail: `Mood: ${mood}/10, Stress: ${stress}/10, Focus: ${focus}/10`,
+            icon: '🧠',
+            reference_id: id.toString(),
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
-

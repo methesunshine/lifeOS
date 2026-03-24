@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from './goals.module.css';
 
-export default function GoalsPage() {
+function GoalsContent() {
+    const searchParams = useSearchParams();
+    const [highlightedId, setHighlightedId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'entry' | 'dashboard'>('entry');
     const [goals, setGoals] = useState<any[]>([]);
     const [title, setTitle] = useState('');
@@ -38,16 +41,40 @@ export default function GoalsPage() {
             }
         };
 
-        // Update time immediately on mount
         updateTime();
-
-        // Keep updating time every second so it perfectly synchronizes minute rollovers
         const intervalId = setInterval(updateTime, 1000);
-
         fetchGoals();
-
         return () => clearInterval(intervalId);
     }, [isTimeEdited]);
+
+    useEffect(() => {
+        const id = searchParams.get('id');
+        if (id) {
+            setHighlightedId(id);
+            setViewMode('dashboard');
+            
+            setTimeout(() => {
+                const element = document.getElementById(`goal-${id}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Keep highlight for focus
+                    setTimeout(() => setHighlightedId(null), 5000);
+                }
+            }, 600);
+        }
+    }, [searchParams, goals]);
+
+    const handleGoalClick = (id: string) => {
+        setHighlightedId(id);
+        const element = document.getElementById(`goal-${id}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.set('id', id);
+        url.searchParams.set('view', 'dashboard');
+        window.history.pushState({}, '', url.toString());
+    };
 
     async function fetchGoals() {
         const res = await fetch('/api/goals');
@@ -344,7 +371,13 @@ export default function GoalsPage() {
                             <h2 className={styles.sectionTitle} style={{ marginTop: '3rem' }}>Latest Missions</h2>
                             <div className={styles.goalsGrid}>
                                 {goals.slice(0, 3).map(goal => (
-                                    <div key={goal.id} className={`${styles.goalCard} card`} style={{ padding: '1.5rem !important' }}>
+                                        <div 
+                                            key={goal.id} 
+                                            id={`goal-${goal.id}`}
+                                            className={`${styles.goalCard} card ${highlightedId === goal.id.toString() ? styles.highlightedItem : ''}`} 
+                                            style={{ padding: '1.5rem !important', cursor: 'pointer' }}
+                                            onClick={() => handleGoalClick(goal.id.toString())}
+                                        >
                                         <div className={styles.goalHeader} style={{ marginBottom: '1rem' }}>
                                             <div className={styles.goalInfo}>
                                                 <span className={`${styles.priorityBadge} ${styles[goal.priority]}`}>{goal.priority}</span>
@@ -522,7 +555,11 @@ export default function GoalsPage() {
                                 goals.filter(g => g.status === 'in-progress').map(goal => {
                                     const isOverdue = goal.deadline && new Date(goal.deadline) < new Date();
                                     return (
-                                        <div key={goal.id} className={`${styles.goalCard} card`}>
+                                        <div 
+                                            key={goal.id} 
+                                            id={`goal-${goal.id}`}
+                                            className={`${styles.goalCard} card ${highlightedId === goal.id.toString() ? styles.highlightedItem : ''}`}
+                                        >
                                             <div className={styles.goalHeader}>
                                                 <div className={styles.goalInfo}>
                                                     <span className={`${styles.priorityBadge} ${styles[goal.priority]}`}>{goal.priority}</span>
@@ -640,7 +677,12 @@ export default function GoalsPage() {
                                 <h2 className={styles.sectionTitle} style={{ marginTop: '4rem' }}>Mission History</h2>
                                 <div className={styles.goalsGrid}>
                                     {goals.filter(g => g.status === 'completed').map(goal => (
-                                        <div key={goal.id} className={`${styles.goalCard} card`} style={{ opacity: 0.7, border: '1px solid var(--accent)' }}>
+                                        <div 
+                                            key={goal.id} 
+                                            id={`goal-${goal.id}`}
+                                            className={`${styles.goalCard} card ${highlightedId === goal.id.toString() ? styles.highlightedItem : ''}`} 
+                                            style={{ opacity: 0.7, border: '1px solid var(--accent)' }}
+                                        >
                                             <div className={styles.goalHeader}>
                                                 <div className={styles.goalInfo}>
                                                     <span className={styles.priorityBadge} style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent)' }}>COMPLETED</span>
@@ -703,5 +745,13 @@ export default function GoalsPage() {
                 </div>
             )}
         </main>
+    );
+}
+
+export default function GoalsPage() {
+    return (
+        <Suspense fallback={<div className={styles.container}>Loading Mission Control...</div>}>
+            <GoalsContent />
+        </Suspense>
     );
 }

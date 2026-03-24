@@ -150,7 +150,7 @@ export default function JourneyPage() {
         try {
             const res = await fetch(`/api/sticky-notes?id=${id}`, { method: 'DELETE' });
             if (res.ok) {
-                fetchStickies();
+                setStickies(prev => prev.filter(s => s.sticky_id !== id));
             } else {
                 const err = await res.json();
                 alert(`Failed to delete sticky: ${err.error || 'Unknown error'}`);

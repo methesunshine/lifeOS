@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import styles from '@/app/page.module.css';
 import Link from 'next/link';
 
+const REMINDER_REFRESH_EVENT = 'reminderUpdated';
+
 export default function DashboardReminders() {
     const [reminders, setReminders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -23,6 +25,8 @@ export default function DashboardReminders() {
             }
         }
         fetchReminders();
+        window.addEventListener(REMINDER_REFRESH_EVENT, fetchReminders);
+        return () => window.removeEventListener(REMINDER_REFRESH_EVENT, fetchReminders);
     }, []);
 
     if (loading) return (

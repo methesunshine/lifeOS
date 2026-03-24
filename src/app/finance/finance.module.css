@@ -104,9 +104,15 @@
     transition: all 0.2s ease;
 }
 
-.activeType {
-    background: var(--bg-card) !important;
-    color: var(--primary) !important;
+.activeCredit {
+    background: var(--accent) !important;
+    color: black !important;
+    box-shadow: var(--shadow-sm);
+}
+
+.activeDebit {
+    background: #ff4d4d !important;
+    color: white !important;
     box-shadow: var(--shadow-sm);
 }
 
@@ -209,10 +215,31 @@
 }
 
 .dashboardTable td {
-    padding: 1.25rem 1rem;
+    padding: 0.75rem 0.5rem;
     border-bottom: 1px solid var(--border);
-    font-size: 0.9375rem;
+    font-size: 0.85rem;
     font-weight: 600;
+}
+
+.historyCardStandard {
+    height: 260px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+    margin-top: 1.5rem;
+}
+
+.historyList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
 }
 
 .historyHeader {
@@ -236,12 +263,8 @@
 }
 
 .historyItem {
-    position: relative;
-    padding: 1.25rem;
-    border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border);
 }
 
 .historyItem:hover {
@@ -294,6 +317,28 @@
     color: var(--text-muted);
     font-weight: 600;
     text-align: center;
+}
+
+.historyViewBtn {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-sidebar);
+    border: 1px dashed var(--border);
+    border-radius: 1rem;
+    color: var(--accent);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.historyViewBtn:hover {
+    background: var(--accent);
+    color: white;
+    border-style: solid;
 }
 
 .alert {
@@ -435,3 +480,17 @@
         grid-template-columns: 1fr;
     }
 }
+
+.highlightedItem {
+    animation: highlight-pulse 2s ease-out;
+    border: 2px solid var(--accent) !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3) !important;
+    position: relative;
+    z-index: 10;
+}
+
+@keyframes highlight-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+    50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+}

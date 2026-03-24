@@ -1,27 +1,71 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import styles from './settings.module.css';
 
-export default function SettingsPage() {
-    const [token, setToken] = useState('');
+function SettingsContent() {
+    const searchParams = useSearchParams();
+    const [highlightedId, setHighlightedId] = useState<string | null>(null);
+    const [userEmail, setUserEmail] = useState<string | null>(null);
+    const [telegramToken, setTelegramToken] = useState('');
+    const [telegramChatId, setTelegramChatId] = useState('');
     const [enabled, setEnabled] = useState(true);
     const [loading, setLoading] = useState(false);
-    const [testLoading, setTestLoading] = useState(false);
-    const [showToken, setShowToken] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [telegramTestLoading, setTelegramTestLoading] = useState(false);
+    const [showTelegramToken, setShowTelegramToken] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error' | 'warning' | 'info', text: string } | null>(null);
+
+    // Auto-dismiss message timer
+    useEffect(() => {
+        if (message) {
+            const durations = {
+                success: 4000,
+                warning: 7000,
+                info: 7000,
+                error: 10000
+            };
+            const timer = setTimeout(() => {
+                setMessage(null);
+            }, durations[message.type] || 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [message]);
 
     useEffect(() => {
         fetchProfile();
     }, []);
 
+    useEffect(() => {
+        const id = searchParams.get('id');
+        if (id) {
+            setHighlightedId(id);
+            setTimeout(() => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 600);
+            const timer = setTimeout(() => setHighlightedId(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [searchParams]);
+
     const fetchProfile = async () => {
         try {
+            // Get User Email
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setUserEmail(user.email || 'N/A');
+            }
+
             const res = await fetch('/api/profile');
             const data = await res.json();
             if (data.profile) {
-                setToken(data.profile.pushbullet_token || '');
-                setEnabled(data.profile.notifications_enabled);
+                setTelegramToken(data.profile.telegram_bot_token || '');
+                setTelegramChatId(data.profile.telegram_chat_id || '');
+                setEnabled(data.profile.notifications_enabled ?? true);
             }
         } catch (err) {
             console.error('Failed to fetch profile:', err);
@@ -36,13 +80,16 @@ export default function SettingsPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    pushbullet_token: token,
+                    telegram_bot_token: telegramToken,
+                    telegram_chat_id: telegramChatId,
                     notifications_enabled: enabled
                 })
             });
 
             if (res.ok) {
                 setMessage({ type: 'success', text: 'Settings saved successfully!' });
+                // Trigger an update for the activity log to show up immediately
+                window.dispatchEvent(new Event('activity-update'));
             } else {
                 setMessage({ type: 'error', text: 'Failed to save settings.' });
             }
@@ -53,21 +100,25 @@ export default function SettingsPage() {
         }
     };
 
-    const handleTest = async () => {
-        setTestLoading(true);
+    const handleTelegramTest = async () => {
+        setTelegramTestLoading(true);
         setMessage(null);
         try {
-            const res = await fetch('/api/notify/test', { method: 'POST' });
+            const res = await fetch('/api/notify/telegram-test', { method: 'POST' });
             const data = await res.json();
             if (res.ok) {
-                setMessage({ type: 'success', text: 'Test notification sent! Check your devices.' });
+                setMessage({ type: 'success', text: 'Telegram test message sent! Check your chat.' });
             } else {
-                setMessage({ type: 'error', text: data.error || 'Test notification failed.' });
+                let errorText = data.error || 'Telegram test failed.';
+                if (errorText.toLowerCase().includes('chat not found')) {
+                    errorText += ' (Tip: Ensure you have started a conversation with your bot first by sending it any message.)';
+                }
+                setMessage({ type: 'error', text: errorText });
             }
         } catch (err) {
-            setMessage({ type: 'error', text: 'An unexpected error occurred during test.' });
+            setMessage({ type: 'error', text: 'An unexpected error occurred during Telegram test.' });
         } finally {
-            setTestLoading(false);
+            setTelegramTestLoading(false);
         }
     };
 
@@ -79,51 +130,80 @@ export default function SettingsPage() {
             </header>
 
             <div className={styles.settingsGrid}>
-                <section className={`${styles.section} card glass`}>
-                    <h2><span>📱</span> Pushbullet Notifications</h2>
+                <section id="telegram" className={`${styles.section} ${styles.pushbulletSection} card glass ${highlightedId === 'telegram' ? styles.highlightedItem : ''}`}>
+                    <h2><span>✈️</span> Telegram Notifications</h2>
+                    
+                    {message && (
+                        <div className={`
+                            ${styles.statusMessage} 
+                            ${message.type === 'success' ? styles.statusSuccess : ''}
+                            ${message.type === 'error' ? styles.statusError : ''}
+                            ${message.type === 'warning' ? styles.statusWarning : ''}
+                            ${message.type === 'info' ? styles.statusInfo : ''}
+                        `} style={{ marginBottom: '1.5rem' }}>
+                            {message.type === 'success' && '✅'}
+                            {message.type === 'error' && '❌'}
+                            {message.type === 'warning' && '⚠️'}
+                            {message.type === 'info' && 'ℹ️'}
+                            {' '}{message.text}
+                        </div>
+                    )}
+
                     <p className={styles.sectionText}>
-                        Receive real-time system alerts, burnout risks, and reminders on your phone or desktop.
+                        Unlimited free alerts via your personal Telegram Bot.
                     </p>
 
+                    <div className={styles.toggleRow}>
+                        <div className={styles.toggleLabel}>
+                            <span className={styles.toggleTitle}>Enable Notifications</span>
+                            <span className={styles.toggleDesc}>Toggle all system-wide real-time alerts.</span>
+                        </div>
+                        <label className={styles.switch}>
+                            <input 
+                                type="checkbox" 
+                                checked={enabled}
+                                onChange={(e) => setEnabled(e.target.checked)}
+                            />
+                            <span className={styles.slider}></span>
+                        </label>
+                    </div>
+
                     <div className={styles.formGroup}>
-                        <label className={styles.inputLabel}>Access Token</label>
+                        <label className={styles.inputLabel}>Bot Token</label>
                         <div className={styles.inputWrapper}>
                             <input
-                                type={showToken ? "text" : "password"}
-                                placeholder="o.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                type={showTelegramToken ? "text" : "password"}
+                                placeholder="123456789:ABCDefGhIJKlmNoPQRStuvWxYz"
                                 className={styles.inputField}
-                                value={token}
-                                onChange={(e) => setToken(e.target.value)}
+                                value={telegramToken}
+                                onChange={(e) => setTelegramToken(e.target.value)}
                             />
                             <button 
                                 type="button"
                                 className={styles.toggleVisibilityBtn}
-                                onClick={() => setShowToken(!showToken)}
-                                title={showToken ? "Hide Token" : "Show Token"}
+                                onClick={() => setShowTelegramToken(!showTelegramToken)}
+                                title={showTelegramToken ? "Hide Token" : "Show Token"}
                             >
-                                {showToken ? '👁️' : '🔒'}
+                                {showTelegramToken ? '👁️' : '🔒'}
                             </button>
                         </div>
                         <p className={styles.hint}>
-                            Get your token from the <a href="https://www.pushbullet.com/#settings" target="_blank" rel="noopener noreferrer">Pushbullet Settings</a> page.
+                            Create a bot via <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer">@BotFather</a>.
                         </p>
                     </div>
 
-                    <div style={{ marginTop: '2rem' }}>
-                        <div className={styles.toggleRow}>
-                            <div className={styles.toggleLabel}>
-                                <span className={styles.toggleTitle}>Enable System Alerts</span>
-                                <span className={styles.toggleDesc}>Pushes critical anomalies and daily summaries.</span>
-                            </div>
-                            <label className={styles.switch}>
-                                <input
-                                    type="checkbox"
-                                    checked={enabled}
-                                    onChange={(e) => setEnabled(e.target.checked)}
-                                />
-                                <span className={styles.slider}></span>
-                            </label>
-                        </div>
+                    <div className={styles.formGroup} style={{ marginTop: '1.5rem' }}>
+                        <label className={styles.inputLabel}>Chat ID</label>
+                        <input
+                            type="text"
+                            placeholder="12345678"
+                            className={styles.inputField}
+                            value={telegramChatId}
+                            onChange={(e) => setTelegramChatId(e.target.value)}
+                        />
+                        <p className={styles.hint}>
+                            Get your ID from <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer">@userinfobot</a>. <strong>Important:</strong> You must message your bot first.
+                        </p>
                     </div>
 
                     <div className={styles.controls}>
@@ -136,19 +216,14 @@ export default function SettingsPage() {
                         </button>
                         <button
                             className={styles.testBtn}
-                            onClick={handleTest}
-                            disabled={testLoading || !token}
+                            onClick={handleTelegramTest}
+                            disabled={telegramTestLoading || !telegramToken || !telegramChatId}
                         >
-                            {testLoading ? 'Sending...' : 'Test Connection'}
+                            {telegramTestLoading ? 'Sending...' : 'Test Connection'}
                         </button>
                     </div>
-
-                    {message && (
-                        <div className={`${styles.statusMessage} ${message.type === 'success' ? styles.statusSuccess : styles.statusError}`}>
-                            {message.text}
-                        </div>
-                    )}
                 </section>
+
 
                 <section className={`${styles.section} card glass`}>
                     <h2><span>🛠️</span> System Maintenance</h2>
@@ -180,5 +255,13 @@ export default function SettingsPage() {
                 </section>
             </div>
         </div>
+    );
+}
+
+export default function SettingsPage() {
+    return (
+        <Suspense fallback={<div className={styles.container}>Loading Settings...</div>}>
+            <SettingsContent />
+        </Suspense>
     );
 }

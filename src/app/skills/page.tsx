@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from './skills.module.css';
 
-export default function SkillsPage() {
+function SkillsContent() {
+    const searchParams = useSearchParams();
+    const [highlightedId, setHighlightedId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'entry' | 'history'>('entry');
     const [skills, setSkills] = useState<any[]>([]);
     const [name, setName] = useState('');
@@ -24,6 +27,35 @@ export default function SkillsPage() {
     const [isClearingAllSkills, setIsClearingAllSkills] = useState(false);
 
     useEffect(() => {
+        const id = searchParams.get('id');
+        if (id) {
+            setHighlightedId(id);
+            setViewMode('history');
+            
+            setTimeout(() => {
+                const element = document.getElementById(`skill-log-${id}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Keep highlight for focus
+                    setTimeout(() => setHighlightedId(null), 5000);
+                }
+            }, 600);
+        }
+    }, [searchParams, skills]);
+
+    const handleLogClick = (id: string) => {
+        setHighlightedId(id);
+        const element = document.getElementById(`skill-log-${id}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.set('id', id);
+        url.searchParams.set('view', 'history');
+        window.history.pushState({}, '', url.toString());
+    };
+
+    useEffect(() => {
         const updateTime = () => {
             if (!isTimeEdited) {
                 const now = new Date();
@@ -33,14 +65,9 @@ export default function SkillsPage() {
             }
         };
 
-        // Update time immediately on mount
         updateTime();
-
-        // Keep updating time every second so it perfectly synchronizes minute rollovers
         const intervalId = setInterval(updateTime, 1000);
-
         fetchSkills();
-
         return () => clearInterval(intervalId);
     }, [isTimeEdited]);
 
@@ -330,7 +357,13 @@ export default function SkillsPage() {
                                     )}
                                 </div>
                                 {skills.flatMap(s => (s.skill_logs || []).map((l: any) => ({ ...l, skillName: s.name }))).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((log) => (
-                                    <div key={log.id} className={styles.expandedHistoryItem}>
+                                    <div 
+                                        key={log.id} 
+                                        id={`skill-log-${log.id}`} 
+                                        className={`${styles.expandedHistoryItem} ${highlightedId === log.id.toString() ? styles.highlightedItem : ''}`}
+                                        onClick={() => handleLogClick(log.id.toString())}
+                                        style={{ cursor: 'pointer' }}
+                                    >
                                         <div className={styles.expandedHeader}>
                                             <div className={styles.expandedHistoryDate}>
                                                 <h3>
@@ -425,7 +458,7 @@ export default function SkillsPage() {
                         <h3 className={styles.sideTitle}>Recent Wins</h3>
                         {skills.flatMap(s => (s.skill_logs || []).map((l: any) => ({ ...l, skillName: s.name }))).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5).map((log, i) => (
                             <div key={i} className={styles.recentWin}>
-                                <div className={styles.winDot}></div>
+                                <div className={styles.dot}></div>
                                 <div>
                                     <p className={styles.winText}><strong>{log.skillName}</strong>: Logged {log.hours_invested}h session</p>
                                     <span className={styles.winDate}>
@@ -438,5 +471,13 @@ export default function SkillsPage() {
                 </aside>
             </div>
         </main>
+    );
+}
+
+export default function SkillsPage() {
+    return (
+        <Suspense fallback={<div className={styles.container}>Loading Mastery Hub...</div>}>
+            <SkillsContent />
+        </Suspense>
     );
 }

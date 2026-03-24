@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from './physical.module.css';
 
-export default function PhysicalHealthPage() {
+function PhysicalContent() {
+    const searchParams = useSearchParams();
+    const [highlightedId, setHighlightedId] = useState<string | null>(null);
     const [sleep, setSleep] = useState(0);
     const [workout, setWorkout] = useState(false);
     const [water, setWater] = useState(0);
@@ -19,6 +22,42 @@ export default function PhysicalHealthPage() {
     // Inline Confirmation States
     const [isDeletingPhysicalId, setIsDeletingPhysicalId] = useState<string | null>(null);
     const [isDeletingAllPhysical, setIsDeletingAllPhysical] = useState(false);
+
+    useEffect(() => {
+        const id = searchParams.get('id');
+        const view = searchParams.get('view');
+        
+        if (view === 'history') {
+            setViewMode('history');
+        }
+
+        if (id) {
+            setHighlightedId(id);
+            setViewMode('history');
+            
+            setTimeout(() => {
+                const element = document.getElementById(`log-${id}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Keep highlight for 5 seconds for user focus
+                    setTimeout(() => setHighlightedId(null), 5000);
+                }
+            }, 600);
+        }
+    }, [searchParams, history]);
+
+    const handleItemClick = (id: string) => {
+        setHighlightedId(id);
+        const element = document.getElementById(`log-${id}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        // Update URL to support "previous one" clicks and history
+        const url = new URL(window.location.href);
+        url.searchParams.set('id', id);
+        url.searchParams.set('view', 'history');
+        window.history.pushState({}, '', url.toString());
+    };
 
     useEffect(() => {
         fetchHistory();
@@ -46,13 +85,11 @@ export default function PhysicalHealthPage() {
         e.preventDefault();
         setMessage(null);
 
-        // Validation: Make Core Entries Compulsory
         if (sleep === 0 || water === 0 || steps === 0) {
             setMessage({ type: 'error', text: 'All core vitals (Sleep, Water, Steps) must be entered.' });
             setTimeout(() => setMessage(null), 6000);
             return;
         }
-
 
         setLoading(true);
 
@@ -146,15 +183,13 @@ export default function PhysicalHealthPage() {
         setTimeout(() => setMessage(null), 3000);
     }
 
-    // Calculate Consistency Score (Mock logic for now)
-    // Calculate Consecutive Workout Streak (Daily)
+    // Calculate Streak & Stats
     const dailyWorkouts = history.reduce((acc: { [key: string]: boolean }, entry) => {
         const date = new Date(entry.created_at).toLocaleDateString();
         acc[date] = acc[date] || entry.workout_completed;
         return acc;
     }, {});
 
-    // Get sorted dates (descending)
     const sortedDates = Object.keys(dailyWorkouts).sort((a, b) =>
         new Date(b).getTime() - new Date(a).getTime()
     );
@@ -164,7 +199,6 @@ export default function PhysicalHealthPage() {
         if (dailyWorkouts[date]) {
             streakCount++;
         } else {
-            // Only break if it's not today (allowing the user to still complete today's workout)
             const isToday = date === new Date().toLocaleDateString();
             if (!isToday) break;
         }
@@ -218,9 +252,6 @@ export default function PhysicalHealthPage() {
                     ⚠️ Your last entry was missing a workout! Let's get that streak started again today.
                 </div>
             )}
-
-
-
 
             {viewMode === 'entry' ? (
                 <div className={styles.grid}>
@@ -429,7 +460,13 @@ export default function PhysicalHealthPage() {
                                     {history.length > 0 ? (
                                         <>
                                             {history.map((entry) => (
-                                                <div key={entry.id} className={styles.historyItem}>
+                                                <div 
+                                                    key={entry.id} 
+                                                    id={`log-${entry.id}`} 
+                                                    className={`${styles.historyItem} ${highlightedId === entry.id.toString() ? styles.highlightedItem : ''}`}
+                                                    onClick={() => handleItemClick(entry.id.toString())}
+                                                    style={{ cursor: 'pointer' }}
+                                                >
                                                     <div className={styles.historyHeader}>
                                                         <div className={styles.historyDate}>
                                                             <div>{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
@@ -505,7 +542,13 @@ export default function PhysicalHealthPage() {
                             )}
                         </div>
                         {history.map((entry) => (
-                            <div key={entry.id} className={styles.expandedHistoryItem}>
+                            <div 
+                                key={entry.id} 
+                                id={`log-${entry.id}`} 
+                                className={`${styles.expandedHistoryItem} ${highlightedId === entry.id.toString() ? styles.highlightedItem : ''}`}
+                                onClick={() => handleItemClick(entry.id.toString())}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 <div className={styles.expandedHeader}>
                                     <div className={styles.expandedHistoryDate}>
                                         <h3>
@@ -561,3 +604,10 @@ export default function PhysicalHealthPage() {
     );
 }
 
+export default function PhysicalPage() {
+    return (
+        <Suspense fallback={<div className={styles.container}>Loading Physical Health...</div>}>
+            <PhysicalContent />
+        </Suspense>
+    );
+}

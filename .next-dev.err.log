@@ -1,0 +1,635 @@
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:42
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:659:11
+    at new Promise (<anonymous>)
+    at retryable (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:641:21)
+    at SupabaseAuthClient._refreshAccessToken (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5251:224)
+    at SupabaseAuthClient._callRefreshToken (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5407:48)
+    at SupabaseAuthClient.__loadSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4541:57)
+    at async SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4471:28)
+    at async SupabaseAuthClient._emitInitialSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5031:16) {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:42
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:659:11
+    at new Promise (<anonymous>)
+    at retryable (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:641:21)
+    at SupabaseAuthClient._refreshAccessToken (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5251:224)
+    at SupabaseAuthClient._callRefreshToken (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5407:48)
+    at SupabaseAuthClient.__loadSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4541:57)
+    at async SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4471:28)
+    at async SupabaseAuthClient._emitInitialSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5031:16) {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processTimers (node:internal/timers:538:9)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processTimers (node:internal/timers:538:9)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+AuthRetryableFetchError: fetch failed
+    at ignore-listed frames {
+  __isAuthError: true,
+  status: 0,
+  code: undefined
+}
+AuthRetryableFetchError: fetch failed
+    at ignore-listed frames {
+  __isAuthError: true,
+  status: 0,
+  code: undefined
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:5256:225
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:647:36 {
+  
+}
+AuthRetryableFetchError: fetch failed
+    at ignore-listed frames {
+  __isAuthError: true,
+  status: 0,
+  code: undefined
+}
+AuthRetryableFetchError: fetch failed
+    at ignore-listed frames {
+  __isAuthError: true,
+  status: 0,
+  code: undefined
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+Error: fetch failed
+    at context.fetch (C:\Anjali Kumar\Project\ANJALI\Life OS\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:577:23
+    at _handleRequest (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:931:24)
+    at _request (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:918:24)
+    at C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4603:225
+    at SupabaseAuthClient._useSession (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4472:26)
+    at async SupabaseAuthClient._getUser (C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4588:20)
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4572:20
+    at async C:\Anjali Kumar\Project\ANJALI\Life OS\.next\dev\server\edge\chunks\node_modules_@supabase_auth-js_dist_module_33c852e9._.js:4420:28 {
+  
+}
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND yhtrjiurkvadlzdjyiwb.supabase.co
+      at ignore-listed frames {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'yhtrjiurkvadlzdjyiwb.supabase.co'
+  }
+}
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: isDeletingAllReminders is not defined
+    at RemindersPage (src\app\reminders\page.tsx:244:25)
+  242 |                     <h2 style={{ margin: 0 }}>Active Reminders</h2>
+  243 |                     {(
+> 244 |                         isDeletingAllReminders ? (
+      |                         ^
+  245 |                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+  246 |                                 <button className={styles.btnDanger} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={handleDeleteAllReminders}>
+  247 |                                     🗑️ Delete Everything {
+  digest: '734349871'
+}
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ./src/app/journey/page.tsx:557:31
+Parsing ecmascript source code failed
+[0m [90m 555 |[39m                                 [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 556 |[39m                                 [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+[31m[1m>[22m[39m[90m 557 |[39m                             [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m     |[39m                               [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 558 |[39m                             [33m<[39m[33mdiv[39m className[33m=[39m{styles[33m.[39mnotesBox}[33m>[39m
+ [90m 559 |[39m                                 [33m<[39m[33mdiv[39m className[33m=[39m{styles[33m.[39mnotesGrid}[33m>[39m
+ [90m 560 |[39m                                 {notes[33m.[39mmap(note [33m=>[39m ([0m
+
+Expected '</', got 'ident'
+
+Import traces:
+  Client Component Browser:
+    ./src/app/journey/page.tsx [Client Component Browser]
+    ./src/app/journey/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/journey/page.tsx [Client Component SSR]
+    ./src/app/journey/page.tsx [Server Component]
+
+

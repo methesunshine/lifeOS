@@ -716,6 +716,15 @@
     align-items: center;
 }
 
+.stickyPanel {
+    max-height: 480px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-right: 0.5rem;
+}
+
 @media (max-width: 1200px) {
     .layout {
         grid-template-columns: 1fr;

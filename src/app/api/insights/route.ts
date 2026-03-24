@@ -73,6 +73,23 @@ export async function GET() {
             });
         }
 
+        const { count: overdueReminders } = await supabase
+            .from('reminders')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .in('status', ['pending', 'snoozed'])
+            .lt('remind_at', new Date().toISOString());
+
+        if (overdueReminders && overdueReminders > 0) {
+            alerts.push({
+                id: 'overdue-reminders',
+                type: 'warning',
+                title: 'Reminder Alert',
+                message: `${overdueReminders} reminders are overdue. Review them in Reminders.`,
+                actionLabel: 'Review Reminders'
+            });
+        }
+
         const { data: todayJournal } = await supabase
             .from('daily_logs')
             .select('log_id')
@@ -89,8 +106,25 @@ export async function GET() {
             });
         }
 
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('telegram_bot_token, notifications_enabled')
+            .eq('user_id', user.id)
+            .single();
+
+        if (!profile?.telegram_bot_token || !profile?.notifications_enabled) {
+            alerts.push({
+                id: 'settings-sync',
+                type: 'info',
+                title: 'Settings Check',
+                message: 'Telegram Bot is not fully configured. Review Settings to keep phone alerts active.',
+                actionLabel: 'Open Settings'
+            });
+        }
+
         return NextResponse.json({ alerts });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

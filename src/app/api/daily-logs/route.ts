@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
-import { sendPushNotification } from '@/lib/pushbullet'
+import { logActivity } from '@/lib/activity-logger'
 
 export async function GET(request: Request) {
     try {
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
             .select('*')
             .eq('user_id', user.id)
             .order('date', { ascending: false })
+            .order('created_at', { ascending: false })
 
         if (date) {
             query = query.eq('date', date)
@@ -61,8 +62,15 @@ export async function POST(request: Request) {
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '📔 Journey Entry Saved', `Date: ${date || 'Today'}\nMood: ${mood || 'N/A'}`);
+        // Persistent Activity Log
+        await logActivity({
+            area: 'Journey',
+            action: 'Daily Reflection Saved',
+            detail: `Mood: ${mood || 'N/A'}${summary ? `\n📝 ${summary}` : ''}${wins ? `\n🏆 Wins: ${wins}` : ''}${lessons ? `\n💡 Lessons: ${lessons}` : ''}`,
+            icon: '📔',
+            reference_id: data.log_id.toString(),
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true, log: data })
     } catch (error: any) {
@@ -92,15 +100,21 @@ export async function PATCH(request: Request) {
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '📔 Journey Entry Updated', `Entry for ${data.date} has been updated.`);
+        // Persistent Activity Log
+        await logActivity({
+            area: 'Journey',
+            action: 'Daily Reflection Updated',
+            detail: `Refined entry for ${data.date}`,
+            icon: '📔',
+            reference_id: data.log_id.toString(),
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true, log: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }
-
 
 export async function DELETE(request: Request) {
     try {
@@ -113,16 +127,41 @@ export async function DELETE(request: Request) {
         const deleteAll = searchParams.get('all') === 'true'
 
         if (deleteAll) {
+            const { count, error: countError } = await supabase
+                .from('daily_logs')
+                .select('log_id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+
+            if (countError) throw countError
+
             const { error } = await supabase
                 .from('daily_logs')
                 .delete()
                 .eq('user_id', user.id)
 
             if (error) throw error
+
+            await logActivity({
+                area: 'Journey',
+                action: 'Daily Logs Cleared',
+                detail: `All ${count || 0} reflections were removed from history.`,
+                icon: '🗑️',
+                userId: user.id
+            });
+
             return NextResponse.json({ success: true, message: 'All logs deleted' })
         }
 
         if (!id) return NextResponse.json({ error: 'Log ID required' }, { status: 400 })
+
+        const { data: logToDelete, error: fetchError } = await supabase
+            .from('daily_logs')
+            .select('date')
+            .eq('log_id', id)
+            .eq('user_id', user.id)
+            .single()
+
+        if (fetchError) throw fetchError
 
         const { error } = await supabase
             .from('daily_logs')
@@ -131,6 +170,16 @@ export async function DELETE(request: Request) {
             .eq('user_id', user.id)
 
         if (error) throw error
+
+        await logActivity({
+            area: 'Journey',
+            action: 'Daily Reflection Deleted',
+            detail: `Removed entry from ${new Date(logToDelete.date).toLocaleDateString()}`,
+            icon: '🗑️',
+            reference_id: id,
+            userId: user.id
+        });
+
         return NextResponse.json({ success: true })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })

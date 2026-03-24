@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
-import { sendPushNotification } from '@/lib/pushbullet'
 
 export async function GET() {
     try {
@@ -46,9 +45,6 @@ export async function POST(request: Request) {
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '📌 Sticky Note Added', `Content: ${content?.substring(0, 50) || 'Empty note'}...`);
-
         return NextResponse.json({ success: true, sticky: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
@@ -77,9 +73,6 @@ export async function PATCH(request: Request) {
 
         if (error) throw error
 
-        // Pushbullet Notification
-        await sendPushNotification(user.id, '📌 Sticky Note Updated', `Content: ${data.content?.substring(0, 50)}...`);
-
         return NextResponse.json({ success: true, sticky: data })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
@@ -93,8 +86,36 @@ export async function DELETE(request: Request) {
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const { searchParams } = new URL(request.url)
+        const deleteAll = searchParams.get('all') === 'true'
         const id = searchParams.get('id')
+
+        if (deleteAll) {
+            const { count, error: countError } = await supabase
+                .from('sticky_notes')
+                .select('sticky_id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+
+            if (countError) throw countError
+
+            const { error } = await supabase
+                .from('sticky_notes')
+                .delete()
+                .eq('user_id', user.id)
+
+            if (error) throw error
+            return NextResponse.json({ success: true, message: 'All sticky notes deleted' })
+        }
+
         if (!id) return NextResponse.json({ error: 'Sticky ID required' }, { status: 400 })
+
+        const { data: stickyToDelete, error: fetchError } = await supabase
+            .from('sticky_notes')
+            .select('content')
+            .eq('sticky_id', id)
+            .eq('user_id', user.id)
+            .single()
+
+        if (fetchError) throw fetchError
 
         const { error } = await supabase
             .from('sticky_notes')

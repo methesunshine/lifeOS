@@ -60,10 +60,64 @@
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
+.activeReminderBox {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 0.75rem;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.reminderListShell {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    padding: 0.25rem 0.2rem 0.25rem 0.25rem;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.reminderScrollArea {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    overflow-y: scroll;
+    width: 100%;
+    padding-right: 0.5rem;
+    box-sizing: border-box;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+}
+
+.reminderScrollArea::-webkit-scrollbar {
+    width: 10px;
+}
+
+.reminderScrollArea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.reminderScrollArea::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
+}
+
 .reminderList {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    min-height: 100%;
 }
 
 .reminderItem {
@@ -129,16 +183,19 @@
     text-align: center;
     color: var(--text-muted);
     font-size: 1rem;
-    padding: 3rem 0;
-    background: var(--bg-card);
-    border-radius: 1rem;
-    border: 1px dashed var(--border);
+    padding: 3rem 1rem;
+    margin: 0;
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .filterTabs {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 0;
+    flex-wrap: wrap;
 }
 
 .filterTab {

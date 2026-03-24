@@ -89,7 +89,7 @@ export default function SystemsPerformanceChart({ areaScores }: { areaScores: Ar
 
                     {/* Footer description */}
                     <div style={{ marginTop: '1.25rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)', fontSize: '0.68rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                        Snapshot of your current progress across all 7 life systems.
+                        Snapshot of your current progress across all 8 life systems.
                     </div>
                 </>
             )}

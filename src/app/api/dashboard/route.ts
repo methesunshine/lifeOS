@@ -1,5 +1,33 @@
 import { createClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
+import {
+    buildSystemActivityFeed,
+    calculateFinanceModuleScore,
+    calculateGoalsModuleScore,
+    calculateJourneyModuleScore,
+    calculateMentalModuleScore,
+    calculateOverallLifeScore,
+    calculatePhysicalModuleScore,
+    calculateReminderModuleScore,
+    calculateSettingsModuleScore,
+    calculateSkillsModuleScore,
+    getDashboardAreaScores
+} from '@/lib/dashboardMetrics';
+
+type ActivityItem = {
+    area: string;
+    action: string;
+    detail: string;
+    time: string;
+    icon: string;
+    id?: string;
+};
+
+type SkillActivityRow = {
+    skills?: Array<{ name?: string }> | null;
+    hours_invested?: number | string | null;
+    created_at: string;
+};
 
 export async function GET() {
     try {
@@ -11,147 +39,168 @@ export async function GET() {
         }
 
         const today = new Date().toLocaleDateString('en-CA');
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
 
-        // 1. Fetch Latest Life Scores for all areas
-        const { data: scores } = await supabase
-            .from('life_scores')
-            .select('area, score')
-            .eq('user_id', user.id)
-            .order('calculated_at', { ascending: false });
-
-        const recentScores: Record<string, number> = {};
-        scores?.forEach(s => {
-            if (!(s.area in recentScores)) {
-                recentScores[s.area] = s.score;
-            }
-        });
-
-        // 2. Fetch Detailed Activity and Metrics
-        // 2. Fetch Detailed Activity and Metrics
-        const [mental, physical, finance, skills, goals, notes, tasks, dailyLogs, productivity] = await Promise.all([
-            // Mental
-            supabase.from('mental_health').select('mood, stress_level, focus_level, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-            // Physical
-            supabase.from('physical_health').select('workout_completed, sleep_hours, water_intake_ml, steps, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-            // Finance
-            supabase.from('finance').select('amount, category, transaction_type, transaction_date').eq('user_id', user.id).order('transaction_date', { ascending: false }).limit(3),
-            // Skills
-            supabase.from('skill_logs').select('skill_id, hours_invested, created_at, skills(name)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-            // Goals
-            supabase.from('goals').select('title, status, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
-            // Notes
-            supabase.from('notes').select('note_id, title, category, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(5),
-            // Tasks
-            supabase.from('tasks').select('title, status, due_date, priority').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-            // Daily Logs
-            supabase.from('daily_logs').select('mood, date').eq('user_id', user.id).order('date', { ascending: false }).limit(1),
-            // Productivity
-            supabase.from('productivity').select('tasks_completed, focus_hours, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+        const [mental, physical, finance, skills, goals, notes, tasks, dailyLogs, reminders, profile, stickies] = await Promise.all([
+            supabase.from('mental_health').select('mood, stress_level, focus_level, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+            supabase.from('physical_health').select('workout_completed, sleep_hours, water_intake_ml, steps, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+            supabase.from('finance').select('amount, category, transaction_type, transaction_date, created_at').eq('user_id', user.id).gte('transaction_date', startOfMonth.toISOString().split('T')[0]).order('transaction_date', { ascending: false }),
+            supabase.from('skill_logs').select('skill_id, hours_invested, created_at, skills(name)').eq('user_id', user.id).order('created_at', { ascending: false }),
+            supabase.from('goals').select('title, status, created_at, updated_at, note').eq('user_id', user.id).order('updated_at', { ascending: false }),
+            supabase.from('notes').select('note_id, title, category, updated_at').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(12),
+            supabase.from('tasks').select('task_id, title, status, due_date, priority, created_at, updated_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(16),
+            supabase.from('daily_logs').select('log_id, mood, date, summary, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+            supabase.from('reminders').select('reminder_id, title, status, remind_at, created_at, category, priority').eq('user_id', user.id).order('created_at', { ascending: false }),
+            supabase.from('profiles').select('telegram_bot_token, notifications_enabled, updated_at').eq('user_id', user.id).single(),
+            supabase.from('sticky_notes').select('sticky_id, content, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
         ]);
 
-        const combinedActivity: any[] = [];
-
-        mental.data?.forEach(d => combinedActivity.push({ area: 'Mental', action: 'Mood Synced', detail: `State: ${d.mood}/10`, time: d.created_at, icon: '🧠' }));
-        physical.data?.forEach(d => combinedActivity.push({ area: 'Physical', action: d.workout_completed ? 'Protocol Done' : 'Stats Logged', detail: d.workout_completed ? 'Workout complete' : `${d.sleep_hours}h sleep`, time: d.created_at, icon: '💪' }));
-        finance.data?.forEach(d => combinedActivity.push({ area: 'Finance', action: d.transaction_type === 'expense' ? 'Debit' : 'Credit', detail: `${d.transaction_type === 'expense' ? '-' : '+'}₹${d.amount}`, time: d.transaction_date, icon: '💰' }));
-        skills.data?.forEach((d: any) => combinedActivity.push({ area: 'Skills', action: 'Practice Done', detail: `${d.skills?.name || 'Skill'} • ${d.hours_invested}h`, time: d.created_at, icon: '📚' }));
-        goals.data?.forEach(d => combinedActivity.push({ area: 'Goals', action: d.status === 'completed' ? 'Mission Success' : 'Objective Logged', detail: d.title, time: d.created_at, icon: '🎯' }));
-        notes.data?.forEach(d => combinedActivity.push({ area: 'Journey', action: 'Note Written', detail: d.title, time: d.updated_at, icon: '📓', id: d.note_id }));
-        tasks.data?.forEach(d => combinedActivity.push({ area: 'Journey', action: d.status === 'Completed' ? 'Task Done' : 'Task Added', detail: d.title, time: new Date().toISOString(), icon: '✅' }));
-        productivity.data?.forEach(d => combinedActivity.push({ area: 'Productivity', action: 'System Active', detail: `${d.focus_hours}h focus • ${d.tasks_completed} tasks`, time: d.created_at, icon: '⚡' }));
-
-        combinedActivity.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-
-        // 3. Vital Statistics Synthesis
-        const overallLifeScore = Object.values(recentScores).length > 0
-            ? Math.round(Object.values(recentScores).reduce((a, b) => a + b, 0) / Object.values(recentScores).length)
-            : 0;
-
-        // Fetch past scores from 7 days ago to compute the trend
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        const { data: pastScoresData } = await supabase
-            .from('life_scores')
-            .select('area, score')
-            .eq('user_id', user.id)
-            .lte('calculated_at', sevenDaysAgo)
-            .order('calculated_at', { ascending: false });
-
-        const pastScores: Record<string, number> = {};
-        pastScoresData?.forEach(s => {
-            if (!(s.area in pastScores)) pastScores[s.area] = s.score;
-        });
-
-        const pastLifeScore = Object.values(pastScores).length > 0
-            ? Math.round(Object.values(pastScores).reduce((a, b) => a + b, 0) / Object.values(pastScores).length)
-            : 0;
-
-        let trendValue = overallLifeScore - pastLifeScore;
-        let lifeScoreTrend = trendValue > 0 ? 'positive' : trendValue < 0 ? 'negative' : 'neutral';
-
-        // If there is literally no past history, don't show an artificial giant spike, just say neutral
-        if (Object.values(pastScores).length === 0) {
-            trendValue = 0;
-            lifeScoreTrend = 'neutral';
-        }
-
-        const totalFocusHours = productivity.data?.reduce((acc, curr) => acc + Number(curr.focus_hours), 0) || 0;
-
-        // 4. Life Journey Metrics
         const { count: totalTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
         const { count: completedTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'Completed');
+        const { count: overdueTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id).neq('status', 'Completed').lt('due_date', today);
+        const { count: overdueRemindersCount } = await supabase.from('reminders').select('*', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ['pending', 'snoozed']).lt('remind_at', new Date().toISOString());
         const { count: totalNotes } = await supabase.from('notes').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
         const { count: totalStickies } = await supabase.from('sticky_notes').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
         const { data: todayLog } = await supabase.from('daily_logs').select('log_id').eq('user_id', user.id).eq('date', today).single();
 
-        const pendingTasks = (totalTasksCount || 0) - (completedTasksCount || 0);
         const hasLogToday = !!todayLog;
+        const journeyProgress = calculateJourneyModuleScore({
+            totalTasksCount: totalTasksCount || 0,
+            completedTasksCount: completedTasksCount || 0,
+            hasLogToday,
+            totalNotes: totalNotes || 0,
+            totalStickies: totalStickies || 0,
+        });
 
-        // Calculate a consolidated Journey Progress (0-100)
-        // Logic: 50% task completion, 25% daily log presence, 25% having at least 1 note/sticky
-        const taskProgress = totalTasksCount && totalTasksCount > 0 ? (completedTasksCount || 0) / totalTasksCount : (totalTasksCount === 0 ? 1 : 0);
-        const logFactor = hasLogToday ? 1 : 0;
-        const creationFactor = (totalNotes || 0) > 0 || (totalStickies || 0) > 0 ? 1 : 0;
+        const moduleScores = {
+            mental: calculateMentalModuleScore(mental.data || []),
+            physical: calculatePhysicalModuleScore(physical.data || []),
+            finance: calculateFinanceModuleScore(finance.data || []),
+            skills: calculateSkillsModuleScore(skills.data || []),
+            goals: calculateGoalsModuleScore(goals.data || []),
+            reminders: calculateReminderModuleScore(reminders.data || []),
+            journey: journeyProgress,
+            settings: calculateSettingsModuleScore(profile.data || null),
+        };
 
-        const journeyProgress = Math.round((taskProgress * 0.5 + logFactor * 0.25 + creationFactor * 0.25) * 100);
+        const areaScores = getDashboardAreaScores(moduleScores);
+        const overallLifeScore = calculateOverallLifeScore(moduleScores);
+        const pendingRemindersCount = reminders.data?.filter((item) => item.status === 'pending' || item.status === 'snoozed').length || 0;
+        const completedRemindersCount = reminders.data?.filter((item) => item.status === 'completed').length || 0;
 
-        const tasksToday = tasks.data?.filter(t => t.due_date === today).length || 0;
-        const latestMood = dailyLogs.data?.[0]?.mood || '-';
-        const latestNote = notes.data?.[0]?.title || 'No recent notes';
+        // 1. Fetch persistent activity logs
+        const { data: persistentLogs } = await supabase
+            .from('system_activity_logs')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(50);
 
-        // ── Persistent Activity Filtering ──
+        const combinedActivity: ActivityItem[] = (persistentLogs || []).map(log => ({
+            area: log.area,
+            action: log.action,
+            detail: log.detail || '',
+            time: log.created_at,
+            icon: log.icon || '📌',
+            id: log.reference_id || log.id.toString()
+        }));
+
+        // 2. Add dynamic "Logic Center" snapshot if empty
+        if (combinedActivity.length === 0) {
+            combinedActivity.push({
+                area: 'Dashboard',
+                action: 'Logic Center Synced',
+                detail: `Overall score ${overallLifeScore} across 8 core systems`,
+                time: new Date().toISOString(),
+                icon: '🧭',
+                id: 'dashboard-snapshot'
+            });
+        }
+
+        // --- TIMELINE EVENT ALERTS (Priority) ---
+        if ((overdueTasksCount || 0) > 0) {
+            combinedActivity.push({
+                area: 'Journey',
+                action: '🚨 Action Required: Overdue Tasks',
+                detail: `You have ${overdueTasksCount} tasks past their due date. Click to resolve.`,
+                time: new Date().toISOString(),
+                icon: '🚨',
+                id: 'alert-overdue-tasks'
+            });
+        }
+
+        if (!hasLogToday) {
+            combinedActivity.push({
+                area: 'Journey',
+                action: '⚠️ Action Required: Missing Daily Reflection',
+                detail: "You haven't logged your daily reflection yet. Click to record your state.",
+                time: new Date().toISOString(),
+                icon: '⚠️',
+                id: 'alert-missing-log'
+            });
+        }
+
+        Object.entries(moduleScores).forEach(([key, score]) => {
+            if (score < 60 && key !== 'settings' && key !== 'journey') {
+                const areaName = key === 'mental' ? 'Mental Health' : 
+                                 key === 'physical' ? 'Physical Health' : 
+                                 key.charAt(0).toUpperCase() + key.slice(1);
+                combinedActivity.push({
+                    area: areaName,
+                    action: '⚠️ Review Needed: Low Area Integrity',
+                    detail: `Your ${areaName} score is currently ${score}. Click to investigate.`,
+                    time: new Date().toISOString(),
+                    icon: '⚠️',
+                    id: `alert-low-score-${key}`
+                });
+            }
+        });
+        // ----------------------------------------
+
+        combinedActivity.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
         const { cookies } = await import('next/headers');
         const cookieJar = await cookies();
         const clearPoint = cookieJar.get('activity_cleared_at')?.value;
         const hiddenItems = cookieJar.get('hidden_activities')?.value?.split(',') || [];
 
-        const filteredLogs = combinedActivity.filter(log => {
+        const filteredLogs = combinedActivity.filter((log) => {
             const logTime = new Date(log.time).getTime();
             const clearTime = clearPoint ? new Date(clearPoint).getTime() : 0;
             const logId = log.id || `${log.area}-${log.action}-${log.time}`;
             return logTime > clearTime && !hiddenItems.includes(logId);
         });
+        const recentLogs = buildSystemActivityFeed(filteredLogs, 24);
 
         return NextResponse.json({
-            scores: recentScores,
-            recentLogs: filteredLogs.slice(0, 10),
+            scores: moduleScores,
+            areaScores,
+            recentLogs,
             vitals: {
                 overallLifeScore,
-                lifeScoreTrend,
-                trendValue,
-                totalFocusHours,
-                tasksToday,
-                pendingTasks,
+                lifeScoreTrend: 'neutral',
+                trendValue: 0,
+                totalFocusHours: 0,
+                tasksToday: tasks.data?.filter((task) => task.due_date === today).length || 0,
+                pendingTasks: (totalTasksCount || 0) - (completedTasksCount || 0),
                 completedTasksCount: completedTasksCount || 0,
                 totalTasksCount: totalTasksCount || 0,
                 journeyProgress,
                 totalNotes: totalNotes || 0,
                 totalStickies: totalStickies || 0,
-                hasLogToday,
-                latestMood,
-                latestNote
+                overdueTasksCount: (overdueTasksCount || 0) + (overdueRemindersCount || 0),
+                hasLogToday: !!todayLog,
+                latestMood: dailyLogs.data?.[0]?.mood ?? '-',
+                latestReflection: dailyLogs.data?.[0]?.summary || 'No reflection logged yet.',
+                latestReflectionTime: dailyLogs.data?.[0]?.created_at || '',
+                latestNote: notes.data?.[0]?.title || 'No recent notes',
+                latestJourneyActivity: filteredLogs.find((item) => item.area === 'Journey') || null,
             }
         });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }
