@@ -76,6 +76,7 @@ export default function RemindersPage() {
     const [remRecurrence, setRemRecurrence] = useState('none');
     const [activeReminderId, setActiveReminderId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [deletingReminderId, setDeletingReminderId] = useState<string | null>(null);
 
     const [reminderToast, setReminderToast] = useState<string | null>(null);
     const [deleteConfirmScope, setDeleteConfirmScope] = useState<'filtered' | 'everything' | null>(null);
@@ -221,8 +222,8 @@ export default function RemindersPage() {
     const deleteReminder = async (id: string) => {
         const res = await fetch(`/api/reminders?id=${id}`, { method: 'DELETE' });
         if (res.ok) {
+            setDeletingReminderId(null);
             fetchReminders();
-            showReminderToast('Reminder deleted.');
         }
     };
 
@@ -387,8 +388,17 @@ export default function RemindersPage() {
                                                     </div>
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                                                    <button className={styles.logDeleteBtn} onClick={() => handleEditReminder(reminder)}>Edit</button>
-                                                    <button className={styles.logDeleteBtn} onClick={() => deleteReminder(reminder.reminder_id)}>Delete</button>
+                                                    {deletingReminderId === reminder.reminder_id ? (
+                                                        <>
+                                                            <button className={styles.logDeleteBtn} style={{ color: 'var(--red)', borderColor: 'rgba(239,68,68,0.3)' }} onClick={() => deleteReminder(reminder.reminder_id)}>Confirm</button>
+                                                            <button className={styles.logDeleteBtn} onClick={() => setDeletingReminderId(null)}>Cancel</button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <button className={styles.logDeleteBtn} onClick={() => handleEditReminder(reminder)}>Edit</button>
+                                                            <button className={styles.logDeleteBtn} onClick={() => setDeletingReminderId(reminder.reminder_id)}>Delete</button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
 

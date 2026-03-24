@@ -62,6 +62,9 @@ export default function JourneyPage() {
     const [isAddingSticky, setIsAddingSticky] = useState(false);
     const [newStickyContent, setNewStickyContent] = useState('');
     const [newStickyColor, setNewStickyColor] = useState('yellow');
+    const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
+    const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+    const [confirmDeleteAllStickies, setConfirmDeleteAllStickies] = useState(false);
 
     // Delete All Confirmation State
     const [isDeletingAllLogs, setIsDeletingAllLogs] = useState(false);
@@ -154,6 +157,20 @@ export default function JourneyPage() {
             } else {
                 const err = await res.json();
                 alert(`Failed to delete sticky: ${err.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            alert('An error occurred during deletion.');
+        }
+    };
+
+    const deleteStickyAll = async () => {
+        try {
+            const res = await fetch('/api/sticky-notes?all=true', { method: 'DELETE' });
+            if (res.ok) {
+                setStickies([]);
+                setConfirmDeleteAllStickies(false);
+            } else {
+                alert('Failed to delete all stickies');
             }
         } catch (error) {
             alert('An error occurred during deletion.');
@@ -425,13 +442,11 @@ export default function JourneyPage() {
                         Tasks
                     </button>
                 </div>
-
-                <button className={styles.btnPrimary} onClick={() => openEditor()}>+ New Note</button>
             </header>
 
             <div className={styles.layout}>
                 <aside className={styles.sideColumn}>
-                    <div className={styles.sideCard}>
+                    <div className={`${styles.sideCard} ${styles.smallSideCard}`}>
                         <h2>📁 Categories</h2>
                         <ul className={styles.categoryList}>
                             <li
@@ -452,8 +467,20 @@ export default function JourneyPage() {
                         </ul>
                     </div>
 
-                    <div className={styles.sideCard}>
-                        <h2>📌 Sticky Notes</h2>
+                    <div className={`${styles.sideCard} ${styles.smallSideCard}`}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                            <h2>📌 Sticky Notes</h2>
+                            {stickies.length > 0 && (
+                                confirmDeleteAllStickies ? (
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <button className={styles.btnDanger} style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', background: 'var(--red)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }} onClick={deleteStickyAll}>Confirm</button>
+                                        <button className={styles.btnSecondary} style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }} onClick={() => setConfirmDeleteAllStickies(false)}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <button className={styles.btnDanger} style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer' }} onClick={() => setConfirmDeleteAllStickies(true)}>Delete All</button>
+                                )
+                            )}
+                        </div>
                         <div className={styles.stickyPanel}>
                             {stickies.map(s => (
                                 <div
@@ -469,17 +496,22 @@ export default function JourneyPage() {
                                     onMouseDown={(e) => handleStickyMouseDown(e, s)}
                                 >
                                     <p>{s.content}</p>
-                                    <button
-                                        className={styles.stickyDelete}
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            console.log('Sticky delete clicked for ID:', s.sticky_id);
-                                            deleteSticky(s.sticky_id);
-                                        }}
-                                    >
-                                        Delete
-                                    </button>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '1rem' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'rgba(0,0,0,0.5)', fontWeight: 'bold' }}>
+                                            {new Date(s.created_at || s.updated_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                        <button
+                                            className={styles.stickyDelete}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                console.log('Sticky delete clicked for ID:', s.sticky_id);
+                                                deleteSticky(s.sticky_id);
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                             {isAddingSticky ? (
@@ -491,17 +523,35 @@ export default function JourneyPage() {
                                         onChange={(e) => setNewStickyContent(e.target.value)}
                                         style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', resize: 'vertical', minHeight: '60px' }}
                                     />
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <select
-                                            value={newStickyColor}
-                                            onChange={(e) => setNewStickyColor(e.target.value)}
-                                            style={{ padding: '0.3rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)' }}
-                                        >
-                                            <option value="yellow">Yellow</option>
-                                            <option value="blue">Blue</option>
-                                            <option value="green">Green</option>
-                                            <option value="pink">Pink</option>
-                                        </select>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100px' }}>
+                                            <div 
+                                                onClick={() => setIsColorDropdownOpen(!isColorDropdownOpen)}
+                                                style={{ padding: '0.4rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}
+                                            >
+                                                {newStickyColor.charAt(0).toUpperCase() + newStickyColor.slice(1)} <span style={{fontSize: '0.7em'}}>▼</span>
+                                            </div>
+                                            {isColorDropdownOpen && (
+                                                <div style={{ 
+                                                    width: '100%', 
+                                                    maxHeight: '80px', 
+                                                    overflowY: 'auto', 
+                                                    background: 'var(--bg-card)', 
+                                                    border: '1px solid var(--border)', 
+                                                    borderRadius: '4px'
+                                                }}>
+                                                    {['yellow', 'blue', 'green', 'pink', 'red'].map(c => (
+                                                        <div 
+                                                            key={c}
+                                                            onClick={() => { setNewStickyColor(c); setIsColorDropdownOpen(false); }}
+                                                            style={{ padding: '0.4rem 0.6rem', cursor: 'pointer', background: newStickyColor === c ? 'rgba(255,255,255,0.05)' : 'transparent', fontSize: '0.9rem' }}
+                                                        >
+                                                            {c.charAt(0).toUpperCase() + c.slice(1)}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                                             <button className={styles.btnSecondary} style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => { setIsAddingSticky(false); setNewStickyContent(''); }}>Cancel</button>
                                             <button className={styles.btnPrimary} style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => {
@@ -554,47 +604,100 @@ export default function JourneyPage() {
                                     )}
                                 </div>
                             </div>
-                            <div className={styles.notesGrid}>
-                                {notes.map(note => (
-                                    <div key={note.note_id} className={styles.noteCard} onClick={() => openEditor(note)}>
-                                        <div className={styles.noteHeader}>
-                                            <h3>{note.title}</h3>
-                                            <div className={styles.noteActions}>
+                            <div className={styles.notesContainer}>
+                                <div style={{ marginBottom: '1.5rem', background: 'var(--bg-app)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'flex-start' }}>
+                                        <input
+                                            type="text"
+                                            placeholder="Note Title"
+                                            value={noteTitle}
+                                            onChange={(e) => setNoteTitle(e.target.value)}
+                                            style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)' }}
+                                        />
+                                        <div style={{ position: 'relative', width: '150px' }}>
+                                            <div
+                                                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                            >
+                                                <span>{noteCategory}</span>
+                                                <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>▼</span>
+                                            </div>
+                                            {isCategoryDropdownOpen && (
+                                                <div style={{ marginTop: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', overflowY: 'auto', maxHeight: '130px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
+                                                    {CATEGORIES.map(c => (
+                                                        <div
+                                                            key={c}
+                                                            onClick={() => { setNoteCategory(c); setIsCategoryDropdownOpen(false); }}
+                                                            style={{ padding: '0.6rem 0.8rem', cursor: 'pointer', background: noteCategory === c ? 'rgba(255,255,255,0.05)' : 'transparent', color: 'var(--text)', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.9rem' }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.background = noteCategory === c ? 'rgba(255,255,255,0.05)' : 'transparent'}
+                                                        >
+                                                            {c}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <textarea
+                                        placeholder="Write your journey..."
+                                        value={noteContent}
+                                        onChange={(e) => setNoteContent(e.target.value)}
+                                        style={{ width: '100%', minHeight: '100px', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', marginBottom: '1rem', resize: 'vertical' }}
+                                    />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            {activeNote && (
+                                                <button className={styles.logDeleteBtn} onClick={() => { setNoteTitle(''); setNoteContent(''); setNoteCategory('General'); setActiveNote(null); }}>Cancel</button>
+                                            )}
+                                        </div>
+                                        <button className={styles.btnPrimary} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px' }} onClick={() => { handleSaveNote(false); }} disabled={isSaving || !noteTitle.trim()}>
+                                            {isSaving ? 'Saving...' : activeNote ? 'Update Note' : '+ Add Note'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className={styles.notesGrid}>
+                                    {notes.map(note => (
+                                        <div key={note.note_id} className={styles.noteCard} onClick={() => openEditor(note)}>
+                                            <div className={styles.noteHeader}>
+                                                <h3>{note.title}</h3>
+                                                <div className={styles.noteActions}>
+                                                    <button
+                                                        className={styles.pinBtn}
+                                                        onClick={(e) => { e.stopPropagation(); togglePin(note); }}
+                                                        title={note.is_pinned ? 'Unpin' : 'Pin'}
+                                                    >
+                                                        {note.is_pinned ? '📌' : '📍'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p className={styles.noteContent}>{note.content}</p>
+                                            <div className={styles.noteFooter}>
+                                                <div className={styles.noteMeta}>
+                                                    <span className={styles.categoryTag}>{note.category}</span>
+                                                    <span className={styles.noteDate}>
+                                                        {new Date(note.updated_at).toLocaleString([], {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            year: 'numeric',
+                                                            hour: 'numeric',
+                                                            minute: '2-digit',
+                                                            hour12: true
+                                                        })}
+                                                    </span>
+                                                </div>
                                                 <button
-                                                    className={styles.pinBtn}
-                                                    onClick={(e) => { e.stopPropagation(); togglePin(note); }}
-                                                    title={note.is_pinned ? 'Unpin' : 'Pin'}
+                                                    className={styles.footerDeleteBtn}
+                                                    onClick={(e) => { e.stopPropagation(); deleteNote(note.note_id); }}
                                                 >
-                                                    {note.is_pinned ? '📌' : '📍'}
+                                                    Delete
                                                 </button>
                                             </div>
                                         </div>
-                                        <p className={styles.noteContent}>{note.content}</p>
-                                        <div className={styles.noteFooter}>
-                                            <div className={styles.noteMeta}>
-                                                <span className={styles.categoryTag}>{note.category}</span>
-                                                <span className={styles.noteDate}>
-                                                    {new Date(note.updated_at).toLocaleString([], {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        year: 'numeric',
-                                                        hour: 'numeric',
-                                                        minute: '2-digit',
-                                                        hour12: true
-                                                    })}
-                                                </span>
-                                            </div>
-                                            <button
-                                                className={styles.footerDeleteBtn}
-                                                onClick={(e) => { e.stopPropagation(); deleteNote(note.note_id); }}
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                                {!loading && notes.length === 0 && <p className={styles.emptyText}>No notes found. Start writing!</p>}
-                                {loading && <p className={styles.emptyText}>Loading notes...</p>}
+                                    ))}
+                                    {!loading && notes.length === 0 && <p className={styles.emptyText}>No notes found. Start writing!</p>}
+                                    {loading && <p className={styles.emptyText}>Loading notes...</p>}
+                                </div>
                             </div>
                         </>
                     )}
@@ -702,9 +805,6 @@ export default function JourneyPage() {
                                         )
                                     )}
                                 </div>
-                                {!isAddingTask && (
-                                    <button className={styles.btnSecondary} onClick={() => setIsAddingTask(true)}>+ New Task</button>
-                                )}
                             </div>
 
                             {taskToast && (
@@ -713,67 +813,75 @@ export default function JourneyPage() {
                                 </div>
                             )}
 
-                            {isAddingTask && (
-                                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', background: 'var(--bg-card)', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
-                                    <input
-                                        type="text"
-                                        autoFocus
-                                        placeholder="What needs to be done?"
-                                        value={newTaskTitle}
-                                        onChange={(e) => setNewTaskTitle(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && newTaskTitle.trim()) {
-                                                handleAddTask(newTaskTitle.trim());
-                                                setNewTaskTitle('');
+                            <div className={styles.notesContainer}>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    {!isAddingTask ? (
+                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                            <button className={styles.btnPrimary} style={{ width: '100%', padding: '0.8rem', fontSize: '1.1rem', borderRadius: '12px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }} onClick={() => setIsAddingTask(true)}>+ New Task</button>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-app)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                                            <input
+                                                type="text"
+                                                autoFocus
+                                                placeholder="What needs to be done?"
+                                                value={newTaskTitle}
+                                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && newTaskTitle.trim()) {
+                                                        handleAddTask(newTaskTitle.trim());
+                                                        setNewTaskTitle('');
+                                                        setIsAddingTask(false);
+                                                    } else if (e.key === 'Escape') {
+                                                        setIsAddingTask(false);
+                                                        setNewTaskTitle('');
+                                                    }
+                                                }}
+                                                style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)' }}
+                                            />
+                                            <button className={styles.btnPrimary} style={{ padding: '0 1.5rem', borderRadius: '8px' }} onClick={() => {
+                                                if (newTaskTitle.trim()) {
+                                                    handleAddTask(newTaskTitle.trim());
+                                                    setNewTaskTitle('');
+                                                    setIsAddingTask(false);
+                                                }
+                                            }}>Add</button>
+                                            <button className={styles.btnSecondary} style={{ padding: '0 1.5rem', borderRadius: '8px' }} onClick={() => {
                                                 setIsAddingTask(false);
-                                            } else if (e.key === 'Escape') {
-                                                setIsAddingTask(false);
                                                 setNewTaskTitle('');
-                                            }
-                                        }}
-                                        style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text)' }}
-                                    />
-                                    <button className={styles.btnPrimary} onClick={() => {
-                                        if (newTaskTitle.trim()) {
-                                            handleAddTask(newTaskTitle.trim());
-                                            setNewTaskTitle('');
-                                            setIsAddingTask(false);
-                                        }
-                                    }}>Add</button>
-                                    <button className={styles.btnSecondary} onClick={() => {
-                                        setIsAddingTask(false);
-                                        setNewTaskTitle('');
-                                    }}>Cancel</button>
+                                            }}>Cancel</button>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
 
-                            <div className={styles.taskList}>
-                                {tasks.map(task => (
-                                    <div key={task.task_id} className={`${styles.taskItem} ${task.status === 'Completed' ? styles.taskDone : ''}`}>
-                                        <div className={styles.taskContent}>
-                                            <div className={styles.taskHeader}>
-                                                <div className={styles.taskCheckbox} onClick={() => toggleTask(task)}>
-                                                    {task.status === 'Completed' ? '✓' : ''}
+                                <div className={styles.taskList}>
+                                    {tasks.map(task => (
+                                        <div key={task.task_id} className={`${styles.taskItem} ${task.status === 'Completed' ? styles.taskDone : ''}`}>
+                                            <div className={styles.taskContent}>
+                                                <div className={styles.taskHeader}>
+                                                    <div className={styles.taskCheckbox} onClick={() => toggleTask(task)}>
+                                                        {task.status === 'Completed' ? '✓' : ''}
+                                                    </div>
+                                                    <span className={styles.taskText}>{task.title}</span>
                                                 </div>
-                                                <span className={styles.taskText}>{task.title}</span>
-                                            </div>
-                                            <div className={styles.taskMetaArea}>
-                                                <span className={styles.taskDate}>
-                                                    {new Date(task.created_at || new Date()).toLocaleString([], {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        year: 'numeric',
-                                                        hour: 'numeric',
-                                                        minute: '2-digit',
-                                                        hour12: true
-                                                    })}
-                                                </span>
-                                                <button className={styles.logDeleteBtn} onClick={() => deleteTask(task.task_id)}>Delete</button>
+                                                <div className={styles.taskMetaArea}>
+                                                    <span className={styles.taskDate}>
+                                                        {new Date(task.created_at || new Date()).toLocaleString([], {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            year: 'numeric',
+                                                            hour: 'numeric',
+                                                            minute: '2-digit',
+                                                            hour12: true
+                                                        })}
+                                                    </span>
+                                                    <button className={styles.logDeleteBtn} onClick={() => deleteTask(task.task_id)}>Delete</button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
-                                {tasks.length === 0 && <p className={styles.emptyText}>No tasks yet. Plan your day!</p>}
+                                    ))}
+                                    {tasks.length === 0 && <p className={styles.emptyText}>No tasks yet. Plan your day!</p>}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -795,8 +903,8 @@ export default function JourneyPage() {
                                 )
                             )}
                         </div>
-                        <div className={styles.taskList}>
-                            {tasks.slice(0, 5).map(task => (
+                        <div className={styles.taskList} style={{ maxHeight: '150px', overflowY: 'auto', overflowX: 'hidden', paddingRight: '0.5rem' }}>
+                            {tasks.map(task => (
                                 <div key={task.task_id} className={styles.taskItem}>
                                     <div className={styles.taskContent}>
                                         <div className={styles.taskHeader}>
@@ -844,61 +952,6 @@ export default function JourneyPage() {
                     </div>
                 </aside>
             </div>
-
-            {/* General Note Editor Modal */}
-            {isEditorOpen && (
-                <div className={styles.modalOverlay} onClick={() => setIsEditorOpen(false)}>
-                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                        <header className={styles.modalHeader}>
-                            <input
-                                type="text"
-                                placeholder="Note Title"
-                                value={noteTitle}
-                                onChange={(e) => setNoteTitle(e.target.value)}
-                            />
-                            <select
-                                value={noteCategory}
-                                onChange={(e) => setNoteCategory(e.target.value)}
-                                className={styles.categorySelect}
-                            >
-                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        </header>
-                        <div className={styles.editorScroll}>
-                            <textarea
-                                className={styles.editorContent}
-                                placeholder="Write your journey..."
-                                value={noteContent}
-                                onChange={(e) => setNoteContent(e.target.value)}
-                            />
-                        </div>
-                        <footer className={styles.modalFooter}>
-                            <div className={styles.modalActions}>
-                                {activeNote && (
-                                    <span className={styles.noteDate}>
-                                        Last updated: {new Date(activeNote.updated_at).toLocaleString([], {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            hour: 'numeric',
-                                            minute: '2-digit',
-                                            hour12: true
-                                        })}
-                                    </span>
-                                )}
-                                <div className={styles.buttonGroup}>
-                                    {activeNote && (
-                                        <button className={styles.btnDanger} onClick={() => deleteNote(activeNote.note_id)}>Delete This Note</button>
-                                    )}
-                                    <button className={styles.btnSecondary} onClick={() => setIsEditorOpen(false)}>Close</button>
-                                    <button className={styles.btnPrimary} onClick={() => handleSaveNote(false)} disabled={isSaving}>
-                                        {isSaving ? 'Saving...' : 'Save Note'}
-                                    </button>
-                                </div>
-                            </div>
-                        </footer>
-                    </div>
-                </div>
-            )}
 
         </main>
     );

@@ -162,6 +162,15 @@ export async function DELETE(request: Request) {
             if (error) throw error
 
             await calculateProductivityScore(supabase, user.id)
+            
+            await logActivity({
+                area: 'Journey',
+                action: 'Global Tasks Reset',
+                detail: `All ${count || 0} tasks were deleted from history.`,
+                icon: '🗑️',
+                userId: user.id
+            });
+
             return NextResponse.json({ success: true, message: 'All tasks deleted' })
         }
 

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { logActivity } from '@/lib/activity-logger'
 
 export async function GET() {
     try {
@@ -44,6 +45,15 @@ export async function POST(request: Request) {
             .select().single()
 
         if (error) throw error
+
+        await logActivity({
+            area: 'Journey',
+            action: 'Sticky Note Created',
+            detail: `📌 ${content || 'Empty Note'}${color ? ` (Color: ${color})` : ''}`,
+            icon: '📌',
+            reference_id: data.sticky_id.toString(),
+            userId: user.id
+        });
 
         return NextResponse.json({ success: true, sticky: data })
     } catch (error: any) {
@@ -103,6 +113,15 @@ export async function DELETE(request: Request) {
                 .eq('user_id', user.id)
 
             if (error) throw error
+ 
+            await logActivity({
+                area: 'Journey',
+                action: 'Sticky Notes Reset',
+                detail: `All ${count || 0} sticky notes were cleared from the sidebar.`,
+                icon: '🗑️',
+                userId: user.id
+            });
+ 
             return NextResponse.json({ success: true, message: 'All sticky notes deleted' })
         }
 
@@ -124,6 +143,16 @@ export async function DELETE(request: Request) {
             .eq('user_id', user.id)
 
         if (error) throw error
+ 
+        await logActivity({
+            area: 'Journey',
+            action: 'Sticky Note Deleted',
+            detail: `Removed: "${stickyToDelete.content || 'Untitled'}"`,
+            icon: '🗑️',
+            reference_id: id,
+            userId: user.id
+        });
+ 
         return NextResponse.json({ success: true })
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })

@@ -10,6 +10,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    position: relative;
 }
 
 .panelHeader {
@@ -103,6 +104,9 @@
     padding: 0.4rem;
     border-radius: 0.75rem;
     border: 1px solid var(--border);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .viewBtn {
@@ -128,7 +132,16 @@
     gap: 2rem;
 }
 
-/* Notes Grid */
+.notesContainer {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    max-height: 395px;
+    max-width: 650px;
+    overflow-y: auto;
+}
+
 .notesGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -211,6 +224,11 @@
     opacity: 1;
 }
 
+.smallSideCard {
+    width: 260px;
+    margin: 0;
+}
+
 .categoryList {
     list-style: none;
     padding: 0;
@@ -218,6 +236,9 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    max-height: 140px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
 }
 
 .categoryList li {
@@ -340,6 +361,15 @@
     background: var(--primary);
     border-color: var(--primary);
     color: white;
+}
+
+.taskText {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    line-height: 1.4;
 }
 
 .taskDone .taskText {
@@ -490,7 +520,7 @@
 /* Daily Log Panel */
 .dailyLogPanel {
     background: var(--bg-card);
-    padding: 2.5rem;
+    padding: 1.25rem; /* Further reduced from 1.5rem */
     border-radius: 1.5rem;
     border: 1px solid var(--border);
 }
@@ -532,9 +562,16 @@
 }
 
 .logForm {
+    background: var(--bg-app);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.8rem;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 0.4rem;
+    max-height: 150px; /* Restored to comfortable height */
+    overflow-y: auto;
+    margin-bottom: 0.8rem;
 }
 
 .moodSelector {
@@ -561,11 +598,12 @@
 
 .logSection textarea {
     width: 100%;
-    min-height: 100px;
+    min-height: 30px;
     background: var(--bg-app);
     border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    padding: 1rem;
+    border-radius: 0.5rem;
+    padding: 0.4rem;
+    font-size: 0.85rem;
     color: var(--text-main);
     resize: vertical;
 }
@@ -577,9 +615,15 @@
 }
 
 .logHistory {
-    margin-top: 4rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-app);
+    max-height: 120px; /* Ultra-compact height for extreme space saving */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .logHistory h3 {
@@ -717,7 +761,7 @@
 }
 
 .stickyPanel {
-    max-height: 480px;
+    max-height: 150px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
