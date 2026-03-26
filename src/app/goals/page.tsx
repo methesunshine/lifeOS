@@ -26,10 +26,12 @@ function GoalsContent() {
     // Note Updating State
     const [savingNoteId, setSavingNoteId] = useState<number | null>(null);
     const [editingNotes, setEditingNotes] = useState<{ [key: number]: string }>({});
+    const [confirmingDeleteNoteId, setConfirmingDeleteNoteId] = useState<number | null>(null);
 
     // New Subtask Appending State
     const [newSubtaskTitle, setNewSubtaskTitle] = useState<{ [key: number]: string }>({});
     const [savingSubtaskId, setSavingSubtaskId] = useState<number | null>(null);
+
 
     useEffect(() => {
         const updateTime = () => {
@@ -49,9 +51,12 @@ function GoalsContent() {
 
     useEffect(() => {
         const id = searchParams.get('id');
+        const view = searchParams.get('view');
         if (id) {
             setHighlightedId(id);
-            setViewMode('dashboard');
+            if (view === 'dashboard' || !viewMode) {
+                setViewMode('dashboard');
+            }
             
             setTimeout(() => {
                 const element = document.getElementById(`goal-${id}`);
@@ -62,9 +67,10 @@ function GoalsContent() {
                 }
             }, 600);
         }
-    }, [searchParams, goals]);
+    }, [searchParams]);
 
     const handleGoalClick = (id: string) => {
+        setViewMode('dashboard');
         setHighlightedId(id);
         const element = document.getElementById(`goal-${id}`);
         if (element) {
@@ -176,22 +182,71 @@ function GoalsContent() {
         setTimeout(() => setMessage(null), 6000);
     }
 
-    async function handleSaveNote(goalId: number, currentNotes: string, newNote: string) {
-        if (currentNotes === newNote) return; // No change
+    async function handleSaveNote(goalId: number, currentNote: string, newNote: string) {
+        if (currentNote === newNote) {
+            return;
+        }
         setSavingNoteId(goalId);
 
         try {
-            await fetch('/api/goals', {
+            const res = await fetch('/api/goals', {
                 method: 'PATCH',
                 body: JSON.stringify({ goal_id: goalId, note: newNote }),
                 headers: { 'Content-Type': 'application/json' },
             });
-            // Update local state without full refetch to prevent UI jumping
-            setGoals(prev => prev.map(g => g.id === goalId ? { ...g, note: newNote } : g));
+            if (res.ok) {
+                setGoals(prev => prev.map(g => g.id === goalId ? { ...g, note: newNote } : g));
+                setEditingNotes(prev => {
+                    const next = { ...prev };
+                    delete next[goalId];
+                    return next;
+                });
+            }
         } catch (error) {
             console.error('Failed to save note', error);
         } finally {
             setSavingNoteId(null);
+        }
+    }
+
+    const handleFocusNote = (goalId: number) => {
+        const textarea = document.getElementById(`note-textarea-${goalId}`) as HTMLTextAreaElement;
+        if (textarea) {
+            textarea.focus();
+            // Scroll into view if needed
+            textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+
+    async function handleDeleteNote(goalId: number) {
+        setSavingNoteId(goalId);
+        try {
+            const res = await fetch('/api/goals', {
+                method: 'PATCH',
+                body: JSON.stringify({ goal_id: goalId, note: '' }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (res.ok) {
+                setGoals(prev => prev.map(g => g.id === goalId ? { ...g, note: '' } : g));
+                setEditingNotes(prev => {
+                    const next = { ...prev };
+                    delete next[goalId];
+                    return next;
+                });
+                setConfirmingDeleteNoteId(null);
+                setMessage({ type: 'success', text: 'Note cleared.' });
+            } else {
+                const errData = await res.json();
+                setMessage({ type: 'error', text: `Failed to clear note: ${errData.error || 'Server error'}` });
+                setConfirmingDeleteNoteId(null);
+            }
+        } catch (error: any) {
+            console.error('Failed to delete note', error);
+            setMessage({ type: 'error', text: 'Critical error: Failed to clear note.' });
+            setConfirmingDeleteNoteId(null);
+        } finally {
+            setSavingNoteId(null);
+            setTimeout(() => setMessage(null), 4000);
         }
     }
 
@@ -257,7 +312,14 @@ function GoalsContent() {
                 <div className={styles.viewSwitcher}>
                     <button
                         className={`${styles.switchBtn} ${viewMode === 'entry' ? styles.switchBtnActive : ''}`}
-                        onClick={() => setViewMode('entry')}
+                        onClick={() => {
+                            setViewMode('entry');
+                            // Clear URL parameters when returning to entry view
+                            const url = new URL(window.location.href);
+                            url.searchParams.delete('id');
+                            url.searchParams.delete('view');
+                            window.history.pushState({}, '', url.pathname);
+                        }}
                     >
                         New Mission
                     </button>
@@ -270,18 +332,34 @@ function GoalsContent() {
                 </div>
             </header>
 
-            {message && (
-                <div className={`${styles.alert} ${styles[message.type]}`}>
-                    {message.text}
-                </div>
-            )}
+
 
             {viewMode === 'entry' ? (
                 <div className={styles.grid}>
                     <section className={styles.mainCol}>
                         <form onSubmit={handleSubmit} className={styles.formCard}>
-                            <div className="card">
-                                <h2 className={styles.sectionTitle}>Set New Objective</h2>
+                            <div className="card" style={{ height: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                                <h2 className={styles.sectionTitle} style={{ borderBottomColor: 'var(--accent)' }}>Set New Objective</h2>
+                                {message && (
+                                    <div 
+                                        className={`${styles.alert} ${styles[message.type]}`}
+                                        style={{ 
+                                            position: 'relative', 
+                                            top: 'auto', 
+                                            left: 'auto', 
+                                            transform: 'none', 
+                                            width: '100%', 
+                                            marginBottom: '1rem',
+                                            padding: '1rem 1.5rem',
+                                            borderRadius: '8px',
+                                            background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                            color: message.type === 'success' ? 'var(--accent)' : 'var(--red)',
+                                            border: `1px solid ${message.type === 'success' ? 'var(--accent)' : 'var(--red)'}`
+                                        }}
+                                    >
+                                        {message.text}
+                                    </div>
+                                )}
                                 <div className={styles.fieldGroup}>
                                     <div className={styles.field}>
                                         <label className={styles.label}>Goal Title</label>
@@ -347,35 +425,66 @@ function GoalsContent() {
                                     <div className={styles.field}>
                                         <label className={styles.label}>Subtasks (Micro-steps)</label>
                                         {subtasks.map((st, index) => (
-                                            <input
-                                                key={index}
-                                                type="text"
-                                                placeholder={`Step ${index + 1}`}
-                                                value={st}
-                                                onChange={(e) => updateSubtaskField(index, e.target.value)}
-                                                className={styles.input}
-                                                style={{ marginBottom: '0.5rem' }}
-                                            />
+                                            <div key={index} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                                <input
+                                                    type="text"
+                                                    placeholder={`Step ${index + 1}`}
+                                                    value={st}
+                                                    onChange={(e) => updateSubtaskField(index, e.target.value)}
+                                                    className={styles.input}
+                                                    style={{ marginBottom: 0, flex: 1 }}
+                                                />
+                                                {subtasks.length > 1 && (
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => {
+                                                            const newSubtasks = [...subtasks];
+                                                            newSubtasks.splice(index, 1);
+                                                            setSubtasks(newSubtasks);
+                                                        }}
+                                                        style={{ 
+                                                            background: 'none', border: 'none', color: 'var(--text-muted)', 
+                                                            cursor: 'pointer', fontSize: '1.2rem', padding: '0 0.25rem',
+                                                        }}
+                                                        title="Remove Step"
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                )}
+                                            </div>
                                         ))}
-                                        <button type="button" onClick={addSubtaskField} className={styles.addBtn}>+ Add Step</button>
+                                        <button type="button" onClick={addSubtaskField} className={styles.addBtn} style={{ marginBottom: '1rem' }}>+ Add Step</button>
                                     </div>
                                 </div>
+                                <button type="submit" className="primary-btn" style={{ marginTop: '1.5rem', width: '100%', flexShrink: 0 }} disabled={loading}>
+                                    {loading ? 'Initializing Mission...' : 'Establish Goal'}
+                                </button>
                             </div>
-
-                            <button type="submit" className="primary-btn" style={{ marginTop: '2.5rem', width: '100%' }} disabled={loading}>
-                                {loading ? 'Initializing Mission...' : 'Establish Goal'}
-                            </button>
                         </form>
 
-                        <div className={styles.activeGoals}>
-                            <h2 className={styles.sectionTitle} style={{ marginTop: '3rem' }}>Latest Missions</h2>
-                            <div className={styles.goalsGrid}>
-                                {goals.slice(0, 3).map(goal => (
+                        <div className={styles.activeGoals} style={{ marginTop: '3rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <h2 className={styles.sectionTitle} style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>Latest Missions</h2>
+                                {isClearingAll ? (
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Are you sure?</span>
+                                        <button onClick={handleClearAll} className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', background: 'var(--red)', borderColor: 'var(--red)' }}>Yes, Delete All</button>
+                                        <button onClick={() => setIsClearingAll(false)} className="secondary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setIsClearingAll(true)} className="secondary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', color: 'var(--red)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                                        🗑️ Clear All
+                                    </button>
+                                )}
+                            </div>
+                            <div className="card" style={{ height: '260px', overflowY: 'auto', padding: '1rem', background: 'var(--bg-app)' }}>
+                                <div className={styles.goalsGrid}>
+                                    {goals.filter(g => g.status === 'in-progress').map(goal => (
                                         <div 
                                             key={goal.id} 
                                             id={`goal-${goal.id}`}
-                                            className={`${styles.goalCard} card ${highlightedId === goal.id.toString() ? styles.highlightedItem : ''}`} 
-                                            style={{ padding: '1.5rem !important', cursor: 'pointer' }}
+                                            className={`${styles.goalCard} ${styles.clickableCard} card`} 
+                                            style={{ padding: '1.5rem !important' }}
                                             onClick={() => handleGoalClick(goal.id.toString())}
                                         >
                                         <div className={styles.goalHeader} style={{ marginBottom: '1rem' }}>
@@ -387,12 +496,12 @@ function GoalsContent() {
                                                 </div>
                                             </div>
                                             {isDeletingGoalId === goal.id ? (
-                                                <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                                    <button onClick={() => handleDelete(goal.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
-                                                    <button onClick={() => setIsDeletingGoalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
+                                                <div style={{ display: 'flex', gap: '0.25rem' }} onClick={(e) => e.stopPropagation()}>
+                                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(goal.id); }} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); setIsDeletingGoalId(null); }} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
                                                 </div>
                                             ) : (
-                                                <button onClick={() => setIsDeletingGoalId(goal.id)} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
+                                                <button onClick={(e) => { e.stopPropagation(); setIsDeletingGoalId(goal.id); }} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
                                             )}
                                         </div>
                                         <div className={styles.progressSection} style={{ marginBottom: '1.5rem' }}>
@@ -407,7 +516,7 @@ function GoalsContent() {
                                         <div className={styles.subtaskList} style={{ marginBottom: '1.5rem' }}>
                                             {goal.subtasks && goal.subtasks.length > 0 ? (
                                                 goal.subtasks.map((st: any) => (
-                                                    <label key={st.id} className={styles.subtaskItem}>
+                                                    <label key={st.id} className={styles.subtaskItem} onClick={(e) => e.stopPropagation()}>
                                                         <input
                                                             type="checkbox"
                                                             checked={st.is_completed}
@@ -417,7 +526,7 @@ function GoalsContent() {
                                                     </label>
                                                 ))
                                             ) : (
-                                                <label className={styles.subtaskItem}>
+                                                <label className={styles.subtaskItem} onClick={(e) => e.stopPropagation()}>
                                                     <input
                                                         type="checkbox"
                                                         checked={goal.progress_percent === 100}
@@ -427,7 +536,7 @@ function GoalsContent() {
                                                 </label>
                                             )}
 
-                                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }} onClick={(e) => e.stopPropagation()}>
                                                 <input
                                                     type="text"
                                                     className={styles.input}
@@ -450,28 +559,66 @@ function GoalsContent() {
                                             </div>
                                         </div>
 
-                                        <div style={{ marginBottom: '1.5rem' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                                <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: 0 }}>Mission Notes / Takeaways</label>
-                                                {savingNoteId === goal.id && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Saving...</span>}
+                                        <div className={styles.noteArea} onClick={(e) => e.stopPropagation()}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                                <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: 0, color: 'var(--primary)' }}>💡 Mission Notes / Takeaways</label>
+                                                {savingNoteId === goal.id && <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 'bold' }}>Saving...</span>}
                                             </div>
+
                                             <textarea
+                                                id={`note-textarea-${goal.id}`}
                                                 className={styles.textarea}
-                                                placeholder="Add important learnings, insights, or thoughts about this mission..."
-                                                style={{ width: '100%', minHeight: '140px', background: 'var(--bg-lighter)', color: 'white', padding: '0.75rem', fontSize: '0.85rem' }}
+                                                placeholder="Add important learnings, insights, or thoughts..."
                                                 value={editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || '')}
                                                 onChange={(e) => setEditingNotes(prev => ({ ...prev, [goal.id]: e.target.value }))}
-                                                onBlur={(e) => handleSaveNote(goal.id, goal.note || '', e.target.value)}
                                             />
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                                                <button
-                                                    className="secondary-btn"
-                                                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}
-                                                    onClick={() => handleSaveNote(goal.id, goal.note || '', editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || ''))}
-                                                    disabled={savingNoteId === goal.id || (editingNotes[goal.id] !== undefined && editingNotes[goal.id] === (goal.note || ''))}
-                                                >
-                                                    {savingNoteId === goal.id ? 'Saving...' : '💾 Save Note'}
-                                                </button>
+
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', alignItems: 'center' }}>
+                                                {confirmingDeleteNoteId === goal.id ? (
+                                                    <>
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 'bold' }}>Confirm clear?</span>
+                                                        <button 
+                                                            className={styles.dangerBtn} 
+                                                            onClick={() => handleDeleteNote(goal.id)}
+                                                        >YES, CLEAR</button>
+                                                        <button 
+                                                            className={styles.switchBtn} 
+                                                            onClick={() => setConfirmingDeleteNoteId(null)}
+                                                            style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', marginLeft: '0.5rem' }}
+                                                        >CANCEL</button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        {goal.note && goal.note.trim() !== '' && (
+                                                            <button 
+                                                                className={styles.deleteBtn} 
+                                                                onClick={() => setConfirmingDeleteNoteId(goal.id)}
+                                                                style={{ 
+                                                                    fontSize: '0.75rem', 
+                                                                    opacity: 1, 
+                                                                    color: 'var(--red)', 
+                                                                    fontWeight: 'bold',
+                                                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                                    padding: '0.4rem 0.75rem',
+                                                                    borderRadius: '0.5rem'
+                                                                }}
+                                                            >🗑️ Clear Note</button>
+                                                        )}
+                                                        <button 
+                                                            className={styles.switchBtn} 
+                                                            onClick={() => handleFocusNote(goal.id)}
+                                                            style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', border: '1px solid var(--border)' }}
+                                                        >📝 Edit</button>
+                                                        <button
+                                                            className="primary-btn"
+                                                            style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}
+                                                            onClick={() => handleSaveNote(goal.id, goal.note || '', editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || ''))}
+                                                            disabled={savingNoteId === goal.id || (editingNotes[goal.id] !== undefined && editingNotes[goal.id] === (goal.note || ''))}
+                                                        >
+                                                            {savingNoteId === goal.id ? '💾 Saving...' : '💾 Save Note'}
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
 
@@ -480,20 +627,16 @@ function GoalsContent() {
                                         </div>
                                     </div>
                                 ))}
-                                {goals.length === 0 && (
-                                    <p className={styles.hint}>No active missions. Set a goal to begin.</p>
+                                {goals.filter(g => g.status === 'in-progress').length === 0 && (
+                                    <p className={styles.hint} style={{ padding: '2rem', textAlign: 'center' }}>No active missions. Set a goal to begin.</p>
                                 )}
+                                </div>
                             </div>
-                            {goals.length > 3 && (
-                                <button className="secondary-btn" style={{ marginTop: '1.5rem', width: '100%', fontSize: '0.75rem' }} onClick={() => setViewMode('dashboard')}>
-                                    View All Active Missions in Dashboard
-                                </button>
-                            )}
                         </div>
                     </section>
 
                     <aside className={styles.sideCol}>
-                        <div className="card glass">
+                        <div className="card glass" style={{ height: '320px', overflowY: 'auto' }}>
                             <h3 className={styles.sideTitle}>Mission Analytics</h3>
                             <div className={styles.statBox}>
                                 <p className={styles.statLabel}>Completion Rate</p>
@@ -550,6 +693,7 @@ function GoalsContent() {
                                 </button>
                             )}
                         </div>
+                        <div className="card" style={{ height: '300px', overflowY: 'auto', padding: '1rem', background: 'var(--bg-app)' }}>
                         <div className={styles.goalsGrid}>
                             {goals.filter(g => g.status === 'in-progress').length > 0 ? (
                                 goals.filter(g => g.status === 'in-progress').map(goal => {
@@ -576,7 +720,7 @@ function GoalsContent() {
                                                             <button onClick={() => setIsDeletingGoalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
                                                         </div>
                                                     ) : (
-                                                        <button onClick={() => setIsDeletingGoalId(goal.id)} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
+                                                        <button onClick={(e) => { e.stopPropagation(); setIsDeletingGoalId(goal.id); }} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
                                                     )}
                                                 </div>
                                             </div>
@@ -594,7 +738,7 @@ function GoalsContent() {
                                             <div className={styles.subtaskList}>
                                                 {goal.subtasks && goal.subtasks.length > 0 ? (
                                                     goal.subtasks.map((st: any) => (
-                                                        <label key={st.id} className={styles.subtaskItem}>
+                                                        <label key={st.id} className={styles.subtaskItem} onClick={(e) => e.stopPropagation()}>
                                                             <input
                                                                 type="checkbox"
                                                                 checked={st.is_completed}
@@ -604,7 +748,7 @@ function GoalsContent() {
                                                         </label>
                                                     ))
                                                 ) : (
-                                                    <label className={styles.subtaskItem}>
+                                                    <label className={styles.subtaskItem} onClick={(e) => e.stopPropagation()}>
                                                         <input
                                                             type="checkbox"
                                                             onChange={() => toggleSubtask(goal.id, -1, false)}
@@ -613,7 +757,7 @@ function GoalsContent() {
                                                     </label>
                                                 )}
 
-                                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }} onClick={(e) => e.stopPropagation()}>
                                                     <input
                                                         type="text"
                                                         className={styles.input}
@@ -637,27 +781,68 @@ function GoalsContent() {
                                             </div>
 
                                             <div style={{ marginBottom: '1.5rem' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                                    <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: 0 }}>Mission Notes / Takeaways</label>
-                                                    {savingNoteId === goal.id && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Saving...</span>}
+
+
+                                            <div className={styles.noteArea} onClick={(e) => e.stopPropagation()}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                                    <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: 0, color: 'var(--primary)' }}>💡 Mission Notes / Takeaways</label>
+                                                    {savingNoteId === goal.id && <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 'bold' }}>Saving...</span>}
                                                 </div>
+
                                                 <textarea
+                                                    id={`note-textarea-${goal.id}`}
                                                     className={styles.textarea}
-                                                    placeholder="Add important learnings, insights, or thoughts about this mission..."
-                                                    style={{ width: '100%', minHeight: '140px', background: 'var(--bg-lighter)', color: 'white', padding: '0.75rem', fontSize: '0.85rem' }}
+                                                    placeholder="Add important learnings, insights, or thoughts..."
                                                     value={editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || '')}
                                                     onChange={(e) => setEditingNotes(prev => ({ ...prev, [goal.id]: e.target.value }))}
-                                                    onBlur={(e) => handleSaveNote(goal.id, goal.note || '', e.target.value)}
                                                 />
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                                                    <button
-                                                        className="secondary-btn"
-                                                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}
-                                                        onClick={() => handleSaveNote(goal.id, goal.note || '', editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || ''))}
-                                                        disabled={savingNoteId === goal.id || (editingNotes[goal.id] !== undefined && editingNotes[goal.id] === (goal.note || ''))}
-                                                    >
-                                                        {savingNoteId === goal.id ? 'Saving...' : '💾 Save Note'}
-                                                    </button>
+
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', alignItems: 'center' }}>
+                                                    {confirmingDeleteNoteId === goal.id ? (
+                                                        <>
+                                                            <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 'bold' }}>Confirm clear?</span>
+                                                            <button 
+                                                                className={styles.dangerBtn} 
+                                                                onClick={() => handleDeleteNote(goal.id)}
+                                                            >YES, CLEAR</button>
+                                                            <button 
+                                                                className={styles.switchBtn} 
+                                                                onClick={() => setConfirmingDeleteNoteId(null)}
+                                                                style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', marginLeft: '0.5rem' }}
+                                                            >CANCEL</button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {goal.note && goal.note.trim() !== '' && (
+                                                                <button 
+                                                                    className={styles.deleteBtn} 
+                                                                    onClick={() => setConfirmingDeleteNoteId(goal.id)}
+                                                                    style={{ 
+                                                                        fontSize: '0.75rem', 
+                                                                        opacity: 1, 
+                                                                        color: 'var(--red)', 
+                                                                        fontWeight: 'bold',
+                                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                                        padding: '0.4rem 0.75rem',
+                                                                        borderRadius: '0.5rem'
+                                                                    }}
+                                                                >🗑️ Clear Note</button>
+                                                            )}
+                                                            <button 
+                                                                className={styles.switchBtn} 
+                                                                onClick={() => handleFocusNote(goal.id)}
+                                                                style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', border: '1px solid var(--border)' }}
+                                                            >📝 Edit</button>
+                                                            <button
+                                                                className="primary-btn"
+                                                                style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}
+                                                                onClick={() => handleSaveNote(goal.id, goal.note || '', editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || ''))}
+                                                                disabled={savingNoteId === goal.id || (editingNotes[goal.id] !== undefined && editingNotes[goal.id] === (goal.note || ''))}
+                                                            >
+                                                                {savingNoteId === goal.id ? '💾 Saving...' : '💾 Save Note'}
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -665,11 +850,13 @@ function GoalsContent() {
                                                 <span className={styles.deadline}>📅 {goal.deadline || 'No deadline'}</span>
                                             </div>
                                         </div>
+                                        </div>
                                     );
                                 })
                             ) : (
                                 <p className={styles.hint}>No active missions. Start a new mission to track progress.</p>
                             )}
+                        </div>
                         </div>
 
                         {goals.filter(g => g.status === 'completed').length > 0 && (
@@ -697,7 +884,7 @@ function GoalsContent() {
                                                         <button onClick={() => setIsDeletingGoalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
                                                     </div>
                                                 ) : (
-                                                    <button onClick={() => setIsDeletingGoalId(goal.id)} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); setIsDeletingGoalId(goal.id); }} className={styles.deleteBtn} title="Delete Mission">🗑️</button>
                                                 )}
                                             </div>
                                             <div className={styles.progressSection}>
@@ -708,28 +895,66 @@ function GoalsContent() {
                                                 <div className={styles.progressBar}><div style={{ width: '100%', background: 'var(--accent)' }}></div></div>
                                             </div>
 
-                                            <div style={{ marginBottom: '1.5rem' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                                    <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: 0 }}>Mission Notes / Takeaways</label>
-                                                    {savingNoteId === goal.id && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Saving...</span>}
+                                            <div className={styles.noteArea} onClick={(e) => e.stopPropagation()}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                                    <label className={styles.label} style={{ fontSize: '0.75rem', marginBottom: 0, color: 'var(--primary)' }}>💡 Mission Notes / Takeaways</label>
+                                                    {savingNoteId === goal.id && <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 'bold' }}>Saving...</span>}
                                                 </div>
+
                                                 <textarea
+                                                    id={`note-textarea-${goal.id}`}
                                                     className={styles.textarea}
-                                                    placeholder="Add important learnings, insights, or thoughts about this mission..."
-                                                    style={{ width: '100%', minHeight: '140px', background: 'var(--bg-lighter)', color: 'white', padding: '0.75rem', fontSize: '0.85rem' }}
+                                                    placeholder="Add important learnings, insights, or thoughts..."
                                                     value={editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || '')}
                                                     onChange={(e) => setEditingNotes(prev => ({ ...prev, [goal.id]: e.target.value }))}
-                                                    onBlur={(e) => handleSaveNote(goal.id, goal.note || '', e.target.value)}
                                                 />
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                                                    <button
-                                                        className="secondary-btn"
-                                                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}
-                                                        onClick={() => handleSaveNote(goal.id, goal.note || '', editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || ''))}
-                                                        disabled={savingNoteId === goal.id || (editingNotes[goal.id] !== undefined && editingNotes[goal.id] === (goal.note || ''))}
-                                                    >
-                                                        {savingNoteId === goal.id ? 'Saving...' : '💾 Save Note'}
-                                                    </button>
+
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', alignItems: 'center' }}>
+                                                    {confirmingDeleteNoteId === goal.id ? (
+                                                        <>
+                                                            <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 'bold' }}>Confirm clear?</span>
+                                                            <button 
+                                                                className={styles.dangerBtn} 
+                                                                onClick={() => handleDeleteNote(goal.id)}
+                                                            >YES, CLEAR</button>
+                                                            <button 
+                                                                className={styles.switchBtn} 
+                                                                onClick={() => setConfirmingDeleteNoteId(null)}
+                                                                style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', marginLeft: '0.5rem' }}
+                                                            >CANCEL</button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {goal.note && goal.note.trim() !== '' && (
+                                                                <button 
+                                                                    className={styles.deleteBtn} 
+                                                                    onClick={() => setConfirmingDeleteNoteId(goal.id)}
+                                                                    style={{ 
+                                                                        fontSize: '0.75rem', 
+                                                                        opacity: 1, 
+                                                                        color: 'var(--red)', 
+                                                                        fontWeight: 'bold',
+                                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                                        padding: '0.4rem 0.75rem',
+                                                                        borderRadius: '0.5rem'
+                                                                    }}
+                                                                >🗑️ Clear Note</button>
+                                                            )}
+                                                            <button 
+                                                                className={styles.switchBtn} 
+                                                                onClick={() => handleFocusNote(goal.id)}
+                                                                style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', border: '1px solid var(--border)' }}
+                                                            >📝 Edit</button>
+                                                            <button
+                                                                className="primary-btn"
+                                                                style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}
+                                                                onClick={() => handleSaveNote(goal.id, goal.note || '', editingNotes[goal.id] !== undefined ? editingNotes[goal.id] : (goal.note || ''))}
+                                                                disabled={savingNoteId === goal.id || (editingNotes[goal.id] !== undefined && editingNotes[goal.id] === (goal.note || ''))}
+                                                            >
+                                                                {savingNoteId === goal.id ? '💾 Saving...' : '💾 Save Note'}
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
 

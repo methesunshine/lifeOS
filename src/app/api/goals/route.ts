@@ -181,7 +181,7 @@ export async function PATCH(request: Request) {
                 }
             }
         } else if (goal_id) {
-            const updates: any = { updated_at: new Date().toISOString() }
+            const updates: any = {}
             if (status !== undefined) updates.status = status
             if (progress_percent !== undefined) updates.progress_percent = progress_percent
             if (note !== undefined) updates.note = note
@@ -204,10 +204,18 @@ export async function PATCH(request: Request) {
             });
         }
 
-        await calculateGoalsScore(supabase, user.id);
+        try {
+            await calculateGoalsScore(supabase, user.id);
+        } catch (scoreErr) {
+            // Non-critical: continue even if score calculation fails
+        }
+
         return NextResponse.json({ success: true })
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ 
+            error: error.message || 'Internal Server Error',
+            details: error.details || null
+        }, { status: 500 })
     }
 }
 

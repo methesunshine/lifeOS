@@ -120,12 +120,15 @@ export async function GET() {
         }
 
         // --- TIMELINE EVENT ALERTS (Priority) ---
+        const alertTime = new Date().setHours(0, 0, 0, 0);
+        const alertTimeString = new Date(alertTime).toISOString();
+
         if ((overdueTasksCount || 0) > 0) {
             combinedActivity.push({
                 area: 'Journey',
                 action: '🚨 Action Required: Overdue Tasks',
                 detail: `You have ${overdueTasksCount} tasks past their due date. Click to resolve.`,
-                time: new Date().toISOString(),
+                time: alertTimeString,
                 icon: '🚨',
                 id: 'alert-overdue-tasks'
             });
@@ -136,7 +139,7 @@ export async function GET() {
                 area: 'Journey',
                 action: '⚠️ Action Required: Missing Daily Reflection',
                 detail: "You haven't logged your daily reflection yet. Click to record your state.",
-                time: new Date().toISOString(),
+                time: alertTimeString,
                 icon: '⚠️',
                 id: 'alert-missing-log'
             });
@@ -151,7 +154,7 @@ export async function GET() {
                     area: areaName,
                     action: '⚠️ Review Needed: Low Area Integrity',
                     detail: `Your ${areaName} score is currently ${score}. Click to investigate.`,
-                    time: new Date().toISOString(),
+                    time: alertTimeString,
                     icon: '⚠️',
                     id: `alert-low-score-${key}`
                 });

@@ -8,6 +8,7 @@ type DashboardSnapshot = {
         action?: string;
         detail?: string;
         time?: string;
+        id?: string;
     } | null;
     latestReflection: string;
     topAlertTitle: string;
@@ -77,12 +78,20 @@ export default function DashboardTelegramSync({ initialSnapshot }: { initialSnap
                     );
                 }
 
-                const savedJourneyTime = savedSnapshot.latestJourneyActivity?.time || '';
-                const nextJourneyTime = nextSnapshot.latestJourneyActivity?.time || '';
-                if (savedJourneyTime !== nextJourneyTime && nextSnapshot.latestJourneyActivity) {
+                const savedJourney = savedSnapshot.latestJourneyActivity;
+                const nextJourney = nextSnapshot.latestJourneyActivity;
+
+                const isNewActivity = nextJourney && (
+                    !savedJourney || 
+                    savedJourney.id !== nextJourney.id ||
+                    savedJourney.time !== nextJourney.time ||
+                    savedJourney.detail !== nextJourney.detail
+                );
+
+                if (isNewActivity && nextJourney) {
                     await sendDashboardNotification(
                         '✈️ Logic Center: Latest Journey Activity',
-                        `${nextSnapshot.latestJourneyActivity.action || 'Journey update'} • ${nextSnapshot.latestJourneyActivity.detail || ''}`.trim()
+                        `${nextJourney.action || 'Journey update'} • ${nextJourney.detail || ''}`.trim()
                     );
                 }
 
