@@ -231,19 +231,22 @@ export async function DELETE(request: Request) {
         const { searchParams } = new URL(request.url)
         const id = searchParams.get('id')
         const deleteAll = searchParams.get('deleteAll') === 'true'
+        const deleteHistory = searchParams.get('deleteHistory') === 'true'
+        const deleteAllActive = searchParams.get('deleteAllActive') === 'true'
 
-        if (deleteAll) {
-            const { count, error: countError } = await supabase
-                .from('goals')
-                .select('id', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-
-            if (countError) throw countError
-
-            const { error } = await supabase
+        if (deleteAll || deleteHistory || deleteAllActive) {
+            const query = supabase
                 .from('goals')
                 .delete()
                 .eq('user_id', user.id)
+            
+            if (deleteAllActive) {
+                query.eq('status', 'in-progress')
+            } else if (deleteHistory) {
+                query.eq('status', 'completed')
+            }
+
+            const { error, count } = await query
 
             if (error) throw error
 
@@ -251,8 +254,8 @@ export async function DELETE(request: Request) {
 
             await logActivity({
                 area: 'Goals',
-                action: 'All Goals Reset',
-                detail: `Removed ${count || 0} goals from system.`,
+                action: deleteHistory ? 'History Cleared' : 'All Goals Reset',
+                detail: deleteHistory ? 'Cleaned up completed mission logs.' : `Removed goals from system.`,
                 icon: '🗑️',
                 userId: user.id
             });

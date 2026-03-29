@@ -181,7 +181,10 @@ export async function calculateGoalsScore(supabase: SupabaseClient, userId: stri
         .select('status')
         .eq('user_id', userId);
 
-    if (!data || data.length === 0) return;
+    if (!data || data.length === 0) {
+        await saveScore(supabase, userId, 'goals', 0);
+        return;
+    }
 
     const total = data.length;
     const completed = data.filter(g => g.status === 'completed').length;
