@@ -17,6 +17,7 @@ export async function GET(request: Request) {
         const status = searchParams.get('status')
         const priority = searchParams.get('priority')
         const today = searchParams.get('today')
+        const isHistory = searchParams.get('isHistory') === 'true'
 
         let query = supabase
             .from('tasks')
@@ -24,6 +25,13 @@ export async function GET(request: Request) {
             .eq('user_id', user.id)
             .order('due_date', { ascending: true })
             .order('priority', { ascending: false })
+
+        if (isHistory) {
+            query = query.eq('priority', 'History')
+        } else {
+            // Default: only show tasks NOT tagged as history
+            query = query.neq('priority', 'History')
+        }
 
         if (note_id) {
             query = query.eq('note_id', note_id)
@@ -55,29 +63,43 @@ export async function POST(request: Request) {
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const body = await request.json()
-        const { title, due_date, priority } = body
+        const { title, due_date, priority, isHistory } = body
 
+        // 1. Create the primary task
         const { data, error } = await supabase
             .from('tasks')
             .insert([{
                 user_id: user.id,
                 title,
                 due_date,
-                priority: priority || 'Medium',
+                priority: isHistory ? 'History' : (priority || 'Medium'),
                 status: 'Pending'
             }])
             .select().single()
 
         if (error) throw error
 
+        // 2. If it's a global task, also create a "History Twin" for the log
+        if (!isHistory) {
+            await supabase
+                .from('tasks')
+                .insert([{
+                    user_id: user.id,
+                    title,
+                    due_date,
+                    priority: 'History',
+                    status: 'Pending'
+                }])
+        }
+
         await calculateProductivityScore(supabase, user.id)
 
         // Persistent Activity Log
         await logActivity({
             area: 'Journey',
-            action: 'Task Created',
-            detail: `✅ ${title}\n❗ Priority: ${priority || 'Medium'}${due_date ? `\n📅 Due: ${new Date(due_date).toLocaleDateString()}` : ''}`,
-            icon: '✅',
+            action: isHistory ? 'History Entry Logged' : 'Task Created',
+            detail: isHistory ? `📜 ${title}` : `✅ ${title}\n❗ Priority: ${priority || 'Medium'}${due_date ? `\n📅 Due: ${new Date(due_date).toLocaleDateString()}` : ''}`,
+            icon: isHistory ? '📜' : '✅',
             reference_id: data.task_id.toString(),
             userId: user.id
         });
@@ -145,28 +167,28 @@ export async function DELETE(request: Request) {
         const { searchParams } = new URL(request.url)
         const id = searchParams.get('id')
         const deleteAll = searchParams.get('all') === 'true'
+        const isHistory = searchParams.get('isHistory') === 'true'
 
         if (deleteAll) {
-            const { count, error: countError } = await supabase
-                .from('tasks')
-                .select('task_id', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-
-            if (countError) throw countError
-
-            const { error } = await supabase
+            let deleteQuery = supabase
                 .from('tasks')
                 .delete()
                 .eq('user_id', user.id)
 
-            if (error) throw error
+            if (isHistory) {
+                deleteQuery = deleteQuery.eq('priority', 'History')
+            } else {
+                deleteQuery = deleteQuery.neq('priority', 'History') // Only clear global tasks
+            }
+
+            const { error } = await deleteQuery
 
             await calculateProductivityScore(supabase, user.id)
             
             await logActivity({
                 area: 'Journey',
-                action: 'Global Tasks Reset',
-                detail: `All ${count || 0} tasks were deleted from history.`,
+                action: isHistory ? 'Task History Reset' : 'Global Tasks Reset',
+                detail: isHistory ? 'The task history log was cleared.' : 'The focus task grid was cleared.',
                 icon: '🗑️',
                 userId: user.id
             });

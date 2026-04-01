@@ -1,0 +1,20 @@
+﻿                                    {!isClient ? (
+                                        <p className={styles.hint}>Synchronizing Mission Data...</p>
+                                    ) : (
+                                    {goals
+                                        .filter(g => g.status === 'in-progress' || g.status === 'completed')
+                                        .sort((a, b) => (a.status === 'completed' ? 1 : -1)) // Keep active ones first
+                                        .map(goal => {
+                                            const isCompleted = goal.status === 'completed';
+                                            return (
+                                                <div 
+                                                    key={goal.id} 
+                                                    id={`goal-${goal.id}`}
+                                                    className={`${styles.goalCard} ${styles.clickableCard} card`} 
+                                                    style={{ 
+                                                        padding: '1.5rem !important',
+                                                        opacity: isCompleted ? 0.6 : 1,
+                                                        border: isCompleted ? '1px dashed var(--accent)' : undefined,
+                                                        background: isCompleted ? 'rgba(var(--bg-rgb), 0.5)' : undefined
+                                                    }}
+                                                    onClick={() => handleGoalClick(goal.id.toString())}

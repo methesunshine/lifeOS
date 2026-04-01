@@ -27,7 +27,7 @@ export default function JourneyPage() {
     // Toast State
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [taskToast, setTaskToast] = useState<string | null>(null);
-    const [logToast, setLogToast] = useState<string | null>(null);
+    const [logToast, setLogToast] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const showToast = (msg: string) => {
         setToastMessage(msg);
@@ -39,9 +39,9 @@ export default function JourneyPage() {
         setTimeout(() => setTaskToast(null), 3000);
     };
 
-    const showLogToast = (msg: string) => {
-        setLogToast(msg);
-        setTimeout(() => setLogToast(null), 3000);
+    const showLogToast = (msg: string, type: 'success' | 'error' = 'success') => {
+        setLogToast({ type, text: msg });
+        setTimeout(() => setLogToast(null), 5000);
     };
 
     // Daily Log state
@@ -65,14 +65,26 @@ export default function JourneyPage() {
     const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const [confirmDeleteAllStickies, setConfirmDeleteAllStickies] = useState(false);
+    const [isDeletingStickyId, setIsDeletingStickyId] = useState<string | null>(null);
+    const [stickyMessage, setStickyMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     // Delete All Confirmation State
     const [isDeletingAllLogs, setIsDeletingAllLogs] = useState(false);
+    const [isDeletingNoteId, setIsDeletingNoteId] = useState<string | null>(null);
+    const [notesSectionMessage, setNotesSectionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-    // Task Add State
+    // Task Add State - Independent Lists
+    const [globalTasks, setGlobalTasks] = useState<any[]>([]);
+    const [historyTasks, setHistoryTasks] = useState<any[]>([]);
     const [isAddingTask, setIsAddingTask] = useState(false);
     const [newTaskTitle, setNewTaskTitle] = useState('');
-    const [isDeletingAllTasks, setIsDeletingAllTasks] = useState(false);
+    const [isGlobalDeletingAll, setIsGlobalDeletingAll] = useState(false);
+    const [isHistoryDeletingAll, setIsHistoryDeletingAll] = useState(false);
+    const [isDeletingLogId, setIsDeletingLogId] = useState<string | null>(null);
+    const [isDeletingTaskId, setIsDeletingTaskId] = useState<string | null>(null);
+    const [isDeletingQuickTaskId, setIsDeletingQuickTaskId] = useState<string | null>(null);
+    const [taskSectionMessage, setTaskSectionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [quickSectionMessage, setQuickSectionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const fetchNotes = useCallback(async () => {
         setLoading(true);
@@ -95,10 +107,22 @@ export default function JourneyPage() {
     }, [selectedCategory, searchQuery]);
 
     const fetchTasks = useCallback(async () => {
-        const res = await fetch('/api/tasks');
-        if (res.ok) {
-            const data = await res.json();
-            setTasks(data);
+        try {
+            // Fetch Global Tasks
+            const resGlobal = await fetch('/api/tasks');
+            if (resGlobal.ok) {
+                const gData = await resGlobal.json();
+                setGlobalTasks(gData);
+            }
+
+            // Fetch History Tasks
+            const resHistory = await fetch('/api/tasks?isHistory=true');
+            if (resHistory.ok) {
+                const hData = await resHistory.json();
+                setHistoryTasks(hData);
+            }
+        } catch (error) {
+            console.error('Error fetching tasks:', error);
         }
     }, []);
 
@@ -150,31 +174,38 @@ export default function JourneyPage() {
     };
 
     const deleteSticky = async (id: string) => {
+        setStickyMessage(null);
         try {
             const res = await fetch(`/api/sticky-notes?id=${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setStickies(prev => prev.filter(s => s.sticky_id !== id));
+                setStickyMessage({ type: 'success', text: 'Note discarded.' });
+                setIsDeletingStickyId(null);
             } else {
                 const err = await res.json();
-                alert(`Failed to delete sticky: ${err.error || 'Unknown error'}`);
+                setStickyMessage({ type: 'error', text: `Failed: ${err.error || 'Unknown error'}` });
             }
         } catch (error) {
-            alert('An error occurred during deletion.');
+            setStickyMessage({ type: 'error', text: 'An error occurred during deletion.' });
         }
+        setTimeout(() => setStickyMessage(null), 5000);
     };
 
     const deleteStickyAll = async () => {
+        setStickyMessage(null);
         try {
             const res = await fetch('/api/sticky-notes?all=true', { method: 'DELETE' });
             if (res.ok) {
                 setStickies([]);
                 setConfirmDeleteAllStickies(false);
+                setStickyMessage({ type: 'success', text: 'All notes cleared.' });
             } else {
-                alert('Failed to delete all stickies');
+                setStickyMessage({ type: 'error', text: 'Failed to delete all stickies' });
             }
         } catch (error) {
-            alert('An error occurred during deletion.');
+            setStickyMessage({ type: 'error', text: 'An error occurred during deletion.' });
         }
+        setTimeout(() => setStickyMessage(null), 5000);
     };
 
     const handleNewReflection = () => {
@@ -195,6 +226,7 @@ export default function JourneyPage() {
     };
 
     const handleDeleteLog = async (id: string) => {
+        setLogToast(null);
         try {
             const res = await fetch(`/api/daily-logs?id=${id}`, { method: 'DELETE' });
             if (res.ok) {
@@ -202,30 +234,32 @@ export default function JourneyPage() {
                 if (activeLogId === id) {
                     handleNewReflection();
                 }
-                showLogToast('Reflection deleted.');
+                showLogToast('Reflection discarded.');
+                setIsDeletingLogId(null);
             } else {
                 const err = await res.json();
-                alert(`Failed to delete reflection: ${err.error || 'Unknown error'}`);
+                showLogToast(`Failed: ${err.error || 'Unknown error'}`, 'error');
             }
         } catch (error) {
-            alert('An error occurred during deletion.');
+            showLogToast('An error occurred during deletion.', 'error');
         }
     };
 
     const handleDeleteAllLogs = async () => {
+        setLogToast(null);
         try {
             const res = await fetch('/api/daily-logs?all=true', { method: 'DELETE' });
             if (res.ok) {
                 fetchDailyLogs();
                 handleNewReflection();
                 setIsDeletingAllLogs(false);
-                showLogToast('All past journal entries deleted.');
+                showLogToast('All journal entries cleared.');
             } else {
                 const err = await res.json();
-                alert(`Failed to delete all reflections: ${err.error || 'Unknown error'}`);
+                showLogToast(`Failed: ${err.error || 'Unknown error'}`, 'error');
             }
         } catch (error) {
-            alert('An error occurred during deletion.');
+            showLogToast('An error occurred during deletion.', 'error');
         }
     };
 
@@ -288,14 +322,20 @@ export default function JourneyPage() {
     };
 
     const deleteNote = async (id: string) => {
+        setNotesSectionMessage(null);
         const res = await fetch(`/api/notes?id=${id}`, { method: 'DELETE' });
         if (res.ok) {
             fetchNotes();
-            showToast('Note deleted.');
+            setNotesSectionMessage({ type: 'success', text: 'Note discarded.' });
+            setIsDeletingNoteId(null);
+        } else {
+            setNotesSectionMessage({ type: 'error', text: 'Failed to delete note.' });
         }
+        setTimeout(() => setNotesSectionMessage(null), 5000);
     };
 
     const handleDeleteCategoryNotes = async () => {
+        setNotesSectionMessage(null);
         try {
             const url = selectedCategory === 'All'
                 ? '/api/notes?all=true'
@@ -305,14 +345,18 @@ export default function JourneyPage() {
             if (res.ok) {
                 fetchNotes();
                 setIsDeletingCategoryNotes(false);
-                showToast(selectedCategory === 'All' ? 'All notes deleted.' : `All notes in ${selectedCategory} deleted.`);
+                setNotesSectionMessage({ 
+                    type: 'success', 
+                    text: selectedCategory === 'All' ? 'All notes discarded.' : `All notes in ${selectedCategory} discarded.` 
+                });
             } else {
                 const err = await res.json();
-                alert(`Failed to delete notes: ${err.error || 'Unknown error'}`);
+                setNotesSectionMessage({ type: 'error', text: `Failed: ${err.error || 'Unknown error'}` });
             }
         } catch (error) {
-            alert('An error occurred during deletion.');
+            setNotesSectionMessage({ type: 'error', text: 'An error occurred during deletion.' });
         }
+        setTimeout(() => setNotesSectionMessage(null), 5000);
     };
 
     const togglePin = async (note: any) => {
@@ -324,7 +368,7 @@ export default function JourneyPage() {
         fetchNotes();
     };
 
-    const handleAddTask = async (title: string) => {
+    const handleAddTask = async (title: string, context: 'global' | 'quick' = 'global') => {
         if (!title) return;
         try {
             const todayStr = new Date().toLocaleDateString('en-CA');
@@ -335,7 +379,8 @@ export default function JourneyPage() {
                     title,
                     status: 'Pending',
                     priority: 'Medium',
-                    due_date: todayStr
+                    due_date: todayStr,
+                    isHistory: context === 'quick'
                 })
             });
 
@@ -352,25 +397,45 @@ export default function JourneyPage() {
         }
     };
 
-    const deleteTask = async (taskId: string) => {
+    const deleteTask = async (taskId: string, context: 'global' | 'quick' = 'global') => {
+        const setLocalMessage = context === 'global' ? setTaskSectionMessage : setQuickSectionMessage;
+        const setLocalDeleting = context === 'global' ? setIsDeletingTaskId : setIsDeletingQuickTaskId;
+        
+        setLocalMessage(null);
+        
+        // Permanent delete from DB (Both systems are now independent on DB level)
         const res = await fetch(`/api/tasks?id=${taskId}`, { method: 'DELETE' });
-        if (res.ok) fetchTasks();
+        if (res.ok) {
+            fetchTasks();
+            setLocalMessage({ type: 'success', text: context === 'global' ? 'Task deleted.' : 'History entry cleared.' });
+            setLocalDeleting(null);
+        } else {
+            setLocalMessage({ type: 'error', text: 'Failed to delete task.' });
+        }
+        
+        setTimeout(() => setLocalMessage(null), 5000);
     };
 
-    const handleDeleteAllTasks = async () => {
+    const handleDeleteAllTasks = async (context: 'global' | 'quick' = 'global') => {
+        const setLocalMessage = context === 'global' ? setTaskSectionMessage : setQuickSectionMessage;
+        setLocalMessage(null);
+        
         try {
-            const res = await fetch('/api/tasks?all=true', { method: 'DELETE' });
+            const res = await fetch(`/api/tasks?all=true&isHistory=${context === 'quick'}`, { method: 'DELETE' });
             if (res.ok) {
                 fetchTasks();
-                setIsDeletingAllTasks(false);
-                showTaskToast('All global tasks deleted.');
+                if (context === 'global') setIsGlobalDeletingAll(false);
+                else setIsHistoryDeletingAll(false);
+                setLocalMessage({ type: 'success', text: context === 'global' ? 'Global tasks cleared.' : 'Task history cleared.' });
             } else {
                 const err = await res.json();
-                alert(`Failed to delete all tasks: ${err.error || 'Unknown error'}`);
+                setLocalMessage({ type: 'error', text: `Failed: ${err.error || 'Unknown error'}` });
             }
         } catch (error) {
-            alert('An error occurred during deletion.');
+            setLocalMessage({ type: 'error', text: 'An error occurred during deletion.' });
         }
+        
+        setTimeout(() => setLocalMessage(null), 5000);
     };
 
     const toggleTask = async (task: any) => {
@@ -481,6 +546,20 @@ export default function JourneyPage() {
                                 )
                             )}
                         </div>
+                        {stickyMessage && (
+                            <div style={{ 
+                                padding: '0.6rem 1rem', 
+                                marginBottom: '1rem', 
+                                borderRadius: '6px', 
+                                fontSize: '0.85rem',
+                                background: stickyMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                color: stickyMessage.type === 'success' ? 'var(--accent)' : 'var(--red)',
+                                border: `1px solid ${stickyMessage.type === 'success' ? 'var(--accent)' : 'var(--red)'}`,
+                                animation: 'fadeIn 0.3s ease-out'
+                            }}>
+                                {stickyMessage.text}
+                            </div>
+                        )}
                         <div className={styles.stickyPanel}>
                             {stickies.map(s => (
                                 <div
@@ -500,17 +579,34 @@ export default function JourneyPage() {
                                         <span style={{ fontSize: '0.75rem', color: 'rgba(0,0,0,0.5)', fontWeight: 'bold' }}>
                                             {new Date(s.created_at || s.updated_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                         </span>
-                                        <button
-                                            className={styles.stickyDelete}
-                                            onMouseDown={(e) => e.stopPropagation()}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                console.log('Sticky delete clicked for ID:', s.sticky_id);
-                                                deleteSticky(s.sticky_id);
-                                            }}
-                                        >
-                                            Delete
-                                        </button>
+                                        {isDeletingStickyId === s.sticky_id ? (
+                                            <div style={{ display: 'flex', gap: '0.25rem' }} onMouseDown={(e) => e.stopPropagation()}>
+                                                <button 
+                                                    className={styles.stickyDelete} 
+                                                    style={{ color: 'var(--red)', fontWeight: 'bold' }}
+                                                    onClick={(e) => { e.stopPropagation(); deleteSticky(s.sticky_id); }}
+                                                >
+                                                    Yes
+                                                </button>
+                                                <button 
+                                                    className={styles.stickyDelete} 
+                                                    onClick={(e) => { e.stopPropagation(); setIsDeletingStickyId(null); }}
+                                                >
+                                                    No
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                className={styles.stickyDelete}
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setIsDeletingStickyId(s.sticky_id);
+                                                }}
+                                            >
+                                                Delete
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -605,6 +701,20 @@ export default function JourneyPage() {
                                 </div>
                             </div>
                             <div className={styles.notesContainer}>
+                                {notesSectionMessage && (
+                                    <div style={{ 
+                                        padding: '0.8rem 1.2rem', 
+                                        marginBottom: '1.5rem', 
+                                        borderRadius: '8px', 
+                                        fontSize: '0.9rem',
+                                        background: notesSectionMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                        color: notesSectionMessage.type === 'success' ? 'var(--accent)' : 'var(--red)',
+                                        border: `1px solid ${notesSectionMessage.type === 'success' ? 'var(--accent)' : 'var(--red)'}`,
+                                        animation: 'fadeIn 0.3s ease-out'
+                                    }}>
+                                        {notesSectionMessage.text}
+                                    </div>
+                                )}
                                 <div style={{ marginBottom: '1.5rem', background: 'var(--bg-app)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
                                     <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'flex-start' }}>
                                         <input
@@ -686,12 +796,30 @@ export default function JourneyPage() {
                                                         })}
                                                     </span>
                                                 </div>
-                                                <button
-                                                    className={styles.footerDeleteBtn}
-                                                    onClick={(e) => { e.stopPropagation(); deleteNote(note.note_id); }}
-                                                >
-                                                    Delete
-                                                </button>
+                                                {isDeletingNoteId === note.note_id ? (
+                                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }} onMouseDown={(e) => e.stopPropagation()}>
+                                                        <button 
+                                                            className={styles.footerDeleteBtn} 
+                                                            style={{ color: 'var(--red)', fontWeight: 'bold' }}
+                                                            onClick={(e) => { e.stopPropagation(); deleteNote(note.note_id); }}
+                                                        >
+                                                            Yes
+                                                        </button>
+                                                        <button 
+                                                            className={styles.footerDeleteBtn} 
+                                                            onClick={(e) => { e.stopPropagation(); setIsDeletingNoteId(null); }}
+                                                        >
+                                                            No
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        className={styles.footerDeleteBtn}
+                                                        onClick={(e) => { e.stopPropagation(); setIsDeletingNoteId(note.note_id); }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -719,8 +847,17 @@ export default function JourneyPage() {
                             </div>
 
                             {logToast && (
-                                <div style={{ padding: '0.5rem', marginBottom: '1rem', background: 'var(--primary)', color: 'white', borderRadius: '6px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 'bold', animation: 'fadeIn 0.2s ease-out' }}>
-                                    {logToast}
+                                <div style={{ 
+                                    padding: '0.6rem 1rem', 
+                                    marginBottom: '1rem', 
+                                    borderRadius: '6px', 
+                                    fontSize: '0.85rem',
+                                    background: logToast.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                    color: logToast.type === 'success' ? 'var(--accent)' : 'var(--red)',
+                                    border: `1px solid ${logToast.type === 'success' ? 'var(--accent)' : 'var(--red)'}`,
+                                    animation: 'fadeIn 0.2s ease-out'
+                                }}>
+                                    {logToast.text}
                                 </div>
                             )}
 
@@ -773,12 +910,30 @@ export default function JourneyPage() {
                                                     hour12: true
                                                 })}
                                             </strong>
-                                            <button
-                                                className={styles.logDeleteBtn}
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteLog(log.log_id); }}
-                                            >
-                                                Delete
-                                            </button>
+                                            {isDeletingLogId === log.log_id ? (
+                                                <div style={{ display: 'flex', gap: '0.25rem' }} onMouseDown={(e) => e.stopPropagation()}>
+                                                    <button 
+                                                        className={styles.logDeleteBtn} 
+                                                        style={{ color: 'var(--red)', fontWeight: 'bold' }}
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteLog(log.log_id); }}
+                                                    >
+                                                        Yes
+                                                    </button>
+                                                    <button 
+                                                        className={styles.logDeleteBtn} 
+                                                        onClick={(e) => { e.stopPropagation(); setIsDeletingLogId(null); }}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    className={styles.logDeleteBtn}
+                                                    onClick={(e) => { e.stopPropagation(); setIsDeletingLogId(log.log_id); }}
+                                                >
+                                                    Delete
+                                                </button>
+                                            )}
                                         </div>
                                         <span>Mood: {log.mood}/10</span>
                                         <p>{log.summary}</p>
@@ -794,30 +949,63 @@ export default function JourneyPage() {
                             <div className={styles.panelHeader}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                     <h2>Global Tasks</h2>
-                                    {tasks.length > 0 && (
-                                        isDeletingAllTasks ? (
-                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                <button className={styles.btnDanger} style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', background: 'var(--red)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }} onClick={handleDeleteAllTasks}>Yes, Delete All</button>
-                                                <button className={styles.btnSecondary} style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }} onClick={() => setIsDeletingAllTasks(false)}>Cancel</button>
+                                    {globalTasks.filter(t => t.status !== 'Completed').length > 0 && (
+                                        isGlobalDeletingAll ? (
+                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginLeft: 'auto' }}>
+                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Are you sure?</span>
+                                                <button 
+                                                    onClick={() => handleDeleteAllTasks('global')} 
+                                                    className={styles.btnPrimary} 
+                                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: 'var(--red)', border: 'none', borderRadius: '4px', color: 'white' }}
+                                                >
+                                                    Yes, Delete All
+                                                </button>
+                                                <button 
+                                                    onClick={() => setIsGlobalDeletingAll(false)} 
+                                                    className={styles.btnSecondary} 
+                                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}
+                                                >
+                                                    Cancel
+                                                </button>
                                             </div>
                                         ) : (
-                                            <button className={styles.logDeleteBtn} style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }} onClick={() => setIsDeletingAllTasks(true)}>Delete All</button>
+                                            <button 
+                                                className={styles.logDeleteBtn} 
+                                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', marginLeft: 'auto' }} 
+                                                onClick={() => setIsGlobalDeletingAll(true)}
+                                            >
+                                                Delete All
+                                            </button>
                                         )
                                     )}
                                 </div>
                             </div>
+
+                            {taskSectionMessage && (
+                                <div style={{ 
+                                    padding: '0.6rem 1rem', 
+                                    marginBottom: '1rem', 
+                                    borderRadius: '6px', 
+                                    fontSize: '0.85rem',
+                                    background: taskSectionMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                    color: taskSectionMessage.type === 'success' ? 'var(--accent)' : 'var(--red)',
+                                    border: `1px solid ${taskSectionMessage.type === 'success' ? 'var(--accent)' : 'var(--red)'}`,
+                                    animation: 'fadeIn 0.2s ease-out'
+                                }}>
+                                    {taskSectionMessage.text}
+                                </div>
+                            )}
 
                             {taskToast && (
                                 <div style={{ padding: '0.5rem', marginBottom: '1rem', background: 'var(--primary)', color: 'white', borderRadius: '6px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 'bold', animation: 'fadeIn 0.2s ease-out' }}>
                                     {taskToast}
                                 </div>
                             )}
-
                             <div className={styles.notesContainer}>
                                 <div style={{ marginBottom: '1.5rem' }}>
                                     {!isAddingTask ? (
                                         <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                            <button className={styles.btnPrimary} style={{ width: '100%', padding: '0.8rem', fontSize: '1.1rem', borderRadius: '12px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }} onClick={() => setIsAddingTask(true)}>+ New Task</button>
+                                            <button className={styles.btnPrimary} style={{ width: '100%', padding: '0.4rem', fontSize: '0.9rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.2)' }} onClick={() => setIsAddingTask(true)}>+ New Task</button>
                                         </div>
                                     ) : (
                                         <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-app)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
@@ -855,7 +1043,7 @@ export default function JourneyPage() {
                                 </div>
 
                                 <div className={styles.taskList}>
-                                    {tasks.map(task => (
+                                    {globalTasks.filter(task => task.status !== 'Completed').map(task => (
                                         <div key={task.task_id} className={`${styles.taskItem} ${task.status === 'Completed' ? styles.taskDone : ''}`}>
                                             <div className={styles.taskContent}>
                                                 <div className={styles.taskHeader}>
@@ -875,12 +1063,30 @@ export default function JourneyPage() {
                                                             hour12: true
                                                         })}
                                                     </span>
-                                                    <button className={styles.logDeleteBtn} onClick={() => deleteTask(task.task_id)}>Delete</button>
+                                                    {isDeletingTaskId === task.task_id ? (
+                                                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                            <button 
+                                                                className={styles.logDeleteBtn} 
+                                                                style={{ color: 'var(--red)', fontWeight: 'bold' }}
+                                                                onClick={() => deleteTask(task.task_id, 'global')}
+                                                            >
+                                                                Yes
+                                                            </button>
+                                                            <button 
+                                                                className={styles.logDeleteBtn} 
+                                                                onClick={() => setIsDeletingTaskId(null)}
+                                                            >
+                                                                No
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button className={styles.logDeleteBtn} onClick={() => setIsDeletingTaskId(task.task_id)}>Delete</button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
-                                    {tasks.length === 0 && <p className={styles.emptyText}>No tasks yet. Plan your day!</p>}
+                                    {globalTasks.filter(t => t.status !== 'Completed').length === 0 && <p className={styles.emptyText}>No active tasks yet. Plan your day!</p>}
                                 </div>
                             </div>
                         </div>
@@ -890,21 +1096,35 @@ export default function JourneyPage() {
                 <aside className={styles.sideColumn}>
                     <div className={styles.sideCard}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h2 style={{ margin: 0 }}>⚡ Quick Tasks</h2>
-                            {tasks.length > 0 && (
-                                isDeletingAllTasks ? (
+                            <h2 style={{ margin: 0 }}>📜 Task History</h2>
+                            {historyTasks.length > 0 && (
+                                isHistoryDeletingAll ? (
                                     <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sure?</span>
-                                        <button onClick={handleDeleteAllTasks} className={styles.logDeleteBtn} style={{ color: 'var(--red)', fontWeight: 'bold' }}>Yes</button>
-                                        <button onClick={() => setIsDeletingAllTasks(false)} className={styles.logDeleteBtn}>No</button>
+                                        <button onClick={() => handleDeleteAllTasks('quick')} className={styles.logDeleteBtn} style={{ color: 'var(--red)', fontWeight: 'bold' }}>Yes</button>
+                                        <button onClick={() => setIsHistoryDeletingAll(false)} className={styles.logDeleteBtn}>No</button>
                                     </div>
                                 ) : (
-                                    <button onClick={() => setIsDeletingAllTasks(true)} className={styles.logDeleteBtn} style={{ fontSize: '0.7rem' }}>Clear All 🗑️</button>
+                                    <button onClick={() => setIsHistoryDeletingAll(true)} className={styles.logDeleteBtn} style={{ fontSize: '0.7rem' }}>Clear History 🧹</button>
                                 )
                             )}
                         </div>
+                        {quickSectionMessage && (
+                            <div style={{ 
+                                padding: '0.4rem 0.6rem', 
+                                marginBottom: '0.8rem', 
+                                borderRadius: '4px', 
+                                fontSize: '0.75rem',
+                                background: quickSectionMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                color: quickSectionMessage.type === 'success' ? 'var(--accent)' : 'var(--red)',
+                                border: `1px solid ${quickSectionMessage.type === 'success' ? 'var(--accent)' : 'var(--red)'}`,
+                                animation: 'fadeIn 0.2s ease-out'
+                            }}>
+                                {quickSectionMessage.text}
+                            </div>
+                        )}
                         <div className={styles.taskList} style={{ maxHeight: '150px', overflowY: 'auto', overflowX: 'hidden', paddingRight: '0.5rem' }}>
-                            {tasks.map(task => (
+                            {[...historyTasks].sort((a,b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()).map(task => (
                                 <div key={task.task_id} className={styles.taskItem}>
                                     <div className={styles.taskContent}>
                                         <div className={styles.taskHeader}>
@@ -942,12 +1162,31 @@ export default function JourneyPage() {
                                                     hour12: true
                                                 })}
                                             </span>
-                                            <button className={styles.logDeleteBtn} style={{ fontSize: '0.7rem', padding: '0.1rem 0.3rem' }} onClick={() => deleteTask(task.task_id)}>Delete</button>
+                                            {isDeletingQuickTaskId === task.task_id ? (
+                                                <div style={{ display: 'flex', gap: '0.2rem' }}>
+                                                    <button 
+                                                        className={styles.logDeleteBtn} 
+                                                        style={{ color: 'var(--red)', fontWeight: 'bold', fontSize: '0.7rem', padding: '0.1rem 0.3rem' }} 
+                                                        onClick={() => deleteTask(task.task_id, 'quick')}
+                                                    >
+                                                        Yes
+                                                    </button>
+                                                    <button 
+                                                        className={styles.logDeleteBtn} 
+                                                        style={{ fontSize: '0.7rem', padding: '0.1rem 0.3rem' }} 
+                                                        onClick={() => setIsDeletingQuickTaskId(null)}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button className={styles.logDeleteBtn} style={{ fontSize: '0.7rem', padding: '0.1rem 0.3rem' }} onClick={() => setIsDeletingQuickTaskId(task.task_id)}>Delete</button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             ))}
-                            {tasks.length === 0 && <p className={styles.emptyText}>No pending tasks.</p>}
+                            {historyTasks.length === 0 && <p className={styles.emptyText}>No history found.</p>}
                         </div>
                     </div>
                 </aside>

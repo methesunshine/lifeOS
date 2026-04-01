@@ -18,6 +18,11 @@ function GoalsContent() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [isTimeEdited, setIsTimeEdited] = useState(false);
+    
+    // Localized Feedback States
+    const [latestMessage, setLatestMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [dashboardMessage, setDashboardMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [historyMessage, setHistoryMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     // Inline Confirmation States
     const [isDeletingGoalId, setIsDeletingGoalId] = useState<number | null>(null);
@@ -162,25 +167,27 @@ function GoalsContent() {
         setTimeout(() => setMessage(null), 6000);
     }
 
-    async function handleDelete(id: number) {
-        setMessage(null);
+    async function handleDelete(id: number, context: 'entry' | 'dashboard' | 'history' = 'entry') {
+        const setLocalMessage = context === 'entry' ? setLatestMessage : (context === 'dashboard' ? setDashboardMessage : setHistoryMessage);
+        setLocalMessage(null);
 
         const res = await fetch(`/api/goals?id=${id}`, {
             method: 'DELETE',
         });
 
         if (res.ok) {
-            setMessage({ type: 'success', text: 'Objective discarded.' });
+            setLocalMessage({ type: 'success', text: 'Objective discarded.' });
             setIsDeletingGoalId(null);
             fetchGoals();
         } else {
-            setMessage({ type: 'error', text: 'Failed to delete goal.' });
+            setLocalMessage({ type: 'error', text: 'Failed to delete goal.' });
         }
-        setTimeout(() => setMessage(null), 6000);
+        setTimeout(() => setLocalMessage(null), 6000);
     }
 
-    async function handleClearAll() {
-        setMessage(null);
+    async function handleClearAll(context: 'entry' | 'dashboard' = 'entry') {
+        const setLocalMessage = context === 'entry' ? setLatestMessage : setDashboardMessage;
+        setLocalMessage(null);
 
         const res = await fetch('/api/goals?deleteAllActive=true', {
             method: 'DELETE',
@@ -188,35 +195,35 @@ function GoalsContent() {
 
         if (res.ok) {
             const now = new Date().toISOString();
-            if (isClearingAllEntry) {
+            if (isClearingAllEntry || context === 'entry') {
                 setLastClearedEntryAt(now);
                 localStorage.setItem('goals_last_cleared_entry', now);
             }
-            setMessage({ type: 'success', text: 'All missions cleared.' });
+            setLocalMessage({ type: 'success', text: 'All missions cleared.' });
             setIsClearingAll(false);
             setIsClearingAllEntry(false);
             fetchGoals();
         } else {
-            setMessage({ type: 'error', text: 'Failed to clear missions.' });
+            setLocalMessage({ type: 'error', text: 'Failed to clear missions.' });
         }
-        setTimeout(() => setMessage(null), 6000);
+        setTimeout(() => setLocalMessage(null), 6000);
     }
 
     async function handleClearHistory() {
-        setMessage(null);
+        setHistoryMessage(null);
 
         const res = await fetch('/api/goals?deleteHistory=true', {
             method: 'DELETE',
         });
 
         if (res.ok) {
-            setMessage({ type: 'success', text: 'History logs cleared.' });
+            setHistoryMessage({ type: 'success', text: 'History logs cleared.' });
             setIsClearingHistory(false);
             fetchGoals();
         } else {
-            setMessage({ type: 'error', text: 'Failed to clear history.' });
+            setHistoryMessage({ type: 'error', text: 'Failed to clear history.' });
         }
-        setTimeout(() => setMessage(null), 6000);
+        setTimeout(() => setHistoryMessage(null), 6000);
     }
 
     async function handleSaveNote(goalId: number, currentNote: string, newNote: string) {
@@ -319,7 +326,8 @@ function GoalsContent() {
         }
     }
 
-    async function toggleSubtask(goalId: number, subtaskId: number, currentStatus: boolean) {
+    async function toggleSubtask(goalId: number, subtaskId: number, currentStatus: boolean, context: 'entry' | 'dashboard' = 'entry') {
+        const setLocalMessage = context === 'entry' ? setLatestMessage : setDashboardMessage;
         const res = await fetch('/api/goals', {
             method: 'PATCH',
             body: JSON.stringify({
@@ -336,11 +344,11 @@ function GoalsContent() {
             const goal = updatedGoals.find((g: any) => g.id === goalId);
             if (goal && goal.status === 'completed' && !currentStatus) {
                 const activeRemaining = updatedGoals.filter((g: any) => g.status === 'in-progress').length;
-                setMessage({
+                setLocalMessage({
                     type: 'success',
                     text: `✅ Mission Accomplished! "${goal.title}" is finished. You have ${activeRemaining} active missions left.`
                 });
-                setTimeout(() => setMessage(null), 6000);
+                setTimeout(() => setLocalMessage(null), 6000);
             }
         }
     }
@@ -379,7 +387,7 @@ function GoalsContent() {
                 <div className={styles.grid}>
                     <section className={styles.mainCol}>
                         <form onSubmit={handleSubmit} className={styles.formCard}>
-                            <div className="card" style={{ height: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                            <div className="card" style={{ height: '260px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                                 <h2 className={styles.sectionTitle} style={{ borderBottomColor: 'var(--accent)' }}>Set New Objective</h2>
                                 {message && (
                                     <div 
@@ -522,7 +530,7 @@ function GoalsContent() {
                                 {isClearingAllEntry ? (
                                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Are you sure?</span>
-                                        <button onClick={handleClearAll} className="primary-btn" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: 'var(--red)', border: 'none', borderRadius: '4px', color: 'white' }}>Yes, Delete All</button>
+                                        <button onClick={() => handleClearAll('entry')} className="primary-btn" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: 'var(--red)', border: 'none', borderRadius: '4px', color: 'white' }}>Yes, Delete All</button>
                                         <button onClick={() => setIsClearingAllEntry(false)} className="secondary-btn" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}>Cancel</button>
                                     </div>
                                 ) : (
@@ -531,7 +539,20 @@ function GoalsContent() {
                                     </button>
                                 )}
                             </div>
-                            <div className="card" style={{ height: '300px', overflowY: 'auto', padding: '1.25rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}>
+                            <div className="card" style={{ height: '240px', overflowY: 'auto', padding: '1.25rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}>
+                                {latestMessage && (
+                                    <div style={{ 
+                                        padding: '0.6rem 1rem', 
+                                        marginBottom: '1rem', 
+                                        borderRadius: '6px', 
+                                        fontSize: '0.85rem',
+                                        background: latestMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                        color: latestMessage.type === 'success' ? 'var(--accent)' : 'var(--red)',
+                                        border: `1px solid ${latestMessage.type === 'success' ? 'var(--accent)' : 'var(--red)'}`
+                                    }}>
+                                        {latestMessage.text}
+                                    </div>
+                                )}
                                 <div className={styles.goalsGrid}>
                                     {!isClient ? (
                                         <p className={styles.hint}>Synchronizing Mission Data...</p>
@@ -586,7 +607,7 @@ function GoalsContent() {
                                                                 </div>
                                                                 {isDeletingGoalId === goal.id ? (
                                                                     <div style={{ display: 'flex', gap: '0.25rem' }} onClick={(e) => e.stopPropagation()}>
-                                                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(goal.id); }} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(goal.id, 'entry'); }} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
                                                                         <button onClick={(e) => { e.stopPropagation(); setIsDeletingGoalId(null); }} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
                                                                     </div>
                                                                 ) : (
@@ -629,7 +650,7 @@ function GoalsContent() {
                                                                                     <input
                                                                                         type="checkbox"
                                                                                         checked={st.is_completed}
-                                                                                        onChange={() => toggleSubtask(goal.id, st.id, st.is_completed)}
+                                                                                        onChange={() => toggleSubtask(goal.id, st.id, st.is_completed, 'entry')}
                                                                                     />
                                                                                     <span className={st.is_completed ? styles.completed : ''} style={{ fontSize: '0.85rem' }}>{st.title}</span>
                                                                                 </label>
@@ -639,7 +660,7 @@ function GoalsContent() {
                                                                                 <input
                                                                                     type="checkbox"
                                                                                     checked={goal.progress_percent === 100}
-                                                                                    onChange={() => toggleSubtask(goal.id, -1, goal.progress_percent === 100)}
+                                                                                    onChange={() => toggleSubtask(goal.id, -1, goal.progress_percent === 100, 'entry')}
                                                                                 />
                                                                                 <span className={goal.progress_percent === 100 ? styles.completed : ''} style={{ fontSize: '0.85rem' }}>Complete Mission</span>
                                                                             </label>
@@ -743,8 +764,8 @@ function GoalsContent() {
                     </section>
 
                     <aside className={styles.sideCol}>
-                        <div className="card glass" style={{ height: '320px', overflowY: 'auto' }}>
-                            <h3 className={styles.sideTitle}>Mission Analytics</h3>
+                        <div className="card glass" style={{ height: '260px', overflowY: 'auto' }}>
+                             <h3 className={styles.sideTitle}>Mission Analytics</h3>
                             <div className={styles.statBox}>
                                 <p className={styles.statLabel}>Completion Rate</p>
                                 <p className={styles.statValue} style={{ color: 'var(--accent)' }}>
@@ -791,7 +812,7 @@ function GoalsContent() {
                             {isClearingAll ? (
                                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Are you sure?</span>
-                                    <button onClick={handleClearAll} className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', background: 'var(--red)', borderColor: 'var(--red)' }}>Yes, Delete All</button>
+                                    <button onClick={() => handleClearAll('dashboard')} className="primary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', background: 'var(--red)', borderColor: 'var(--red)' }}>Yes, Delete All</button>
                                     <button onClick={() => setIsClearingAll(false)} className="secondary-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>Cancel</button>
                                 </div>
                             ) : (
@@ -802,7 +823,20 @@ function GoalsContent() {
                         </div>
                         
                         {/* Box 1: Active Missions */}
-                        <div className="card" style={{ height: '300px', overflowY: 'auto', padding: '1.5rem', background: 'var(--bg-app)', border: '1px solid var(--border)', marginBottom: '3rem' }}>
+                        <div className="card" style={{ height: '240px', overflowY: 'auto', padding: '1.5rem', background: 'var(--bg-app)', border: '1px solid var(--border)', marginBottom: '3rem' }}>
+                            {dashboardMessage && (
+                                <div style={{ 
+                                    padding: '0.6rem 1rem', 
+                                    marginBottom: '1rem', 
+                                    borderRadius: '6px', 
+                                    fontSize: '0.85rem',
+                                    background: dashboardMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                    color: dashboardMessage.type === 'success' ? 'var(--accent)' : 'var(--red)',
+                                    border: `1px solid ${dashboardMessage.type === 'success' ? 'var(--accent)' : 'var(--red)'}`
+                                }}>
+                                    {dashboardMessage.text}
+                                </div>
+                            )}
                             <div className={styles.goalsGrid}>
                                 {(() => {
                                     const active = goals.filter(g => g.status === 'in-progress');
@@ -824,7 +858,7 @@ function GoalsContent() {
                                                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                                     {isDeletingGoalId === goal.id ? (
                                                         <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                                            <button onClick={() => handleDelete(goal.id)} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
+                                                            <button onClick={() => handleDelete(goal.id, 'dashboard')} className={styles.deleteBtn} style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}>Yes</button>
                                                             <button onClick={() => setIsDeletingGoalId(null)} className={styles.deleteBtn} style={{ fontSize: '0.8rem', paddingRight: '0' }}>No</button>
                                                         </div>
                                                     ) : (
@@ -849,7 +883,7 @@ function GoalsContent() {
                                                         <input
                                                             type="checkbox"
                                                             checked={st.is_completed}
-                                                            onChange={() => toggleSubtask(goal.id, st.id, st.is_completed)}
+                                                            onChange={() => toggleSubtask(goal.id, st.id, st.is_completed, 'dashboard')}
                                                         />
                                                         <span className={st.is_completed ? styles.completed : ''}>{st.title}</span>
                                                     </label>
@@ -908,7 +942,20 @@ function GoalsContent() {
                                 );
                             })()}
                         </div>
-                        <div className="card" style={{ height: '300px', overflowY: 'auto', padding: '1.5rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}>
+                        <div className="card" style={{ height: '240px', overflowY: 'auto', padding: '1.5rem', background: 'var(--bg-app)', border: '1px solid var(--border)' }}>
+                            {historyMessage && (
+                                <div style={{ 
+                                    padding: '0.6rem 1rem', 
+                                    marginBottom: '1rem', 
+                                    borderRadius: '6px', 
+                                    fontSize: '0.85rem',
+                                    background: historyMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                    color: historyMessage.type === 'success' ? 'var(--accent)' : 'var(--red)',
+                                    border: `1px solid ${historyMessage.type === 'success' ? 'var(--accent)' : 'var(--red)'}`
+                                }}>
+                                    {historyMessage.text}
+                                </div>
+                            )}
                             <div className={styles.goalsGrid}>
                                 {(() => {
                                     const completed = goals.filter(g => g.status === 'completed');
@@ -936,7 +983,7 @@ function GoalsContent() {
                                                 {isDeletingGoalId === goal.id ? (
                                                     <div style={{ display: 'flex', gap: '0.25rem' }} onClick={(e) => e.stopPropagation()}>
                                                         <button 
-                                                            onClick={(e) => { e.stopPropagation(); handleDelete(goal.id); }} 
+                                                            onClick={(e) => { e.stopPropagation(); handleDelete(goal.id, 'history'); }} 
                                                             className={styles.deleteBtn} 
                                                             style={{ color: 'var(--red)', fontSize: '0.8rem', fontWeight: 'bold' }}
                                                         >Yes</button>

@@ -222,8 +222,8 @@ export default function RemindersPage() {
     const deleteReminder = async (id: string) => {
         const res = await fetch(`/api/reminders?id=${id}`, { method: 'DELETE' });
         if (res.ok) {
-            setDeletingReminderId(null);
             fetchReminders();
+            showReminderToast('Reminder deleted!');
         }
     };
 
@@ -258,7 +258,8 @@ export default function RemindersPage() {
     };
 
     return (
-        <main className={styles.container}>
+        <>
+            <main className={styles.container}>
             <header className={styles.header}>
                 <div className={styles.headerTitle}>
                     <h1>Reminders</h1>
@@ -267,36 +268,16 @@ export default function RemindersPage() {
             </header>
 
             <div className={styles.panelHeader}>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'wrap' }}>
-                    <h2 style={{ margin: 0 }}>Active Reminders</h2>
-                    {deleteConfirmScope === 'filtered' ? (
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <button className={styles.btnDanger} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => handleDeleteReminders('filtered')}>
-                                {getFilterDeleteEmoji()} Yes, {getFilterDeleteLabel()}
-                            </button>
-                            <button className={styles.btnSecondary} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => setDeleteConfirmScope(null)}>
-                                ❌ Cancel
-                            </button>
-                        </div>
-                    ) : deleteConfirmScope === 'everything' ? (
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <button className={styles.btnDanger} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => handleDeleteReminders('everything')}>
-                                🗑️ Yes, Delete Everything
-                            </button>
-                            <button className={styles.btnSecondary} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => setDeleteConfirmScope(null)}>
-                                ❌ Cancel
-                            </button>
-                        </div>
-                    ) : (
-                        <>
-                            <button className={styles.logDeleteBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', color: 'var(--yellow)', border: '1px solid rgba(245, 158, 11, 0.3)' }} onClick={() => setDeleteConfirmScope('filtered')}>
-                                {getFilterDeleteEmoji()} {getFilterDeleteLabel()}
-                            </button>
-                            <button className={styles.logDeleteBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', color: 'var(--red)', border: '1px solid rgba(239, 68, 68, 0.3)' }} onClick={() => setDeleteConfirmScope('everything')}>
-                                🗑️ Delete Everything
-                            </button>
-                        </>
-                    )}
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Active Reminders</h2>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className={styles.logDeleteBtn} onClick={() => handleDeleteReminders('filtered')}>
+                            {getFilterDeleteEmoji()} {getFilterDeleteLabel()}
+                        </button>
+                        <button className={styles.logDeleteBtn} onClick={() => handleDeleteReminders('everything')}>
+                            🗑️ EVERYTHING
+                        </button>
+                    </div>
                 </div>
 
                 <button
@@ -347,8 +328,7 @@ export default function RemindersPage() {
                     ))}
                 </div>
 
-                <div className={styles.reminderListShell}>
-                    <div className={styles.reminderScrollArea}>
+                <div className={styles.reminderScrollArea}>
                         {loading ? (
                             <p className={styles.emptyText}>Loading reminders...</p>
                         ) : (
@@ -388,17 +368,8 @@ export default function RemindersPage() {
                                                     </div>
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                                                    {deletingReminderId === reminder.reminder_id ? (
-                                                        <>
-                                                            <button className={styles.logDeleteBtn} style={{ color: 'var(--red)', borderColor: 'rgba(239,68,68,0.3)' }} onClick={() => deleteReminder(reminder.reminder_id)}>Confirm</button>
-                                                            <button className={styles.logDeleteBtn} onClick={() => setDeletingReminderId(null)}>Cancel</button>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <button className={styles.logDeleteBtn} onClick={() => handleEditReminder(reminder)}>Edit</button>
-                                                            <button className={styles.logDeleteBtn} onClick={() => setDeletingReminderId(reminder.reminder_id)}>Delete</button>
-                                                        </>
-                                                    )}
+                                                    <button className={styles.logDeleteBtn} onClick={() => handleEditReminder(reminder)}>Edit</button>
+                                                    <button className={styles.logDeleteBtn} onClick={() => deleteReminder(reminder.reminder_id)}>Delete</button>
                                                 </div>
                                             </div>
 
@@ -425,118 +396,118 @@ export default function RemindersPage() {
                             </div>
                         )}
                     </div>
-                </div>
             </section>
+        </main>
 
-            {isReminderOpen && (
-                <div className={styles.modalOverlay} onClick={() => setIsReminderOpen(false)}>
-                    <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
-                        <header className={styles.modalHeader}>
-                            <h2 style={{ fontSize: '1.25rem', margin: 0 }}>{activeReminderId ? 'Edit Reminder' : 'New Reminder'}</h2>
-                            <button className={styles.modalClose} onClick={() => setIsReminderOpen(false)}>×</button>
-                        </header>
+        {isReminderOpen && (
+            <div className={styles.modalOverlay} onClick={() => setIsReminderOpen(false)}>
+                <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
+                    <header className={styles.modalHeader}>
+                        <h2 style={{ fontSize: '1.25rem', margin: 0 }}>{activeReminderId ? 'Edit Reminder' : 'New Reminder'}</h2>
+                        <button className={styles.modalClose} onClick={() => setIsReminderOpen(false)}>×</button>
+                    </header>
 
-                        <div className={styles.modalBody}>
-                            <div>
-                                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Reminder Title *</label>
+                    <div className={styles.modalBody}>
+                        <div>
+                            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Reminder Title *</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Doctor's Appointment"
+                                value={remTitle}
+                                onChange={(event) => setRemTitle(event.target.value)}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', fontSize: '1rem' }}
+                                autoFocus
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Description (Optional)</label>
+                            <textarea
+                                placeholder="Add notes..."
+                                value={remDesc}
+                                onChange={(event) => setRemDesc(event.target.value)}
+                                rows={3}
+                                className={styles.logTextarea}
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Date & Time</label>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 <input
-                                    type="text"
-                                    placeholder="e.g. Doctor's Appointment"
-                                    value={remTitle}
-                                    onChange={(event) => setRemTitle(event.target.value)}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', fontSize: '1rem' }}
-                                    autoFocus
+                                    type="date"
+                                    value={remDate}
+                                    onChange={(event) => setRemDate(event.target.value)}
+                                    style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', minWidth: '150px' }}
                                 />
-                            </div>
-
-                            <div>
-                                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Description (Optional)</label>
-                                <textarea
-                                    placeholder="Add notes..."
-                                    value={remDesc}
-                                    onChange={(event) => setRemDesc(event.target.value)}
-                                    rows={3}
-                                    className={styles.logTextarea}
-                                />
-                            </div>
-
-                            <div>
-                                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Date & Time</label>
-                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                    <input
-                                        type="date"
-                                        value={remDate}
-                                        onChange={(event) => setRemDate(event.target.value)}
-                                        style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', minWidth: '150px' }}
-                                    />
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
-                                        <select value={remHour} onChange={(event) => setRemHour(event.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
-                                            {[...Array(12)].map((_, index) => (
-                                                <option key={index + 1} value={(index + 1).toString()}>
-                                                    {(index + 1).toString()}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+                                    <select value={remHour} onChange={(event) => setRemHour(event.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
+                                        {[...Array(12)].map((_, index) => (
+                                            <option key={index + 1} value={(index + 1).toString()}>
+                                                {(index + 1).toString()}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <span style={{ fontWeight: 800 }}>:</span>
+                                    <select value={remMinute} onChange={(event) => setRemMinute(event.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
+                                        {[...Array(60)].map((_, index) => {
+                                            const minute = index.toString().padStart(2, '0');
+                                            return (
+                                                <option key={minute} value={minute}>
+                                                    {minute}
                                                 </option>
-                                            ))}
-                                        </select>
-                                        <span style={{ fontWeight: 800 }}>:</span>
-                                        <select value={remMinute} onChange={(event) => setRemMinute(event.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
-                                            {[...Array(60)].map((_, index) => {
-                                                const minute = index.toString().padStart(2, '0');
-                                                return (
-                                                    <option key={minute} value={minute}>
-                                                        {minute}
-                                                    </option>
-                                                );
-                                            })}
-                                        </select>
-                                        <select value={remAmPm} onChange={(event) => setRemAmPm(event.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
-                                            <option value="AM">AM</option>
-                                            <option value="PM">PM</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1.5rem' }}>
-                                <div>
-                                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Category</label>
-                                    <select value={remCategory} onChange={(event) => setRemCategory(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
-                                        <option value="personal">Personal</option>
-                                        <option value="task">Task</option>
-                                        <option value="health">Health</option>
-                                        <option value="finance">Finance</option>
-                                        <option value="custom">Custom</option>
+                                            );
+                                        })}
                                     </select>
-                                </div>
-
-                                <div>
-                                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Priority</label>
-                                    <select value={remPriority} onChange={(event) => setRemPriority(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
-                                        <option value="low">Low</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Recurrence</label>
-                                    <select value={remRecurrence} onChange={(event) => setRemRecurrence(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
-                                        <option value="none">One-time</option>
-                                        <option value="daily">Daily</option>
-                                        <option value="weekly">Weekly</option>
+                                    <select value={remAmPm} onChange={(event) => setRemAmPm(event.target.value)} style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)', cursor: 'pointer' }}>
+                                        <option value="AM">AM</option>
+                                        <option value="PM">PM</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        <footer className={styles.modalFooter}>
-                            <button className={styles.btnSecondary} onClick={() => setIsReminderOpen(false)}>Cancel</button>
-                            <button className={styles.btnPrimary} onClick={handleAddReminder} disabled={isSaving || !remTitle || !remDate}>
-                                {isSaving ? 'Saving...' : activeReminderId ? 'Save Changes' : 'Set Reminder'}
-                            </button>
-                        </footer>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1.5rem' }}>
+                            <div>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Category</label>
+                                <select value={remCategory} onChange={(event) => setRemCategory(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
+                                    <option value="personal">Personal</option>
+                                    <option value="task">Task</option>
+                                    <option value="health">Health</option>
+                                    <option value="finance">Finance</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Priority</label>
+                                <select value={remPriority} onChange={(event) => setRemPriority(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>Recurrence</label>
+                                <select value={remRecurrence} onChange={(event) => setRemRecurrence(event.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-app)', color: 'var(--text-main)' }}>
+                                    <option value="none">One-time</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
+
+                    <footer className={styles.modalFooter}>
+                        <button className={styles.btnSecondary} onClick={() => setIsReminderOpen(false)}>Cancel</button>
+                        <button className={styles.btnPrimary} onClick={handleAddReminder} disabled={isSaving || !remTitle || !remDate}>
+                            {isSaving ? 'Saving...' : activeReminderId ? 'Save Changes' : 'Set Reminder'}
+                        </button>
+                    </footer>
                 </div>
-            )}
-        </main>
+            </div>
+        )}
+        </>
     );
 }
